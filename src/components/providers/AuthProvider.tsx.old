@@ -1,0 +1,62 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { authService } from "@/src/features/account/auth.services";
+import { usePathname, useRouter } from "next/navigation";
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [isInitializing, setIsInitializing] = useState(true);
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    console.log("Pathname détecté par le Provider:", pathname);
+    const init = async () => {
+      // 1. DÉFINITION DES ROUTES PUBLIQUES
+      // Vérifie bien que ton dossier est "account" sans "s"
+      const publicRoutes = ["/account/login", "/account/register"];
+      const isPublic = publicRoutes.includes(pathname);
+      console.log("Est-ce une route publique ?", isPublic);
+      // 2. LOGIQUE DE DÉBLOCAGE IMMÉDIAT
+      if (isPublic) {
+        setIsInitializing(false);
+        return; // On arrête l'exécution ici pour les pages de login/register
+      }
+
+      // 3. LOGIQUE POUR LES PAGES PROTÉGÉES (Dashboard, etc.)
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        setIsInitializing(false);
+        router.replace("/account/login");
+        return;
+      }
+
+      try {
+        await authService.initializeSession();
+      } catch (error) {
+        console.error("Erreur d'initialisation de session");
+        localStorage.removeItem("access_token");
+        router.replace("/account/login");
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    init();
+  }, [pathname, router]);
+
+  // L'écran que tu vois actuellement vient d'ici :
+  if (isInitializing) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-slate-500">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+};
