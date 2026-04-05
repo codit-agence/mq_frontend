@@ -1,3 +1,14 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Copie ces deux lignes ici :
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Maintenant tu peux utiliser __dirname plus bas dans ton code
+// Exemple : const path = __dirname + '/public';
+
+
 const nextConfig = {
   // À la racine, PAS dans experimental
  // allowedDevOrigins: ['127.0.0.1:3000', 'localhost:3000'],
