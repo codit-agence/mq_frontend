@@ -6,6 +6,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ScheduleForm from '../../../src/features/player/components/ScheduleForm';
 import ScheduleTimeline from '../../../src/features/player/components/ScheduleTimeline';
 
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface AudioTrack {
+  id: string;
+  title: string;
+}
+
+interface Promotion {
+  id: string;
+  name: string;
+}
+
 export default function SchedulePage() {
   const { schedules, fetchSchedules, isLoading } = useAdminScheduleStore();
   const [showForm, setShowForm] = useState(false);
@@ -95,7 +111,7 @@ export default function SchedulePage() {
                           <div key={s.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
                             <div>
                               <p className="font-bold text-slate-900">{s.label}</p>
-                              <p className="text-sm text-slate-500 uppercase font-semibold">{s.category_name}</p>
+                              <p className="text-sm text-slate-500 uppercase font-semibold">{s.category_ids}</p>
                             </div>
                             <div className="flex items-center gap-4">
                               <span className="font-mono text-sm bg-slate-100 px-3 py-1 rounded-lg text-slate-600">
