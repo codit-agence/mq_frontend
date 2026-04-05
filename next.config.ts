@@ -1,9 +1,4 @@
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 
-// Copie ces deux lignes ici :
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 // Maintenant tu peux utiliser __dirname plus bas dans ton code
 // Exemple : const path = __dirname + '/public';
