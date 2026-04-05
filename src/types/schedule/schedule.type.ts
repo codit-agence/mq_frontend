@@ -45,3 +45,18 @@ export interface TemplateProps {
   currentProduct: Product;
   tenant?: TenantInfo;      // On le passe en obligatoire ici car le Player s'assure qu'il existe
 }
+
+export interface Category {
+  id: string;
+  name: string;
+}
+
+export interface AudioTrack {
+  id: string;
+  title: string;
+}
+
+export interface Promotion {
+  id: string;
+  name: string;
+}

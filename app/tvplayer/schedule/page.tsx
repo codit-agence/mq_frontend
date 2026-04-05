@@ -5,22 +5,10 @@ import { Calendar, Plus, LayoutDashboard, Settings, Loader2 } from 'lucide-react
 import { motion, AnimatePresence } from 'framer-motion';
 import ScheduleForm from '../../../src/features/player/components/ScheduleForm';
 import ScheduleTimeline from '../../../src/features/player/components/ScheduleTimeline';
+import { AudioTrack, Category, Promotion } from '@/src/types/schedule/schedule.type';
 
 
-interface Category {
-  id: string;
-  name: string;
-}
 
-interface AudioTrack {
-  id: string;
-  title: string;
-}
-
-interface Promotion {
-  id: string;
-  name: string;
-}
 
 export default function SchedulePage() {
   const { schedules, fetchSchedules, isLoading } = useAdminScheduleStore();
