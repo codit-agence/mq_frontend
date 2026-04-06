@@ -1,6 +1,5 @@
 "use client";
-export const dynamic = "force-dynamic";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, Loader2, ArrowRight } from "lucide-react";
 
@@ -8,8 +7,11 @@ import { authService } from "@/src/features/account/auth.services";
 import { useAuthStore } from "@/src/features/account/store/useAuthStore";
 import { getErrorMessage } from "@/src/utils/errors";
 
-export default function LoginPage() {
-  const searchParams = useSearchParams();
+
+
+function LoginContent() {
+
+const searchParams = useSearchParams();
   const isRegistered = searchParams.get('registered') === 'true';
   const router = useRouter();
   const loginSuccess = useAuthStore((state) => state.handleLoginSuccess);
@@ -173,5 +175,16 @@ export default function LoginPage() {
         </footer>
       </div>
     </div>
+  );
+}
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
+        <Loader2 className="animate-spin text-indigo-600" size={32} />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
