@@ -10,7 +10,7 @@ export const useProductForm = (initialData?: any | null, onSuccess?: () => void)
   const [preview, setPreview] = useState<string | null>(initialData?.image || null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const { register, control, handleSubmit, reset } = useForm<ProductUpdate>({
+  const { register, control, handleSubmit, reset, formState } = useForm<ProductUpdate>({
     defaultValues: initialData || {
       name: "", name_ar: "", name_en: "",
       category_id: "",
@@ -64,6 +64,7 @@ export const useProductForm = (initialData?: any | null, onSuccess?: () => void)
     handleSubmit: handleSubmit(onSubmit),
     fields,
     append,
+    formState, // <--- AJOUTE CECI ICI
     remove,
     preview,
     handleImageChange,

@@ -10,5 +10,5 @@ export const getImageUrl = (path: string | null | undefined): string => {
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
   
   // On force l'URL vers le backend Django
-  return `http://127.0.0.1:8000${cleanPath}`;
+  return `http://161.97.96.60:8000${cleanPath}`;
 };

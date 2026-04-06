@@ -1,9 +1,12 @@
+
 export interface UserProfile {
   id: string;
   email: string;
   first_name: string;
   last_name: string;
   avatar: string | null;
+  is_active: boolean;
+  is_verified: boolean;
 }
 
 export interface Tenant {
@@ -12,6 +15,8 @@ export interface Tenant {
   role?: string | null;
   slug: string;
   city?: string | null;
+  type?: string | null;
+  logo: string | null;
 }
 
 export interface LoginResponse {
@@ -23,6 +28,11 @@ export interface LoginResponse {
   tenant_id: string | null;
   tenant_name: string | null;
   tenant_city: string | null;
+  tenant_type: string | null;
+  tenant_logo_url: string | null;
+  is_active: boolean;
+  is_verified: boolean;
+
 }
 
 export interface MeResponse {

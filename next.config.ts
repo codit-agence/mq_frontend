@@ -7,17 +7,23 @@
 const nextConfig = {
   // À la racine, PAS dans experimental
  // allowedDevOrigins: ['127.0.0.1:3000', 'localhost:3000'],
-  eimages: {
+  images: {
     remotePatterns: [
+     
+      // Si tu utilises aussi 'localhost' au lieu de '127.0.0.1'
       {
-        protocol: 'https',
-        hostname: '**.vercel.app', // Autorise tes domaines Vercel
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+        pathname: "/media/**",
       },
-      {
-        protocol: 'http',
-        hostname: '127.0.0.1', // Pour tes tests locaux
-      },
-      // Ajoute ici l'IP de ton serveur Contabo si tu charges des images de là-bas
+
+     {
+        protocol: 'https',             // Obligatoire car ton domaine est en SSL
+        hostname: 'qooom.duckdns.org', // Ton nouveau domaine
+        pathname: '/media/**',
+        // port: "",                   // Laisse vide, le HTTPS utilise le port 443 par défaut
+      }
     ],
   },
 

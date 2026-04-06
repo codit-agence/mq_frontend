@@ -38,11 +38,16 @@ export const useAuthStore = create<AuthState>()(
             email: "", 
             first_name: data.first_name || "",
             last_name: data.last_name || "",
-            avatar: null
+            avatar: null,
+            is_active: data.is_active,
+            is_verified: data.is_verified,
           },
           tenant: data.tenant_id ? {
             id: data.tenant_id,
             name: data.tenant_name || "",
+            city: data.tenant_city || "",
+            logo: data.tenant_logo_url || null,
+            type: data.tenant_type || "",
             slug: "",
           } : null
         });
@@ -70,7 +75,13 @@ export const useAuthStore = create<AuthState>()(
     {
       name: "auth-storage",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ isAuthenticated: state.isAuthenticated }), 
+      partialize: (state) => ({
+      
+                isAuthenticated: state.isAuthenticated,
+                user: state.user,
+                tenant: state.tenant
+            
+       }), 
     }
   ) // <--- Fin du persist
 );

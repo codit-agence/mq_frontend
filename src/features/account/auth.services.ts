@@ -13,6 +13,16 @@ export const authService = {
     const response = await api.post<LoginResponse>("/auth/login", credentials);
     return response.data;
   },
+  async forgotPassword(email: string) {
+  // Supprime "password-reset" et utilise "forgot-password" comme dans ton code Python
+  const response = await api.post("/auth/forgot-password", { email });
+  return response.data;
+  },
+  
+  async resetPasswordConfirm(data: any) {
+    const response = await api.post("/auth/reset-password-confirm", data);
+    return response.data;
+  },
 
   async getMe(): Promise<MeResponse> {
   // On utilise l'URL exacte que tu as testée manuellement
