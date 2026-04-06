@@ -8,22 +8,24 @@ const nextConfig = {
   // À la racine, PAS dans experimental
  // allowedDevOrigins: ['127.0.0.1:3000', 'localhost:3000'],
   images: {
-    remotePatterns: [
-     
-      // Si tu utilises aussi 'localhost' au lieu de '127.0.0.1'
+    remotePatterns:[
+      {
+        protocol: "http",
+        hostname: "161.97.96.60", // Ajoute ton IP ici
+        port: "8000",
+        pathname: "/media/**",
+      },
+      {
+        protocol: "https",
+        hostname: "qooom.duckdns.org",
+        pathname: "/media/**",
+      },
       {
         protocol: "http",
         hostname: "localhost",
         port: "8000",
         pathname: "/media/**",
       },
-
-     {
-        protocol: 'https',             // Obligatoire car ton domaine est en SSL
-        hostname: 'qooom.duckdns.org', // Ton nouveau domaine
-        pathname: '/media/**',
-        // port: "",                   // Laisse vide, le HTTPS utilise le port 443 par défaut
-      }
     ],
   },
 
