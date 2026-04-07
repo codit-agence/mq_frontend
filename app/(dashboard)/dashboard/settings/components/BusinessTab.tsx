@@ -1,7 +1,14 @@
-import { useSettingsStore } from "../../../../../src/features/settings/store/useSettingStore";
+"use client";
+import { useSettingsStore } from "@/src/features/settings/store/useSettingStore";
+import { useEffect, useState } from "react";
 
 export default function BusinessTab() {
   const { formData, setField } = useSettingsStore();
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const isFile = (value: any): value is File => {
+  return value instanceof File;
+  };// Helper pour mettre à jour l'objet imbriqué tenant_settings
 
   const currencies = [
     { code: 'MAD', symbol: 'DH', label: 'Dirham Marocain' },
@@ -16,21 +23,22 @@ export default function BusinessTab() {
     });
   };
 
-  // Helper corrigé pour éviter l'erreur instanceof
-  const getCoverPreview = () => {
-    // On cast en 'any' pour que TS accepte le test instanceof
-    const img = formData.tenant_settings?.cover_image as any;
-    
-    if (!img) return null;
+  // Gestion intelligente de la preview
+  useEffect(() => {
+   const img = formData.tenant_settings?.cover_image;
 
-    // Vérification sécurisée
-    if (typeof img === 'object' && img instanceof File) {
-      return URL.createObjectURL(img);
+  if (isFile(img)) {
+    const objectUrl = URL.createObjectURL(img);
+    setPreview(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }
+
+    if (typeof img === 'string') {
+      setPreview(img);
+    } else {
+      setPreview(null);
     }
-    
-    // Si c'est déjà une string (URL du serveur)
-    return img as string;
-  };
+  }, [formData.tenant_settings?.cover_image]);
 
   return (
     <div className="space-y-8">
@@ -58,7 +66,7 @@ export default function BusinessTab() {
               id="show_prices"
               checked={formData.tenant_settings?.show_prices ?? true}
               onChange={(e) => updateSettings({ show_prices: e.target.checked })}
-              className="w-5 h-5 accent-yellow-500"
+              className="w-5 h-5 accent-yellow-500 rounded"
             />
             <label htmlFor="show_prices" className="text-sm font-medium cursor-pointer">
               Afficher les prix
@@ -71,18 +79,11 @@ export default function BusinessTab() {
       <section className="space-y-4">
         <h3 className="text-lg font-semibold">🖼️ Image de couverture</h3>
         <div className="relative h-40 w-full bg-gray-100 rounded-2xl border-2 border-dashed flex items-center justify-center overflow-hidden group">
-          {formData.tenant_settings?.cover_image ? (
-            <img 
-              src={getCoverPreview() || ""} 
-              className="object-cover w-full h-full"
-              alt="Cover"
-            />
+          {preview ? (
+            <img src={preview} className="object-cover w-full h-full" alt="Cover" />
           ) : (
             <p className="text-gray-400 text-sm">Cliquez pour ajouter une bannière</p>
           )}
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-             <span className="text-white text-xs font-bold bg-black/50 px-4 py-2 rounded-full">Modifier</span>
-          </div>
           <input 
             type="file" 
             accept="image/*"
@@ -97,20 +98,26 @@ export default function BusinessTab() {
 
       {/* Section Horaires */}
       <section className="space-y-4">
-        <h3 className="text-lg font-semibold">🕒 Horaires</h3>
+        <h3 className="text-lg font-semibold">🕒 Horaires de service</h3>
         <div className="grid grid-cols-2 gap-4">
-          <input 
-            type="time" 
-            value={formData.tenant_settings?.work_start || "09:00"}
-            onChange={(e) => updateSettings({ work_start: e.target.value })}
-            className="p-3 border rounded-xl" 
-          />
-          <input 
-            type="time" 
-            value={formData.tenant_settings?.work_end || "23:00"}
-            onChange={(e) => updateSettings({ work_end: e.target.value })}
-            className="p-3 border rounded-xl" 
-          />
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Ouverture</label>
+            <input 
+              type="time" 
+              value={formData.tenant_settings?.work_start || "09:00"}
+              onChange={(e) => updateSettings({ work_start: e.target.value })}
+              className="w-full p-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-yellow-500 outline-none" 
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Fermeture</label>
+            <input 
+              type="time" 
+              value={formData.tenant_settings?.work_end || "23:00"}
+              onChange={(e) => updateSettings({ work_end: e.target.value })}
+              className="w-full p-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-yellow-500 outline-none" 
+            />
+          </div>
         </div>
       </section>
     </div>

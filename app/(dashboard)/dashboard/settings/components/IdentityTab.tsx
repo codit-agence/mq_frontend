@@ -1,3 +1,4 @@
+// IdentityTab.tsx
 import { useSettingsStore } from "@/src/features/settings/store/useSettingStore";
 
 export default function IdentityTab() {
@@ -9,28 +10,31 @@ export default function IdentityTab() {
     }
   };
 
-  // On utilise 'any' ici temporairement pour le test instanceof afin de calmer TS
   const getLogoPreview = () => {
     const logo = formData.logo as any; 
     if (!logo) return null;
     
+    // Si c'est un nouveau fichier sélectionné localement
     if (typeof logo === 'object' && logo instanceof File) {
       return URL.createObjectURL(logo);
     }
     
-    return logo; // Retourne l'URL string si ce n'est pas un fichier
+    // Si c'est l'URL qui vient déjà du serveur (string)
+    return logo; 
   };
 
   return (
     <div className="space-y-8">
-      {/* Section Logo */}
+      {/* Section Logo avec Preview */}
       <div className="flex items-center space-x-6 p-4 bg-yellow-50/50 rounded-2xl border border-yellow-100">
         <div className="h-20 w-20 bg-white rounded-xl border shadow-sm flex items-center justify-center overflow-hidden flex-shrink-0">
           {formData.logo ? (
             <img 
-              src={getLogoPreview() || ""} 
+              src={getLogoPreview()} 
               className="object-cover h-full w-full" 
               alt="Logo preview"
+              // Petit fix pour éviter de créer trop d'URLs en mémoire
+              onLoad={() => { if(typeof formData.logo === 'object') URL.revokeObjectURL(getLogoPreview()!); }}
             />
           ) : (
             <span className="text-3xl text-gray-300">🏪</span>
@@ -47,7 +51,7 @@ export default function IdentityTab() {
         </div>
       </div>
 
-      {/* Informations de base */}
+      {/* Champs Formulaire - Reliés au Store */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2">
           <label className="block text-sm font-medium mb-1.5 text-gray-700">Nom de l'établissement</label>
@@ -56,7 +60,6 @@ export default function IdentityTab() {
             value={formData.name || ""} 
             onChange={(e) => setField('name', e.target.value)}
             className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-yellow-500 outline-none"
-            placeholder="Ex: Le Petit Bistro"
           />
         </div>
 

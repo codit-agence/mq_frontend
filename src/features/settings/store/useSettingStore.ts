@@ -66,8 +66,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   }
 });
       
-      await tenantService.updateTenant(finalData);
-      set({ formData: {}, isLoading: false }); // Reset après succès
+      const updatedTenant =  await tenantService.updateTenant(finalData);
+      set({ formData: updatedTenant , isLoading: false }); // Reset après succès
       alert("Configuration mise à jour !");
     } catch (error) {
       console.error("Erreur de sauvegarde:", error);

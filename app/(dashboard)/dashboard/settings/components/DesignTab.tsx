@@ -1,7 +1,16 @@
+"use client";
 import { useSettingsStore } from "@/src/features/settings/store/useSettingStore";
 
 export default function DesignTab() {
   const { formData, setField } = useSettingsStore();
+
+  // Helper pour mettre à jour l'objet imbriqué display_settings
+  const updateDisplay = (updates: any) => {
+    setField('display_settings', {
+      ...(formData.display_settings || {}),
+      ...updates
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -17,11 +26,14 @@ export default function DesignTab() {
           <div className="flex items-center space-x-3">
             <input 
               type="color" 
-              value={formData.primary_color || "#EAB308"}
-              onChange={(e) => setField('primary_color', e.target.value)}
+              // Accès sécurisé via display_settings
+              value={formData.display_settings?.primary_color || "#EAB308"}
+              onChange={(e) => updateDisplay({ primary_color: e.target.value })}
               className="h-10 w-10 border-none rounded-lg cursor-pointer"
             />
-            <span className="text-sm font-mono uppercase">{formData.primary_color || "#EAB308"}</span>
+            <span className="text-sm font-mono uppercase">
+                {formData.display_settings?.primary_color || "#EAB308"}
+            </span>
           </div>
         </div>
 
@@ -30,8 +42,8 @@ export default function DesignTab() {
           <label className="block text-sm font-medium mb-2">Modèle de page (Template)</label>
           <select 
             value={formData.display_settings?.template || "modern"}
-            onChange={(e) => setField('template', e.target.value)}
-            className="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm"
+            onChange={(e) => updateDisplay({ template: e.target.value })}
+            className="w-full p-2.5 bg-gray-50 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-yellow-500"
           >
             <option value="modern">Moderne (Grille)</option>
             <option value="classic">Classique (Liste)</option>
