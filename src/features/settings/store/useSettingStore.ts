@@ -26,6 +26,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set({ isLoading: true });
     try {
       const data = await tenantService.getMyTenant();
+      console.log("DEBUG API DATA:", data);
       set({ formData: data });
     } catch (error) {
       console.error("Erreur chargement:", error);

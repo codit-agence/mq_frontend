@@ -15,13 +15,11 @@ export default function RestaurantSettingsPage() {
   // ✅ FIX : On vérifie si formData.id existe pour savoir si on a vraiment des données
   const hasData = formData && formData.id;
 
-  if (isLoading && !hasData) {
+if (isLoading && (!formData || Object.keys(formData).length === 0)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <div className="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-gray-500 font-black text-[10px] uppercase tracking-[0.2em] mt-4">
-          Récupération de la configuration...
-        </p>
+        <div className="w-12 h-12 border-4 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-500 font-bold uppercase text-[10px] tracking-widest">Initialisation...</p>
       </div>
     );
   }
