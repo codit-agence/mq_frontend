@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Tenant } from "@/src/types/settings/settings.type";
 import { tenantService } from "../services/tenant.services";
+import api from '@/src/core/api/axios';
 
 interface SettingsState {
   activeTab: 'identity' | 'design' | 'business';
@@ -8,6 +9,7 @@ interface SettingsState {
   isLoading: boolean; // Ajouté pour le feedback UI
   setActiveTab: (tab: 'identity' | 'design' | 'business') => void;
   setField: (key: string, value: any) => void;
+  fetchSettings: () => Promise<void>;
   saveAll: () => Promise<void>;
 }
 
@@ -17,6 +19,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   isLoading: false,
   
   setActiveTab: (tab) => set({ activeTab: tab }),
+
+  fetchSettings: async () => {
+    set({ isLoading: true });
+    try {
+      const response = await api.get('/tenants/setting/me'); // Remplace par ton endpoint de lecture
+      set({ formData: response.data }); // On remplit le store avec les vraies données de la DB
+    } catch (error) {
+      console.error("Erreur lors du chargement des réglages", error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 
   setField: (key, value) => set((state) => ({
     formData: { ...state.formData, [key]: value }

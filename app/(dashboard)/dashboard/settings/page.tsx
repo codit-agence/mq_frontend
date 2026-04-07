@@ -4,10 +4,19 @@ import { useSettingsStore } from "@/src/features/settings/store/useSettingStore"
 import IdentityTab from "./components/IdentityTab";
 import DesignTab from "./components/DesignTab";
 import BusinessTab from "@/app/(dashboard)/dashboard/settings/components/BusinessTab";
+import { useEffect } from "react";
 
 export default function RestaurantSettingsPage() {
-  const { activeTab, setActiveTab, saveAll, isLoading } = useSettingsStore();
+const { activeTab, setActiveTab, saveAll, isLoading, fetchSettings } = useSettingsStore();
 
+useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  if (isLoading && !activeTab) {
+    return <div className="flex justify-center p-20">Chargement de votre restaurant...</div>;
+  }
+  
   const tabs = [
     { id: 'identity', label: 'Mon Restaurant', icon: '🏪' },
     { id: 'design', label: 'Design & Couleurs', icon: '🎨' },
