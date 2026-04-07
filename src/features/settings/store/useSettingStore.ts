@@ -1,12 +1,11 @@
 import { create } from 'zustand';
 import { Tenant } from "@/src/types/settings/settings.type";
 import { tenantService } from "../services/tenant.services";
-import api from '@/src/core/api/axios';
 
 interface SettingsState {
   activeTab: 'identity' | 'design' | 'business';
   formData: Partial<Tenant>; 
-  isLoading: boolean; // Ajouté pour le feedback UI
+  isLoading: boolean;
   setActiveTab: (tab: 'identity' | 'design' | 'business') => void;
   setField: (key: string, value: any) => void;
   fetchSettings: () => Promise<void>;
@@ -21,12 +20,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   setActiveTab: (tab) => set({ activeTab: tab }),
 
   fetchSettings: async () => {
+    // Si on a déjà des données, on évite le flash de chargement inutile
+    if (get().isLoading) return;
+    
     set({ isLoading: true });
     try {
-      const response = await api.get('/tenants/setting/me'); // Remplace par ton endpoint de lecture
-      set({ formData: response.data }); // On remplit le store avec les vraies données de la DB
+      const data = await tenantService.getMyTenant();
+      set({ formData: data });
     } catch (error) {
-      console.error("Erreur lors du chargement des réglages", error);
+      console.error("Erreur chargement:", error);
     } finally {
       set({ isLoading: false });
     }
@@ -38,39 +40,43 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   saveAll: async () => {
     const { formData } = get();
-    if (Object.keys(formData).length === 0) return; // Ne rien faire si vide
-
     set({ isLoading: true });
+
     const finalData = new FormData();
     
-    try {Object.entries(formData).forEach(([key, value]) => {
-  if (value === undefined || value === null) return;
+    try {
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
 
-  // ✅ SOLUTION : Vérifier que c'est un objet ET non-nul AVANT 'instanceof'
-  if (typeof value === 'object' && value !== null && value instanceof File) {
-    finalData.append(key, value);
-  } 
-  else if (typeof value === 'boolean') {
-    finalData.append(key, value ? 'true' : 'false');
-  }
-  // Si c'est un objet complexe (ex: display_settings) mais PAS un fichier
-  else if (typeof value === 'object' && value !== null) {
-    Object.entries(value).forEach(([subKey, subValue]) => {
-      if (subValue !== undefined && subValue !== null) {
-        finalData.append(subKey, String(subValue));
-      }
-    });
-  }
-  else {
-    finalData.append(key, String(value));
-  }
-});
-      
-      const updatedTenant =  await tenantService.updateTenant(finalData);
-      set({ formData: updatedTenant , isLoading: false }); // Reset après succès
-      alert("Configuration mise à jour !");
+        // 1. Gestion des fichiers (Logo, etc.)
+        if (value instanceof File) {
+          finalData.append(key, value);
+        } 
+        
+        // 2. Gestion de l'objet display_settings (Le JSONField)
+        // CRITIQUE : On l'envoie comme une chaîne JSON pour que Django puisse le parser
+        else if (key === 'display_settings' && typeof value === 'object') {
+          finalData.append(key, JSON.stringify(value));
+        }
+
+        // 3. Gestion des booleens
+        else if (typeof value === 'boolean') {
+          finalData.append(key, value ? 'true' : 'false');
+        }
+
+        // 4. Reste des champs (strings, numbers)
+        else {
+          finalData.append(key, String(value));
+        }
+      });
+
+      const updatedTenant = await tenantService.updateTenant(finalData);
+      set({ formData: updatedTenant });
+      alert("✅ Configuration enregistrée avec succès !");
     } catch (error) {
       console.error("Erreur de sauvegarde:", error);
+      alert("❌ Erreur lors de la sauvegarde.");
+    } finally {
       set({ isLoading: false });
     }
   }
