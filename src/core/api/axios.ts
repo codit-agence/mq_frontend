@@ -1,76 +1,82 @@
-import axios from "axios";
+import axios, { AxiosHeaders } from "axios";
 import Cookies from "js-cookie";
+import { getApiBaseUrl } from "@/src/core/config/public-env";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api",
+  baseURL: getApiBaseUrl(),
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// 1. INTERCEPTEUR DE REQUÊTE : Injecter le Token
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
+    // 1. Gestion du Token d'accès
     const token = Cookies.get("access_token") || localStorage.getItem("access_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token.replace(/"/g, '')}`;
+    const headers = AxiosHeaders.from(config.headers);
+    const hasAuthorizationHeader = headers.has("Authorization");
+
+    // Ne pas écraser un Authorization déjà passé explicitement
+    // (ex: token d'écran TV pour /screens/tv/heartbeat).
+    if (token && !hasAuthorizationHeader) {
+      const cleanToken = token.replace(/"/g, '');
+      headers.set("Authorization", `Bearer ${cleanToken}`);
     }
     
-    // 2. Injection du Tenant ID (Ajout)
-    // On récupère le tenant_id depuis le localStorage (car Zustand persist l'écrit là)
+    // 2. Gestion du Tenant ID (Multi-tenant)
     const authStorage = localStorage.getItem('auth-storage');
     if (authStorage) {
+      try {
         const parsed = JSON.parse(authStorage);
         const tenantId = parsed.state.tenant?.id;
-        if (tenantId) {
-            config.headers['X-Tenant-Id'] = tenantId; // On l'envoie au backend
+        const hasTenantHeader = headers.has("X-Tenant-ID");
+
+        // Do not override tenant explicitly provided by per-request headers.
+        if (tenantId && !hasTenantHeader) {
+          headers.set("X-Tenant-ID", tenantId);
         }
+      } catch (e) {
+        console.error("Erreur lecture auth-storage", e);
+      }
     }
+
+    config.headers = headers;
   }
   return config;
 }, (error) => Promise.reject(error));
 
-// 2. INTERCEPTEUR DE RÉPONSE : Gérer l'expiration (401)
 api.interceptors.response.use(
-  (response) => response, // Si tout va bien, on renvoie la réponse
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Si l'erreur est 401 et qu'on n'a pas déjà tenté de rafraîchir
     if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true; // On marque la requête pour ne pas boucler à l'infini
+      originalRequest._retry = true;
 
       try {
         const refreshToken = Cookies.get("refresh_token") || localStorage.getItem("refresh_token");
-        
-        if (!refreshToken) throw new Error("No refresh token available");
+        if (!refreshToken) throw new Error("No refresh token");
 
-        // On appelle l'endpoint de refresh (utilise axios direct pour éviter l'intercepteur de 'api')
-        const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh/`, {
+        const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
           refresh: refreshToken.replace(/"/g, ''),
         });
 
-        // On stocke le nouveau access_token
         Cookies.set("access_token", data.access, { expires: 7, path: '/' });
         localStorage.setItem("access_token", data.access);
 
-        // On met à jour le header de la requête originale et on la relance
-        originalRequest.headers.Authorization = `Bearer ${data.access}`;
+        const headers = AxiosHeaders.from(originalRequest.headers);
+        headers.set("Authorization", `Bearer ${data.access}`);
+        originalRequest.headers = headers;
         return api(originalRequest);
         
       } catch (refreshError) {
-        // Si le refresh échoue (ex: refresh_token expiré), on déconnecte tout
-        console.error("Session expirée, redirection login...");
-        Cookies.remove("access_token", { path: '/' });
-        Cookies.remove("refresh_token", { path: '/' });
         localStorage.clear();
-        
+        Cookies.remove("access_token", { path: '/' });
         if (typeof window !== "undefined") {
           window.location.href = "/account/login";
         }
       }
     }
-
     return Promise.reject(error);
   }
 );

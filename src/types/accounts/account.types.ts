@@ -1,23 +1,8 @@
+import type { AuthUserProfile, TenantSummary } from "@/src/types/common/entities";
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  avatar: string | null;
-  is_active: boolean;
-  is_verified: boolean;
-}
+export type UserProfile = AuthUserProfile;
 
-export interface Tenant {
-  id: string;
-  name: string;
-  role?: string | null;
-  slug: string;
-  city?: string | null;
-  type?: string | null;
-  logo: string | null;
-}
+export type Tenant = TenantSummary;
 
 export interface LoginResponse {
   access: string;
@@ -32,7 +17,16 @@ export interface LoginResponse {
   tenant_logo_url: string | null;
   is_active: boolean;
   is_verified: boolean;
-
+  is_staff?: boolean;
+  is_superuser?: boolean;
+  role?: string | null;
+  tenant_slug?: string | null;
+  tenant_status?: string | null;
+  subscription_pack?: string | null;
+  subscription_offer?: string | null;
+  coupon_code?: string | null;
+  registration_date?: string | null;
+  primary_color?: string | null;
 }
 
 export interface MeResponse {

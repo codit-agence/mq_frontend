@@ -16,6 +16,14 @@ export interface RegisterIn {
   tenant_name: string;
   business_type: "restaurant" | "cafe" | "snack" | "agency" | "other"; 
   city: string;
+  address?: string | null;
+  country?: string | null;
+  selected_pack?: string | null;
+  qarat_code?: string | null;
+  lead_source_detail?: string | null;
+  accepted_terms: boolean;
+  terms_version: string;
+  terms_locale: "fr" | "ar";
 }
 
 /**

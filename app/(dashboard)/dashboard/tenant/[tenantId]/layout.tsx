@@ -1,85 +1,157 @@
 "use client";
 
-import React from "react";
-
-import { useParams } from "next/navigation";
-import { ChevronLeft, MapPin, Utensils, Globe, ShieldCheck, Building2 } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useCurrentTenant } from "@/src/features/account/useCurrentTenant";
+import { useParams, usePathname } from "next/navigation";
+import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
+import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
+import { Bell, Home, LayoutDashboard, LifeBuoy, QrCode, ScanLine, Settings, Sparkles, Tv } from "lucide-react";
+import { resolveTenantQrUrl } from "@/src/projects/client-dashboard/tenant/tenant-qr";
+import { TenantQrModal } from "@/src/projects/client-dashboard/tenant/components/TenantQrModal";
+import { TenantQrScannerModal } from "@/src/projects/client-dashboard/tenant/components/TenantQrScannerModal";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 export default function TenantLayout({ children }: { children: React.ReactNode }) {
-const { tenantId, tenant } = useCurrentTenant(); // Propre et rapide !  const params = useParams();
+  const { tenant } = useAuthStore();
+  const { formData, fetchSettings } = useSettingsStore();
+  const params = useParams();
+  const pathname = usePathname();
+  const { branding } = useBranding();
+  const { locale, isRtl } = useAppLocale(branding);
+  const [qrOpen, setQrOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  const tenantId = (params?.tenantId as string) || tenant?.id || "";
+
+  useEffect(() => {
+    if (tenantId) {
+      fetchSettings(tenantId);
+    }
+  }, [tenantId, fetchSettings]);
+
+  const primaryColor = formData?.display?.primary_color || "#2563eb";
+  const subtleBorder = "#e2e8f0";
+  const qrUrl = useMemo(
+    () =>
+      resolveTenantQrUrl({
+        public_landing_url: formData?.public_landing_url,
+        qr_slug: formData?.qr_slug,
+      }),
+    [formData?.public_landing_url, formData?.qr_slug]
+  );
+
+  const mobileNav = [
+    { href: `/dashboard/tenant/${tenantId}`, label: locale === "ar" ? "الرئيسية" : "Accueil", icon: <Home size={16} />, active: pathname === `/dashboard/tenant/${tenantId}` },
+    { href: `/dashboard/tenant/${tenantId}/menu`, label: "Menu", icon: <LayoutDashboard size={16} />, active: pathname.includes(`/dashboard/tenant/${tenantId}/menu`) },
+    { href: `/dashboard/tenant/${tenantId}/display`, label: "Display", icon: <Tv size={16} />, active: pathname.includes(`/dashboard/tenant/${tenantId}/display`) },
+    { href: `/dashboard/tenant/${tenantId}/settings`, label: locale === "ar" ? "الاعدادات" : "Settings", icon: <Settings size={16} />, active: pathname.includes(`/dashboard/tenant/${tenantId}/settings`) },
+  ];
+
+  const text = locale === "ar"
+    ? {
+        tenantSpace: "مساحة المستأجر",
+        themeActive: "الهوية مفعلة",
+        showQr: "عرض QR",
+        scan: "مسح",
+        notifications: "الاشعارات",
+        support: "الدعم والمساعدة",
+        myBusiness: "مؤسستي",
+      }
+    : {
+        tenantSpace: "Espace tenant",
+        themeActive: "Theme actif",
+        showQr: "Afficher QR",
+        scan: "Scanner",
+        notifications: "Notifications",
+        support: "Aide & Support",
+        myBusiness: "Mon etablissement",
+      };
 
   return (
-    <div className="space-y-8">
-      {/* HEADER ÉTABLISSEMENT AGRANDI */}
-      <div className="bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm relative overflow-hidden">
-        {/* Décoration en arrière-plan */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-50/50 rounded-full blur-3xl -mr-20 -mt-20" />
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-8">
-          
-          {/* LOGO / AVATAR DE L'ENTREPRISE */}
-          <div className="relative group shrink-0">
-            <div className="w-28 h-28 bg-white border-4 border-slate-50 rounded-[35px] flex items-center justify-center overflow-hidden shadow-2xl shadow-indigo-100 transition-transform group-hover:scale-105 duration-500">
-              {tenant?.logo ? (
-                <img 
-                  src={tenant.logo} 
-                  alt={tenant.name} 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                /* Fallback : Initiale si pas de logo */
-                <div className="w-full h-full bg-gradient-to-br from-indigo-600 to-violet-700 flex items-center justify-center text-white">
-                  <span className="text-4xl font-black">{tenant?.name?.charAt(0)}</span>
-                </div>
-              )}
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen dashboard-shell text-slate-900">
+      <header className="border-b bg-white/90 backdrop-blur-sm" style={{ borderColor: subtleBorder }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="inline-flex items-center gap-3 rounded-2xl bg-white shadow-sm border border-slate-200 px-4 py-3">
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center text-white font-black shadow-inner"
+              style={{ backgroundColor: primaryColor }}
+            >
+              {tenant?.name?.charAt(0) ?? "T"}
             </div>
-            
-            {/* Badge de certification (Badge flottant sur le logo) */}
-            <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-2 rounded-xl border-4 border-white shadow-lg">
-              <ShieldCheck size={16} />
-            </div>
-          </div>
-
-          {/* Informations détaillées */}
-          <div className="flex-1 space-y-4">
-            <div className="flex items-center gap-3">
-              <Link href="/dashboard" className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors">
-                <ChevronLeft size={20} className="text-slate-600" />
-              </Link>
-              <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">
-                {tenant?.name || "Chargement..."}
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">{text.tenantSpace}</p>
+              <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-950">
+                {tenant?.name ?? text.myBusiness}
               </h1>
             </div>
+          </div>
 
-            <div className="flex flex-wrap gap-3">
-              <InfoTag icon={<MapPin size={14} />} label={tenant?.city || "Ville non définie"} />
-              <InfoTag icon={<Utensils size={14} />} label={tenant?.type || "Restauration"} />
-              <InfoTag icon={<Globe size={14} />} label="Menu Digital Actif" color="text-emerald-600 bg-emerald-50 border-emerald-100" />
-              
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-900 text-slate-400 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border border-slate-800">
-                 ID: {tenant?.id?.slice(0, 8)}
-              </div>
-            </div>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <span
+              className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-[11px] font-black uppercase tracking-wider"
+              style={{ backgroundColor: `${primaryColor}1A`, color: primaryColor }}
+            >
+              <Sparkles size={13} /> {text.themeActive}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setQrOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+            >
+              <QrCode size={14} /> {text.showQr}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setScannerOpen(true)}
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+            >
+              <ScanLine size={14} /> {text.scan}
+            </button>
+
+            <Link
+              href="/dashboard/notifications"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+            >
+              <Bell size={14} /> {text.notifications}
+            </Link>
+
+            <Link
+              href="/dashboard/support"
+              className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
+            >
+              <LifeBuoy size={14} /> {text.support}
+            </Link>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* ZONE DE CONTENU VARIABLE (Page Manager) */}
-      <div className="px-2">
-        {children}
-      </div>
+      <main className="max-w-7xl mx-auto px-4 py-8 pb-28 md:pb-8 md:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[2rem] border bg-white shadow-[0_30px_70px_-45px_rgba(15,23,42,0.25)]" style={{ borderColor: subtleBorder }}>
+          {children}
+        </div>
+      </main>
+
+      <nav className="fixed bottom-4 left-4 right-4 z-40 md:hidden rounded-[1.75rem] border border-slate-200 bg-white/95 backdrop-blur-xl px-3 py-3 shadow-2xl">
+        <div className="grid grid-cols-4 gap-2">
+          {mobileNav.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center gap-1 rounded-2xl px-2 py-3 text-[10px] font-black uppercase tracking-[0.14em] ${item.active ? "text-white" : "text-slate-500"}`}
+              style={item.active ? { backgroundColor: primaryColor } : undefined}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
+
+      <TenantQrModal open={qrOpen} onClose={() => setQrOpen(false)} qrUrl={qrUrl} />
+      <TenantQrScannerModal open={scannerOpen} onClose={() => setScannerOpen(false)} />
     </div>
   );
 }
-
-/**
- * Composant utilitaire pour les badges d'information
- */
-const InfoTag = ({ icon, label, color = "text-slate-500 bg-slate-50 border-slate-100" }: any) => (
-  <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-[11px] font-black uppercase tracking-wider border ${color}`}>
-    <span className="opacity-70">{icon}</span>
-    {label}
-  </div>
-);

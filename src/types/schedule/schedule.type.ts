@@ -1,16 +1,22 @@
-export interface Schedule {
-  id: string;
+export type ScheduleBehavior = 'EXCLUSIVE' | 'ADDITIVE';
+
+export interface CreateScheduleInput {
   label: string;
+  category_ids: string[];
+  behavior: ScheduleBehavior;
   start_time: string;
   end_time: string;
-  category_ids: string[];
-  behavior: 'EXCLUSIVE' | 'ADDITIVE';
   days_of_week: number[];
   template_name: string;
   slot_duration: number;
   priority: number;
   audio_track_id?: string | null;
   promotion_id?: string | null;
+}
+
+export interface Schedule extends CreateScheduleInput {
+  id: string;
+  category_name?: string;
 }
 
 export interface TenantInfo {
@@ -34,7 +40,9 @@ export interface Manifest {
   label: string;
   category_name: string;
   template_name: string;
+  slot_duration: number;
   audio_url?: string | null;
+  audio_playlist?: string[] | null;
   products: Product[];
   tenant: TenantInfo;      // Obligatoire dans la réponse API finale
   server_time: string;

@@ -1,6 +1,6 @@
 "use client";
-import { tvService } from '@/src/features/tvapp/services/tvapp.service';
-import { useTVStore } from '@/src/features/tvapp/store/tvapp.store';
+import { tvApi } from "@/src/projects/client-dashboard/tv/tv.api";
+import { useTVStore } from "@/src/projects/client-dashboard/tv/tv.store";
 import { getDeviceInfo } from '@/src/utils/helpers/getDeviceInfo';
 import React, { useEffect, useState } from 'react';
 
@@ -12,6 +12,7 @@ const PairingScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const setAuth = useTVStore((state) => state.setAuth);
+  const setControlConfig = useTVStore((state) => state.setControlConfig);
 
   // ÉTAPE 2 : Envoyer le code 6 chiffres saisi sur la TV
   const handleInit = async () => {
@@ -20,10 +21,16 @@ const PairingScreen: React.FC = () => {
     try {
       const info = getDeviceInfo();
       // Le backend doit renvoyer { screen_id, security_code }
-      const res = await tvService.initialize(pairingCode, info);
+      const res = await tvApi.initialize(pairingCode, info);
       
       setScreenId(res.screen_id);
       setDisplaySecurityCode(res.security_code); // Les 4 chiffres générés par le serveur
+      setControlConfig({
+        transportMode: res.transport_mode,
+        pollIntervalSeconds: res.poll_interval_seconds,
+        gpsRequired: res.gps_required,
+        deviceTier: res.device_tier,
+      });
       setIsWaitingForSecurity(true);
     } catch (err) {
       alert("Code invalide ou expiré. Réessayez.");
@@ -40,7 +47,7 @@ const PairingScreen: React.FC = () => {
     if (isWaitingForSecurity && screenId) {
       pollInterval = setInterval(async () => {
        try {
-        const authStatus = await tvService.checkAuthStatus(screenId);
+        const authStatus = await tvApi.checkAuthStatus(screenId);
         
         // 1. Si on reçoit un code de sécurité qu'on n'avait pas, on l'affiche
         if (authStatus.security_code && !displaySecurityCode) {
@@ -49,6 +56,12 @@ const PairingScreen: React.FC = () => {
 
         // 2. Si c'est validé, on connecte
         if (authStatus.is_paired && authStatus.access_token) {
+          setControlConfig({
+            transportMode: authStatus.transport_mode,
+            pollIntervalSeconds: authStatus.poll_interval_seconds,
+            gpsRequired: authStatus.gps_required,
+            deviceTier: authStatus.device_tier,
+          });
           setAuth(screenId, authStatus.access_token);
           clearInterval(pollInterval);
         }

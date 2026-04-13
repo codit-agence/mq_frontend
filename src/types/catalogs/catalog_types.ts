@@ -52,6 +52,21 @@ export interface ProductPayload {
   description?: string;
   note?: string;
 
+  name_ar?: string;
+  short_description_ar?: string;
+  description_ar?: string;
+  note_ar?: string;
+
+  name_en?: string;
+  short_description_en?: string;
+  description_en?: string;
+  note_en?: string;
+
+  name_es?: string;
+  short_description_es?: string;
+  description_es?: string;
+  note_es?: string;
+
   price: number;
   compare_at_price?: number;
 
@@ -63,6 +78,9 @@ export interface ProductPayload {
 
 export interface CategoryPayload {
   name: string;
+  name_ar?: string;
+  name_en?: string;
+  name_es?: string;
   order?: number;
   image?: string; // Ajout de l'image en tant que champ optionnel
   is_active?: boolean;
@@ -93,6 +111,12 @@ export interface ProductUpdate{
   short_description_en?: string;
   description_en?: string;
   note_en?: string;
+
+  // Espagnol
+  name_es?: string;
+  short_description_es?: string;
+  description_es?: string;
+  note_es?: string;
   
   is_active: Boolean;
   is_featured: Boolean;

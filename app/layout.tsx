@@ -1,11 +1,18 @@
-import "./globals.css"; // Vérifie que le chemin est correct
-import { Inter } from "next/font/google";
+import type { Metadata } from "next";
 
-const inter = Inter({ subsets: ["latin"] });
+import "./globals.css";
+import { getSiteUrl } from "@/src/core/config/public-env";
+import { BrandingRuntime } from "@/src/projects/shared/branding/components/BrandingRuntime";
 
-export const metadata = {
-  title: "SmartMenu SaaS",
-  description: "Gestion de menus digitaux au Maroc",
+const siteUrl = getSiteUrl();
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: "QALYAS",
+  description: "QALYAS plateforme de gestion digitale",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function RootLayout({
@@ -15,8 +22,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body className={inter.className}>{children}</body>
+      <body>
+        <BrandingRuntime />
+        {children}
+      </body>
     </html>
   );
 }
-// Assure-toi qu'il n'y a rien après cette accolade qui traîne

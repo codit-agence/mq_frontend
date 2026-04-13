@@ -1,10 +1,10 @@
 "use client";
 import { Tv, Plus, Loader2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { ScreenCard } from "./components/ScreenCart";
+import PairingScreenCard from "./components/PairingScreenCard";
 import { AddScreenForm } from "./components/AddScreenForm";
 import { PairingModal } from "./components/PairingModal";
-import { useTVStream } from "@/src/features/tvstream/hooks/useTVStream";
+import { useTVStream } from "@/src/projects/client-dashboard/tvstream/hooks/useTVStream";
 export default function TVStreamPage() {
   const {
     screens, loading, isAdding, setIsAdding,
@@ -45,7 +45,7 @@ export default function TVStreamPage() {
             <Loader2 className="animate-spin mx-auto text-blue-500" size={48} />
           ) : (
             screens.map((s) => (
-              <ScreenCard key={s.id} screen={s} onStartPairing={(id) => { setCurrentScreenId(id); setStep(3); }} />
+              <PairingScreenCard key={s.id} screen={s} onStartPairing={(id) => { setCurrentScreenId(id); setStep(3); }} />
             ))
           )}
         </div>

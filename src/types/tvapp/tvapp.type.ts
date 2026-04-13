@@ -1,20 +1,8 @@
-export interface TVState {
-  screenId: string | null;
-  accessToken: string | null;
-  isPaired: boolean;
-  currentTemplate: string;
-  deviceName: string;
-}
-
-export interface TVInitResponse {
-  status: string;
-  screen_id: string;
-  message: string;
-  security_code: string; // Les 4 chiffres à afficher sur la TV
-}
-
-export interface HeartbeatResponse {
-  status: 'active' | 'paused' | 'reboot';
-  current_template: string;
-  needs_refresh: boolean;
-}
+// Backward-compatible bridge. New single source is src/features/tv/tv.types.ts
+export type {
+  TVState,
+  TVInitResponse,
+  HeartbeatResponse,
+  TVManifestProduct,
+  TVManifest,
+} from "@/src/projects/client-dashboard/tv/tv.types";

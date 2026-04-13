@@ -1,30 +1,36 @@
-import React from 'react';
-import ClassicMenu from './templates/ClassicMenu';
-import GridPromotion from './templates/GridPromotion';
-import VideoFocus from './templates/VideoFocus';
-// Importe tes différents designs ici
-
+import React from "react";
+import ClassicMenu from "./templates/ClassicMenu";
+import GridPromotion from "./templates/GridPromotion";
+import VideoFocus from "./templates/VideoFocus";
+import TVPlayerTemplate from "./templates/TVPlayerTemplate";
+import DisplayTemplate from "./templates/DisplayTemplate";
+import { TVManifest } from "@/src/projects/client-dashboard/tv/tv.types";
 
 interface Props {
   type: string;
+  manifest: TVManifest;
+  productIndex: number;
 }
 
-const TemplateManager: React.FC<Props> = ({ type }) => {
-  // Logique de sélection du composant visuel
-  switch (type) {
-    case 'classic':
-      return <ClassicMenu />;
-    case 'grid':
-      return <GridPromotion />;
-    case 'video_focus':
-      return <VideoFocus />;
+const TemplateManager: React.FC<Props> = ({ type, manifest, productIndex }) => {
+  const normalized = (type || "").toLowerCase();
+  switch (normalized) {
+    case "display":
+      return <DisplayTemplate manifest={manifest} productIndex={productIndex} />;
+    case "grid":
+    case "promo":
+    case "full_promo":
+      return <GridPromotion manifest={manifest} productIndex={productIndex} />;
+    case "video_focus":
+    case "focus":
+      return <VideoFocus manifest={manifest} productIndex={productIndex} />;
+    case "tvplayer":
+      return <TVPlayerTemplate manifest={manifest} productIndex={productIndex} />;
+    case "classic":
+    case "standard":
+    case "branded":
     default:
-      // Fallback si le template n'existe pas encore côté Front
-      return (
-        <div style={{ color: 'white', padding: '20px' }}>
-          <h1>Template "{type}" en cours de chargement...</h1>
-        </div>
-      );
+      return <ClassicMenu manifest={manifest} productIndex={productIndex} />;
   }
 };
 

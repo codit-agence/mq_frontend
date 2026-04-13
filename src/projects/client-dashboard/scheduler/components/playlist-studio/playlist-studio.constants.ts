@@ -1,0 +1,1 @@
+export const PLAYLIST_DAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];

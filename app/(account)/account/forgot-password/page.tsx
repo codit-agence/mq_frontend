@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
-import { authService } from "@/src/features/account/auth.services";
+import { authService } from "@/src/projects/client-dashboard/account/auth.services";
 import { getErrorMessage } from "@/src/utils/errors";
 
 export default function ForgotPasswordPage() {
@@ -19,9 +19,12 @@ export default function ForgotPasswordPage() {
     setError("");
 
     try {
+      console.log("Tentative de réinitialisation pour:", email);
       await authService.forgotPassword(email);
+      console.log("Email de réinitialisation envoyé");
       setIsSent(true);
     } catch (err) {
+      console.error("Erreur réinitialisation mot de passe:", err);
       setError(getErrorMessage(err));
     } finally {
       setIsLoading(false);

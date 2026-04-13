@@ -1,7 +1,12 @@
-export default function Home() {
-  return (
-    <div className="flex items-center justify-center min-h-screen font-bold">
-      <h1>Bienvenue sur SmartMenu SaaS</h1>
-    </div>
-  );
+import { PublicHomePage } from "@/src/projects/public-site/marketing/components/PublicHomePage";
+import { buildHomeMetadata, getPublicBrandingServer } from "@/src/projects/shared/branding/branding.server";
+
+export async function generateMetadata() {
+  const branding = await getPublicBrandingServer();
+  return buildHomeMetadata(branding);
+}
+
+export default async function Home() {
+  const branding = await getPublicBrandingServer();
+  return <PublicHomePage branding={branding} />;
 }

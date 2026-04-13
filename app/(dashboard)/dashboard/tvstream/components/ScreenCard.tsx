@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useTvStreamStore } from '@/src/features/tvstream/store/tvstream.store';
+import { useTvStreamStore } from '@/src/projects/client-dashboard/tvstream/store/tvstream.store';
 import { Screen } from '@/src/types/tvstream/tvstream';
 
 interface Props {
@@ -52,6 +52,10 @@ const ScreenCard: React.FC<Props> = ({ screen }) => {
       <div className="mt-4 pt-4 border-t text-xs text-gray-400 grid grid-cols-2 gap-2">
         <div>OS: {screen.os_platform || 'N/A'}</div>
         <div>Res: {screen.screen_resolution || 'N/A'}</div>
+        <div>Transport: {screen.resolved_transport || 'N/A'}</div>
+        <div>Profil: {screen.device_tier || 'N/A'}</div>
+        <div>GPS: {screen.last_gps_status || 'N/A'}</div>
+        <div>GPS requis: {screen.gps_required ? 'Oui' : 'Non'}</div>
       </div>
     </div>
   );

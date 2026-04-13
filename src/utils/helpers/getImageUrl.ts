@@ -1,5 +1,7 @@
 // src/utils/helpers/getImageUrl.ts
 
+import { getBackendOrigin } from "@/src/core/config/public-env";
+
 export const getImageUrl = (path: string | null | undefined): string => {
   if (!path) return "/mq/petitedejeuner.jpg"; // Image par défaut dans ton dossier public
   
@@ -8,7 +10,5 @@ export const getImageUrl = (path: string | null | undefined): string => {
   
   // On nettoie le path pour éviter les doubles slashes //
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  
-  // On force l'URL vers le backend Django
-  return `http://161.97.96.60:8000${cleanPath}`;
+  return `${getBackendOrigin()}${cleanPath}`;
 };

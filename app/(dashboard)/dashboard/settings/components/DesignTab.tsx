@@ -1,142 +1,132 @@
 "use client";
-import { useSettingsStore } from "@/src/features/settings/store/useSettingStore";
+import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
 
 export default function DesignTab() {
-  const { formData, setField } = useSettingsStore();
+  const { formData, setNestedField } = useSettingsStore();
+  const colors = ["#EAB308", "#EF4444", "#3B82F6", "#10B981", "#111827", "#0EA5E9"];
+  const languages = ["fr", "en", "ar", "es"] as const;
+  const templates = [
+    { id: "standard", label: "Standard" },
+    { id: "full_promo", label: "Full Promo" },
+    { id: "branded", label: "Branded" },
+    { id: "tvplayer", label: "TV Player" },
+    { id: "display", label: "Display" },
+  ];
 
-  const updateDisplay = (updates: any) => {
-    setField('display_settings', {
-      ...(formData.display_settings || {}),
-      ...updates
-    });
+  const normalizeTemplate = (value?: string) => {
+    if (!value) return "tvplayer";
+    if (value === "classic") return "tvplayer";
+    if (value === "grid" || value === "video_focus" || value === "focus") return "display";
+    return value;
   };
 
-  const primaryColor = formData.display_settings?.primary_color || "#EAB308";
+  const display = formData.display || {};
+  const activeLanguages = display.active_languages || ["fr"];
+  const defaultLanguage = display.default_language || "fr";
+  const selectedTemplate = normalizeTemplate(display.template);
+
+  const toggleLanguage = (lang: string) => {
+    const current = new Set(activeLanguages);
+    if (current.has(lang)) {
+      if (current.size === 1) return;
+      current.delete(lang);
+    } else {
+      current.add(lang);
+    }
+    const updated = Array.from(current);
+    setNestedField("display", "active_languages", updated);
+    if (!updated.includes(defaultLanguage)) {
+      setNestedField("display", "default_language", updated[0]);
+    }
+  };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
-      
-      {/* HEADER SECTION */}
-      <section>
-        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-2">
-          <span className="bg-purple-100 p-1.5 rounded-lg text-purple-600 text-xs">🎨</span>
-          Style & Apparence
-        </h3>
-        <p className="text-sm text-gray-500">Configurez l'ambiance visuelle de votre menu digital.</p>
-      </section>
+    <div className="space-y-12 animate-in fade-in duration-500">
+      <div className="p-6 bg-white border-2 border-slate-100 rounded-[2rem] space-y-4">
+        <p className="font-black text-slate-800">Template client</p>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          {templates.map((template) => (
+            <button
+              key={template.id}
+              onClick={() => setNestedField("display", "template", template.id)}
+              className={`py-4 rounded-2xl border-2 font-black text-sm transition ${
+                selectedTemplate === template.id
+                  ? "bg-slate-900 text-white border-slate-900"
+                  : "bg-slate-50 text-slate-600 border-slate-200"
+              }`}
+            >
+              {template.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* CONFIGURATION COLUMN */}
-        <div className="space-y-6">
-          {/* Couleur de la marque */}
-          <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 shadow-sm">
-            <label className="block text-sm font-semibold mb-3 text-gray-700">Couleur principale</label>
-            <div className="flex items-center space-x-4 bg-white p-2 rounded-xl border border-gray-200">
-              <input 
-                type="color" 
-                value={primaryColor}
-                onChange={(e) => updateDisplay({ primary_color: e.target.value })}
-                className="h-12 w-12 border-none rounded-lg cursor-pointer bg-transparent"
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div className="space-y-6 p-8 bg-slate-50 rounded-[2.5rem]">
+          <label className="text-[10px] font-black text-slate-400 uppercase">Couleur Primaire</label>
+          <div className="flex flex-wrap gap-4">
+            {colors.map((c) => (
+              <button
+                key={c}
+                onClick={() => setNestedField("display", "primary_color", c)}
+                style={{ backgroundColor: c }}
+                className={`w-12 h-12 rounded-2xl shadow-lg transition-all ${display.primary_color === c ? "ring-4 ring-white scale-110" : "hover:scale-105"}`}
               />
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-gray-400 uppercase">Code Hex</span>
-                <span className="text-sm font-mono font-bold uppercase">{primaryColor}</span>
-              </div>
-            </div>
+            ))}
+            <input
+              type="color"
+              className="w-12 h-12 rounded-2xl cursor-pointer bg-white p-1"
+              value={display.primary_color || "#EAB308"}
+              onChange={(e) => setNestedField("display", "primary_color", e.target.value)}
+            />
           </div>
 
-          {/* Template Selection */}
-          <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 shadow-sm">
-            <label className="block text-sm font-semibold mb-3 text-gray-700">Modèle d'affichage</label>
-            <div className="space-y-2">
-              {[
-                { id: 'modern', name: 'Moderne', desc: 'Grille d\'images dynamique' },
-                { id: 'classic', name: 'Classique', desc: 'Liste épurée type brasserie' },
-                { id: 'luxury', name: 'Luxe', desc: 'Minimaliste & élégant' },
-              ].map((tpl) => (
+          <label className="text-[10px] font-black text-slate-400 uppercase">Couleur Secondaire</label>
+          <div className="flex items-center gap-4">
+            <input
+              type="color"
+              className="w-12 h-12 rounded-2xl cursor-pointer bg-white p-1"
+              value={display.secondary_color || "#F9FAFB"}
+              onChange={(e) => setNestedField("display", "secondary_color", e.target.value)}
+            />
+            <input
+              value={display.secondary_color || "#F9FAFB"}
+              onChange={(e) => setNestedField("display", "secondary_color", e.target.value)}
+              className="w-full p-3 bg-white rounded-xl font-bold border-2 border-slate-100 outline-none focus:border-yellow-500"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="p-6 bg-white border-2 border-slate-100 rounded-[2rem] space-y-4">
+            <p className="font-black text-slate-800">Configuration des Langues</p>
+            <div className="grid grid-cols-2 gap-3">
+              {languages.map((lang) => (
                 <button
-                  key={tpl.id}
-                  onClick={() => updateDisplay({ template: tpl.id })}
-                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${
-                    (formData.display_settings?.template || 'modern') === tpl.id
-                    ? "bg-white border-yellow-500 shadow-md ring-2 ring-yellow-500/10"
-                    : "bg-white/50 border-gray-200 hover:border-gray-300"
-                  }`}
+                  key={lang}
+                  onClick={() => toggleLanguage(lang)}
+                  className={`py-3 rounded-2xl font-black text-sm transition ${activeLanguages.includes(lang) ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-500"}`}
                 >
-                  <div className="text-left">
-                    <p className="text-sm font-bold text-gray-800">{tpl.name}</p>
-                    <p className="text-[11px] text-gray-500">{tpl.desc}</p>
-                  </div>
-                  {(formData.display_settings?.template || 'modern') === tpl.id && (
-                    <span className="text-yellow-500 text-xl">✨</span>
-                  )}
+                  {lang.toUpperCase()}
                 </button>
               ))}
             </div>
+
+            <div className="pt-4 border-t border-slate-50">
+              <label className="text-[10px] font-black text-slate-400 uppercase">Langue par défaut</label>
+              <select
+                value={defaultLanguage}
+                onChange={(e) => setNestedField("display", "default_language", e.target.value)}
+                className="w-full mt-2 p-3 bg-slate-50 rounded-xl font-bold outline-none"
+              >
+                {activeLanguages.map((lang) => (
+                  <option key={lang} value={lang}>{lang === "ar" ? "العربية" : lang.toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
-
-        {/* PREVIEW COLUMN (PRO) */}
-        <div className="flex flex-col justify-center bg-gray-900 rounded-3xl p-8 text-center relative overflow-hidden shadow-2xl min-h-[300px]">
-            {/* Décoration d'arrière-plan */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/10 blur-3xl rounded-full"></div>
-            
-            <p className="text-[10px] font-bold text-gray-500 mb-6 uppercase tracking-widest">Aperçu en temps réel</p>
-            
-            <div className="space-y-6">
-                {/* Simulation d'un élément du menu */}
-                <div className="bg-white rounded-2xl p-4 shadow-lg mx-auto max-w-[220px]">
-                    <div className="w-full h-24 bg-gray-100 rounded-xl mb-3 flex items-center justify-center text-2xl">🍕</div>
-                    <div className="h-3 w-2/3 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-3 w-1/3 bg-gray-100 rounded mb-4"></div>
-                    
-                    {/* LE BOUTON QUI CHANGE DE COULEUR */}
-                    <button 
-                        style={{ backgroundColor: primaryColor }}
-                        className="w-full py-2 rounded-lg text-white text-[10px] font-bold shadow-sm transition-all duration-300"
-                    >
-                        AJOUTER AU PANIER
-                    </button>
-                </div>
-                
-                <p className="text-xs text-gray-400 italic">
-                    Le modèle <span className="text-white font-bold">"{formData.display_settings?.template || 'modern'}"</span> est actif
-                </p>
-            </div>
-        </div>
-
       </div>
-
-      {/* OPTIONS AVANCÉES (Typographie & Langue) */}
-      <section className="pt-6 border-t border-gray-100">
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-               <label className="block text-sm font-semibold mb-2 text-gray-700">Police de caractères (Font)</label>
-               <select 
-                  value={formData.display_settings?.font_family || "Inter"}
-                  onChange={(e) => updateDisplay({ font_family: e.target.value })}
-                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-yellow-500"
-               >
-                  <option value="Inter">Inter (Moderne)</option>
-                  <option value="Poppins">Poppins (Arrondi)</option>
-                  <option value="Playfair Display">Playfair (Luxe)</option>
-               </select>
-            </div>
-            <div className="flex items-center space-x-3 bg-gray-50 p-4 rounded-xl self-end">
-               <input 
-                  type="checkbox"
-                  id="is_rtl"
-                  checked={formData.display_settings?.is_rtl || false}
-                  onChange={(e) => updateDisplay({ is_rtl: e.target.checked })}
-                  className="w-5 h-5 accent-yellow-500 rounded"
-               />
-               <label htmlFor="is_rtl" className="text-sm font-semibold text-gray-700 cursor-pointer">
-                  Activer le mode Arabe (RTL)
-               </label>
-            </div>
-         </div>
-      </section>
     </div>
   );
 }

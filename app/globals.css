@@ -5,6 +5,19 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --app-bg: #f8fafc;
+  --app-text: #0f172a;
+  --brand-primary: #87bf5a;
+  --brand-secondary: #1f2937;
+  --brand-accent: #f59e0b;
+  --brand-radius: 16px;
+  --font-brand-latin: "Poppins";
+  --font-brand-arabic: "Cairo";
+  --dashboard-bg: #f6f8fc;
+  --dashboard-surface: #ffffff;
+  --dashboard-border: #e2e8f0;
+  --dashboard-text: #0f172a;
+  --dashboard-muted: #64748b;
 }
 
 
@@ -23,9 +36,37 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: var(--font-brand-latin), var(--font-geist-sans), "Segoe UI", sans-serif;
+}
+
+html[dir="rtl"] body {
+  font-family: var(--font-brand-arabic), "Segoe UI", sans-serif;
+}
+
+.dashboard-shell {
+  background:
+    radial-gradient(1200px 500px at 0% -10%, color-mix(in srgb, var(--brand-primary) 16%, white) 0%, rgba(232, 238, 251, 0) 60%),
+    radial-gradient(900px 400px at 100% 0%, color-mix(in srgb, var(--brand-secondary) 10%, white) 0%, rgba(238, 244, 255, 0) 55%),
+    var(--dashboard-bg);
+}
+
+.dashboard-surface {
+  background: var(--dashboard-surface);
+  border: 1px solid var(--dashboard-border);
+  border-radius: 1.5rem;
+  box-shadow: 0 8px 30px -20px rgba(15, 23, 42, 0.2);
+}
+
+.dashboard-muted {
+  color: var(--dashboard-muted);
+}
+
+.app-footer-surface {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(226, 232, 240, 0.95);
 }
 
 @keyframes marquee {

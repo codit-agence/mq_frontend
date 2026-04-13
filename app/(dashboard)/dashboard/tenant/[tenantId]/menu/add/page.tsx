@@ -1,20 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useProductForm } from "@/src/features/catalog/store/useProductForm";
+import { useProductForm } from "@/src/projects/client-dashboard/catalog/store/useProductForm";
 import { 
   ArrowLeft, Loader2, Plus, Trash2, 
   ImageIcon, Save 
 } from "lucide-react";
-import { useAuthStore } from "@/src/features/account/store/useAuthStore";
+import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
+import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
 
 type Lang = "fr" | "ar" | "en" | "es";
 
 export default function AddProductPage() {
   const router = useRouter();
   const { tenant } = useAuthStore();
+  const { formData } = useSettingsStore();
   const [activeLang, setActiveLang] = useState<Lang>("fr");
+  const activeLanguages = (formData?.display?.active_languages || ["fr"]) as Lang[];
+  const defaultLanguage = (formData?.display?.default_language as Lang) || activeLanguages[0] || "fr";
+  const isOwner = tenant?.role === "owner";
+  const catalogRestricted = !!formData?.display?.catalog_client_restricted;
+  const readonlyMode = catalogRestricted && !isOwner;
+
+  useEffect(() => {
+    if (!activeLanguages.includes(activeLang)) {
+      setActiveLang(defaultLanguage);
+    }
+  }, [activeLanguages, activeLang, defaultLanguage]);
 
   // Initialisation du Hook avec redirection dynamique
   const { 
@@ -28,6 +41,18 @@ export default function AddProductPage() {
       router.push("/dashboard");
     }
   });
+
+  if (readonlyMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-3xl rounded-3xl border border-rose-200 bg-white p-12 text-center shadow-xl">
+          <h1 className="text-3xl font-black text-rose-600 mb-4">Accès restreint</h1>
+          <p className="text-sm text-slate-600 mb-8">Le catalogue est verrouillé pour les clients. Seuls les propriétaires peuvent créer ou modifier des produits.</p>
+          <button onClick={() => router.push(`/dashboard/tenant/${tenant?.id}/menu`)} className="px-8 py-4 rounded-3xl bg-slate-900 text-white font-black uppercase tracking-[0.2em]">Retour au menu</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-10 pb-40 animate-in fade-in duration-500">
@@ -50,6 +75,18 @@ export default function AddProductPage() {
           </div>
         </div>
       </div>
+
+      {activeLanguages.length > 0 && (
+        <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+          <p className="text-xs font-black uppercase tracking-wider text-amber-700">
+            Champs obligatoires multilingues
+          </p>
+          <p className="mt-1 text-sm text-amber-800">
+            Pour enregistrer, vous devez remplir `Nom` et `Description` dans chaque langue active ({activeLanguages.join(", ")}).
+            Sinon, modifiez `Active languages` dans Parametres &gt; Design.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         
@@ -109,7 +146,7 @@ export default function AddProductPage() {
           <div className="bg-white p-6 md:p-10 rounded-[50px] border border-slate-100 shadow-xl shadow-slate-200/40">
             {/* TABS DE LANGUES */}
             <div className="flex bg-slate-100 p-2 rounded-[25px] gap-1 mb-10 overflow-x-auto no-scrollbar">
-              {(["fr", "ar", "en", "es"] as Lang[]).map(l => (
+              {activeLanguages.map((l) => (
                 <button 
                   key={l} type="button" onClick={() => setActiveLang(l)} 
                   className={`flex-1 min-w-[100px] py-3 rounded-[20px] text-[10px] font-black uppercase tracking-wider transition-all ${activeLang === l ? "bg-white text-indigo-600 shadow-md scale-105" : "text-slate-400 hover:text-slate-600"}`}
@@ -133,14 +170,32 @@ export default function AddProductPage() {
                 {activeLang === "fr" && errors.name && <p className="text-[10px] text-rose-500 font-bold px-2 uppercase tracking-tighter">{errors.name.message as string}</p>}
               </div>
 
-              <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">Description ({activeLang})</label>
-                <textarea 
-                   {...register(activeLang === "fr" ? "description" : `description_${activeLang}` as any)} 
-                   rows={4}
-                   placeholder="Détails, ingrédients..."
-                   className="w-full px-8 py-5 bg-slate-50 rounded-[25px] border-2 border-transparent focus:border-indigo-500 outline-none font-medium text-slate-600 shadow-inner resize-none" 
-                />
+              <div className="space-y-3 grid gap-6">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">Courte description ({activeLang})</label>
+                  <input 
+                    {...register(activeLang === "fr" ? "short_description" : `short_description_${activeLang}` as any)}
+                    placeholder="Ex: Pain maison, sauce épicée..."
+                    className="w-full px-8 py-5 bg-slate-50 rounded-[25px] border-2 border-transparent focus:border-indigo-500 outline-none shadow-inner"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">Description ({activeLang})</label>
+                  <textarea 
+                     {...register(activeLang === "fr" ? "description" : `description_${activeLang}` as any)} 
+                     rows={4}
+                     placeholder="Détails, ingrédients, conseil..."
+                     className="w-full px-8 py-5 bg-slate-50 rounded-[25px] border-2 border-transparent focus:border-indigo-500 outline-none font-medium text-slate-600 shadow-inner resize-none" 
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">Note interne ({activeLang})</label>
+                  <input 
+                    {...register(activeLang === "fr" ? "note" : `note_${activeLang}` as any)}
+                    placeholder="Note cuisine, allergènes..."
+                    className="w-full px-8 py-5 bg-slate-50 rounded-[25px] border-2 border-transparent focus:border-indigo-500 outline-none shadow-inner"
+                  />
+                </div>
               </div>
             </div>
           </div>

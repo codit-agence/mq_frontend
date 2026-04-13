@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useTvStreamStore } from '@/src/features/tvstream/store/tvstream.store';
+import { useTvStreamStore } from '@/src/projects/client-dashboard/tvstream/store/tvstream.store';
 import ScreenCard from './ScreenCard';
 
 const ScreenList: React.FC = () => {

@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QALYAS Frontend
 
-## Getting Started
+Frontend Next.js pour qalyas.com.
 
-First, run the development server:
+Le projet couvre:
+
+- site public marketing
+- dashboard client
+- espace admin interne
+- TV, messaging et branding partage
+
+## Developpement local
+
+1. Installer les dependances:
+
+```bash
+npm install
+```
+
+2. Creer un fichier `.env.local` a partir de `.env.example`
+
+3. Lancer le serveur:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Variables publiques
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Variables principales:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `NEXT_PUBLIC_SITE_URL`
+- `NEXT_PUBLIC_API_URL`
 
-## Learn More
+Variables optionnelles:
 
-To learn more about Next.js, take a look at the following resources:
+- `NEXT_PUBLIC_WS_URL`
+- `NEXT_PUBLIC_BACKEND_URL`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+En production Vercel pour qalyas.com, utilisez les valeurs documentees dans [DEPLOYMENT.md](./DEPLOYMENT.md).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Verification avant push
 
-## Deploy on Vercel
+```bash
+npm run build
+npm run test
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploiement Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Root Directory Vercel: `mq_fronend`
+- Domaine canonique: `https://qalyas.com`
+- Backend: serveur Contabo expose derriere un domaine HTTPS
+
+Voir [DEPLOYMENT.md](./DEPLOYMENT.md) pour la checklist complete.

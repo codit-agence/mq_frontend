@@ -1,48 +1,39 @@
+import type { NextConfig } from "next";
+import type { RemotePattern } from "next/dist/shared/lib/image-config";
 
+function buildMediaPattern(value: string): RemotePattern | null {
+  try {
+    const url = new URL(value);
+    return {
+      protocol: url.protocol === "https:" ? "https" : "http",
+      hostname: url.hostname,
+      port: url.port,
+      pathname: "/media/**",
+    };
+  } catch {
+    return null;
+  }
+}
 
-// Maintenant tu peux utiliser __dirname plus bas dans ton code
-// Exemple : const path = __dirname + '/public';
+const remotePatterns = [
+  process.env.NEXT_PUBLIC_BACKEND_URL,
+  process.env.NEXT_PUBLIC_API_URL,
+  "http://localhost:8000",
+  "http://127.0.0.1:8000",
+]
+  .filter((value): value is string => Boolean(value))
+  .map(buildMediaPattern)
+  .filter((value): value is NonNullable<ReturnType<typeof buildMediaPattern>> => Boolean(value))
+  .filter((value, index, list) => list.findIndex((item) => `${item.protocol}//${item.hostname}:${item.port}${item.pathname}` === `${value.protocol}//${value.hostname}:${value.port}${value.pathname}`) === index);
 
-
-const nextConfig = {
-  // À la racine, PAS dans experimental
- // allowedDevOrigins: ['127.0.0.1:3000', 'localhost:3000'],
+const nextConfig: NextConfig = {
   images: {
-    remotePatterns:[
-      {
-        protocol: "http",
-        hostname: "161.97.96.60", // Ajoute ton IP ici
-        port: "8000",
-        pathname: "/media/**",
-      },
-      {
-        protocol: "https",
-        hostname: "qooom.duckdns.org",
-        pathname: "/media/**",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-        port: "8000",
-        pathname: "/media/**",
-      },
-    ],
+    dangerouslyAllowSVG: true,
+    remotePatterns,
   },
-
-  // 2. Supprime la clé 'eslint' qui fait planter le build
-  // Pour ignorer ESLint pendant le build en Next 16, cela se fait désormais 
-  // via le CLI ou dans un fichier séparé, mais plus ici.
-
-  // 3. Garde la sécurité Webpack si nécessaire
- 
-
   typescript: {
-    ignoreBuildErrors: true,
-    // Optionnel: si tu veux aussi ignorer les erreurs TS au build
-    // ignoreBuildErrors: true, 
+    ignoreBuildErrors: false,
   },
-
-
 };
 
 export default nextConfig;
