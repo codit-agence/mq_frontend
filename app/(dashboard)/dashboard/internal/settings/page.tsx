@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Activity, Globe, Palette, Save, ServerCrash, ShieldCheck, Wifi } from "lucide-react";
+import { Activity, ArrowRight, Globe, Save, ShieldCheck, Wifi } from "lucide-react";
 import { adminConfigService, AdminSystemStatus, BrandingAdminOptions } from "@/src/projects/admin-dashboard/internal/services/admin-config.service";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { getAccessToken } from "@/src/core/ws/authToken";
@@ -17,6 +18,7 @@ import { apiBaseUrl } from "@/src/projects/admin-dashboard/internal/admin-settin
 import { MetricCard } from "@/src/projects/admin-dashboard/internal/admin-settings/admin-settings.ui";
 import { parseCmsEditorValue, serializeCmsValue } from "@/src/projects/admin-dashboard/internal/admin-settings/admin-settings.utils";
 import { AdminBrandingState, CmsEditorKey, NetworkProbe } from "@/src/projects/admin-dashboard/internal/admin-settings/admin-settings.types";
+import { adminConsoleSections, internalAdminsPreview } from "@/src/projects/admin-dashboard/internal/admin-console.data";
 
 export default function InternalSettingsPage() {
   const { user } = useAuthStore();
@@ -361,6 +363,51 @@ export default function InternalSettingsPage() {
         <MetricCard icon={<Activity size={16} />} label="Environnement" value={status.environment} />
         <MetricCard icon={<Globe size={16} />} label="Langue par defaut" value={status.default_language} />
         <MetricCard icon={<Wifi size={16} />} label="Docker" value={status.docker_detected ? "Detecte" : "Non detecte"} />
+      </section>
+
+      <section className="grid grid-cols-1 xl:grid-cols-[1.1fr_0.9fr] gap-6">
+        <article className="dashboard-surface p-5 sm:p-6">
+          <div className="flex items-center gap-2 text-slate-900 font-black text-lg">
+            <ShieldCheck size={18} /> Hub interne conserve
+          </div>
+          <p className="mt-2 text-sm leading-7 text-slate-600">
+            La configuration application reste la page par defaut, mais les acces rapides admin sont gardes ici pour ne rien perdre du hub interne.
+          </p>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {adminConsoleSections.map((section) => (
+              <Link key={section.href} href={section.href} className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5 transition hover:-translate-y-1 hover:border-slate-300 hover:bg-white">
+                <div className="inline-flex rounded-2xl bg-white p-3 text-[#5f7f41] shadow-sm">
+                  <section.icon size={18} />
+                </div>
+                <h2 className="mt-4 text-lg font-black text-slate-950">{section.title}</h2>
+                <p className="mt-2 text-sm leading-7 text-slate-600">{section.description}</p>
+                <span className="mt-4 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.16em] text-slate-900">
+                  Ouvrir
+                  <ArrowRight size={14} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </article>
+
+        <article className="dashboard-surface p-5 sm:p-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Equipe interne</p>
+          <h2 className="mt-2 text-2xl font-black text-slate-950">Admins et responsabilites</h2>
+          <div className="mt-5 space-y-3">
+            {internalAdminsPreview.map((admin) => (
+              <div key={admin.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-black text-slate-950">{admin.name}</h3>
+                    <p className="mt-1 text-xs text-slate-500">{admin.role}</p>
+                  </div>
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-700">{admin.focus}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
       </section>
 
       <section className="grid grid-cols-1 xl:grid-cols-[1.3fr_0.7fr] gap-6">

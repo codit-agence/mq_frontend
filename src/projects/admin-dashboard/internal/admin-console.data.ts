@@ -2,9 +2,9 @@ import { Briefcase, Building2, CreditCard, Settings, ShieldCheck, UserCog, Users
 
 export const adminConsoleSections = [
   {
-    title: "Hub Admin",
-    description: "Point d'entree pour piloter la plateforme, les acces et les priorites internes.",
-    href: "/dashboard/internal",
+    title: "Config application",
+    description: "Nom app, branding, logo, SEO, langues actives, maintenance et comportements transverses.",
+    href: "/dashboard/internal/settings",
     icon: ShieldCheck,
   },
   {
