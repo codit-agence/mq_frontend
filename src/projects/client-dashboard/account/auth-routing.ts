@@ -33,7 +33,7 @@ export function resolveAuthenticatedRoute(params: {
   const { tenant } = params;
 
   if (isInternalAccount(params)) {
-    return "/dashboard/internal";
+    return "/dashboard/internal/settings";
   }
 
   if (tenant?.id || params.loginResponse?.tenant_id) {

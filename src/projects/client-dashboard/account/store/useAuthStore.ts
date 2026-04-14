@@ -4,6 +4,7 @@ import { UserProfile, Tenant, LoginResponse } from "@/src/types/accounts/account
 import Cookies from 'js-cookie';
 import { useCatalogStore } from "@/src/projects/client-dashboard/catalog/store/catalog.store";
 import api from "@/src/core/api/axios";
+import { clearAuthStorage } from "@/src/projects/client-dashboard/account/auth-storage";
 
 interface AuthState {
   user: UserProfile | null;
@@ -80,12 +81,14 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         Cookies.remove('access_token', { path: '/' });
         Cookies.remove('refresh_token', { path: '/' });
-        localStorage.clear();
-        
+        delete api.defaults.headers.common['Authorization'];
+        delete api.defaults.headers.common['X-Tenant-Id'];
+
+        set({ user: null, tenant: null, isAuthenticated: false, isLoading: false });
+        clearAuthStorage();
+
         // Reset des autres stores
         useCatalogStore.getState().resetCatalog();
-        
-        set({ user: null, tenant: null, isAuthenticated: false, isLoading: false });
 
         if (typeof window !== 'undefined') {
           window.location.href = "/account/login";

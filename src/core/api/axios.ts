@@ -1,6 +1,7 @@
 import axios, { AxiosHeaders } from "axios";
 import Cookies from "js-cookie";
 import { getApiBaseUrl } from "@/src/core/config/public-env";
+import { clearAuthStorage } from "@/src/projects/client-dashboard/account/auth-storage";
 
 const api = axios.create({
   baseURL: getApiBaseUrl(),
@@ -70,8 +71,9 @@ api.interceptors.response.use(
         return api(originalRequest);
         
       } catch (refreshError) {
-        localStorage.clear();
+        clearAuthStorage();
         Cookies.remove("access_token", { path: '/' });
+        Cookies.remove("refresh_token", { path: '/' });
         if (typeof window !== "undefined") {
           window.location.href = "/account/login";
         }
