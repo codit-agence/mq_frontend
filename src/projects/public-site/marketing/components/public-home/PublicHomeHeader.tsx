@@ -3,6 +3,7 @@ import { ArrowRight, Globe2, LockKeyhole, Menu, PanelsTopLeft, X } from "lucide-
 
 import { LocaleToggle } from "@/src/projects/shared/branding/components/LocaleToggle";
 import { PublicBranding, BrandingSiteNavigationItem } from "@/src/projects/shared/branding/branding.types";
+import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { getLocalizedText, PublicHomeLocale } from "./public-home.utils";
 
 interface PublicHomeHeaderProps {
@@ -50,7 +51,7 @@ export function PublicHomeHeader({
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-10">
         <Link href="/" className="flex min-w-0 items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-[1.35rem] text-white shadow-[0_18px_40px_-20px_rgba(45,79,158,0.8)] ring-1 ring-black/5" style={{ background: `linear-gradient(135deg, ${branding.primary_color}, ${branding.secondary_color})` }}>
-            {branding.logo ? <img src={branding.logo} alt={branding.app_name} className="h-full w-full object-cover" /> : branding.app_name.charAt(0)}
+            {branding.logo ? <img src={getImageUrl(branding.logo)} alt={branding.app_name} className="h-full w-full object-cover" /> : branding.app_name.charAt(0)}
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-black uppercase tracking-[0.18em] text-slate-900">{branding.app_name}</p>

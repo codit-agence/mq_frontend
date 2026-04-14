@@ -8,6 +8,7 @@ import { getErrorMessage } from "@/src/utils/errors";
 import { RegisterIn } from "@/src/types/accounts/auth.payloads";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
+import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { LocaleToggle } from "@/src/projects/shared/branding/components/LocaleToggle";
 import { BrandingFooter } from "@/src/projects/shared/branding/components/BrandingFooter";
 
@@ -193,7 +194,7 @@ export default function RegisterPage() {
           <div className="flex items-center gap-3 mb-4">
             <div className="w-12 h-12 rounded-2xl overflow-hidden" style={{ backgroundColor: branding.primary_color }}>
               {branding.logo ? (
-                <img src={branding.logo} alt="QALYAS" className="w-full h-full object-cover" />
+                <img src={getImageUrl(branding.logo)} alt="QALYAS" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white font-black">Q</div>
               )}

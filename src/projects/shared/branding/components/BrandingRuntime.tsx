@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
+import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 
 export function BrandingRuntime() {
   const { branding } = useBranding();
@@ -38,7 +39,7 @@ export function BrandingRuntime() {
         link.rel = "icon";
         document.head.appendChild(link);
       }
-      link.href = favicon;
+      link.href = getImageUrl(favicon);
     }
   }, [branding, isRtl, locale]);
 

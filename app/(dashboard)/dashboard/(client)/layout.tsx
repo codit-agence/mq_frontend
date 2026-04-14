@@ -8,6 +8,7 @@ import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useA
 import { DashboardMessaging } from "@/src/projects/client-dashboard/messaging/components/DashboardMessaging";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
+import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { BrandingFooter } from "@/src/projects/shared/branding/components/BrandingFooter";
 import { LocaleToggle } from "@/src/projects/shared/branding/components/LocaleToggle";
 
@@ -54,7 +55,7 @@ export default function ClientDashboardLayout({ children }: { children: React.Re
 
             <Link href="/dashboard" className="flex items-center gap-3 group">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black shadow-sm group-hover:scale-105 transition-all overflow-hidden" style={{ backgroundColor: branding.primary_color }}>
-                {branding.logo ? <img src={branding.logo} alt={branding.app_name} className="w-full h-full object-cover" /> : branding.app_name.charAt(0)}
+                {branding.logo ? <img src={getImageUrl(branding.logo)} alt={branding.app_name} className="w-full h-full object-cover" /> : branding.app_name.charAt(0)}
               </div>
               <span className="font-black text-slate-900 uppercase text-xs sm:text-sm tracking-tight">{branding.app_name}</span>
             </Link>
