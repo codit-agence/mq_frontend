@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 type Lang = "fr" | "ar" | "en" | "es";
 
@@ -16,12 +18,53 @@ export default function AddProductPage() {
   const router = useRouter();
   const { tenant } = useAuthStore();
   const { formData } = useSettingsStore();
+  const { branding } = useBranding();
+  const { locale, isRtl } = useAppLocale(branding);
   const [activeLang, setActiveLang] = useState<Lang>("fr");
   const activeLanguages = (formData?.display?.active_languages || ["fr"]) as Lang[];
   const defaultLanguage = (formData?.display?.default_language as Lang) || activeLanguages[0] || "fr";
   const isOwner = tenant?.role === "owner";
   const catalogRestricted = !!formData?.display?.catalog_client_restricted;
   const readonlyMode = catalogRestricted && !isOwner;
+  const text = locale === "ar"
+    ? {
+        restricted: "وصول مقيّد",
+        restrictedDesc: "الكتالوج مقفل للعملاء. فقط المالك يمكنه إنشاء أو تعديل المنتجات.",
+        back: "الرجوع إلى القائمة",
+        newProduct: "منتج جديد",
+        creation: "إنشاء الكتالوج",
+        requiredTitle: "حقول متعددة اللغات مطلوبة",
+        requiredDesc: `للحفظ، يجب تعبئة \`الاسم\` و\`الوصف\` في كل لغة مفعلة (${activeLanguages.join(", ")}). غيّر اللغات المفعلة من الإعدادات > التصميم إذا لزم الأمر.`,
+        image: "إضافة صورة",
+        price: "السعر (MAD)",
+        category: "التصنيف",
+        selectCategory: "اختر تصنيفاً",
+        productName: "اسم المنتج",
+        shortDescription: "وصف مختصر",
+        description: "الوصف",
+        note: "ملاحظة داخلية",
+        processing: "جار المعالجة...",
+        submit: "تأكيد الحفظ",
+      }
+    : {
+        restricted: "Acces restreint",
+        restrictedDesc: "Le catalogue est verrouille pour les clients. Seuls les proprietaires peuvent creer ou modifier des produits.",
+        back: "Retour au menu",
+        newProduct: "Nouveau produit",
+        creation: "Creation catalogue",
+        requiredTitle: "Champs obligatoires multilingues",
+        requiredDesc: `Pour enregistrer, vous devez remplir \`Nom\` et \`Description\` dans chaque langue active (${activeLanguages.join(", ")}). Sinon, modifiez \`Active languages\` dans Parametres > Design.`,
+        image: "Ajouter une image",
+        price: "Prix (MAD)",
+        category: "Categorie",
+        selectCategory: "Selectionner...",
+        productName: "Nom du produit",
+        shortDescription: "Courte description",
+        description: "Description",
+        note: "Note interne",
+        processing: "Traitement en cours...",
+        submit: "Confirmer l'enregistrement",
+      };
 
   useEffect(() => {
     if (!activeLanguages.includes(activeLang)) {
@@ -46,16 +89,16 @@ export default function AddProductPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
         <div className="max-w-3xl rounded-3xl border border-rose-200 bg-white p-12 text-center shadow-xl">
-          <h1 className="text-3xl font-black text-rose-600 mb-4">Accès restreint</h1>
-          <p className="text-sm text-slate-600 mb-8">Le catalogue est verrouillé pour les clients. Seuls les propriétaires peuvent créer ou modifier des produits.</p>
-          <button onClick={() => router.push(`/dashboard/tenant/${tenant?.id}/menu`)} className="px-8 py-4 rounded-3xl bg-slate-900 text-white font-black uppercase tracking-[0.2em]">Retour au menu</button>
+          <h1 className="text-3xl font-black text-rose-600 mb-4">{text.restricted}</h1>
+          <p className="text-sm text-slate-600 mb-8">{text.restrictedDesc}</p>
+          <button onClick={() => router.push(`/dashboard/tenant/${tenant?.id}/menu`)} className="px-8 py-4 rounded-3xl bg-slate-900 text-white font-black uppercase tracking-[0.2em]">{text.back}</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-10 pb-40 animate-in fade-in duration-500">
+    <div dir={isRtl ? "rtl" : "ltr"} className="max-w-6xl mx-auto p-4 md:p-10 pb-40 animate-in fade-in duration-500">
       
       {/* --- HEADER --- */}
       <div className="flex items-center justify-between mb-10">
@@ -69,9 +112,9 @@ export default function AddProductPage() {
           </button>
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
-              Nouveau <span className="text-indigo-600 italic">Produit</span>
+              {locale === "ar" ? "منتج" : "Nouveau"} <span className="text-indigo-600 italic">{locale === "ar" ? "جديد" : "Produit"}</span>
             </h1>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[3px] mt-1">Création Catalogue</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[3px] mt-1">{text.creation}</p>
           </div>
         </div>
       </div>
@@ -79,12 +122,9 @@ export default function AddProductPage() {
       {activeLanguages.length > 0 && (
         <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
           <p className="text-xs font-black uppercase tracking-wider text-amber-700">
-            Champs obligatoires multilingues
+            {text.requiredTitle}
           </p>
-          <p className="mt-1 text-sm text-amber-800">
-            Pour enregistrer, vous devez remplir `Nom` et `Description` dans chaque langue active ({activeLanguages.join(", ")}).
-            Sinon, modifiez `Active languages` dans Parametres &gt; Design.
-          </p>
+          <p className="mt-1 text-sm text-amber-800">{text.requiredDesc}</p>
         </div>
       )}
 
@@ -102,7 +142,7 @@ export default function AddProductPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-slate-300 gap-3">
                   <ImageIcon size={40} strokeWidth={1.5} />
-                  <span className="text-[9px] font-black uppercase tracking-widest">Ajouter une image</span>
+                  <span className="text-[9px] font-black uppercase tracking-widest">{text.image}</span>
                 </div>
               )}
               <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
@@ -112,7 +152,7 @@ export default function AddProductPage() {
           {/* PRIX & CATEGORIE */}
           <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/40 space-y-8">
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase text-slate-400 block tracking-widest px-1">Prix (MAD)</label>
+              <label className="text-[10px] font-black uppercase text-slate-400 block tracking-widest px-1">{text.price}</label>
               <input 
                 {...register("price", { 
                   required: "Prix requis", 
@@ -127,12 +167,12 @@ export default function AddProductPage() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase text-slate-400 block tracking-widest px-1">Catégorie</label>
+              <label className="text-[10px] font-black uppercase text-slate-400 block tracking-widest px-1">{text.category}</label>
               <select 
-                {...register("category_id", { required: "Sélectionnez une catégorie" })} 
+                {...register("category_id", { required: text.selectCategory })} 
                 className={`w-full px-6 py-5 bg-slate-50 rounded-[22px] border-2 outline-none font-bold text-slate-700 appearance-none shadow-inner transition-all ${errors.category_id ? 'border-rose-200 focus:border-rose-500' : 'border-transparent focus:border-indigo-500'}`}
               >
-                <option value="">Sélectionner...</option>
+                <option value="">{text.selectCategory}</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               {errors.category_id && <p className="text-[10px] text-rose-500 font-bold px-2 uppercase tracking-tighter">{errors.category_id.message as string}</p>}
@@ -159,7 +199,7 @@ export default function AddProductPage() {
             {/* INPUTS DYNAMIQUES */}
             <div className="space-y-8" dir={activeLang === "ar" ? "rtl" : "ltr"}>
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">Nom du produit ({activeLang})</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">{text.productName} ({activeLang})</label>
                 <input 
                    {...register(activeLang === "fr" ? "name" : `name_${activeLang}` as any, { 
                      required: activeLang === "fr" ? "Le nom en Français est obligatoire" : false 
@@ -172,7 +212,7 @@ export default function AddProductPage() {
 
               <div className="space-y-3 grid gap-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">Courte description ({activeLang})</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">{text.shortDescription} ({activeLang})</label>
                   <input 
                     {...register(activeLang === "fr" ? "short_description" : `short_description_${activeLang}` as any)}
                     placeholder="Ex: Pain maison, sauce épicée..."
@@ -180,7 +220,7 @@ export default function AddProductPage() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">Description ({activeLang})</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">{text.description} ({activeLang})</label>
                   <textarea 
                      {...register(activeLang === "fr" ? "description" : `description_${activeLang}` as any)} 
                      rows={4}
@@ -189,7 +229,7 @@ export default function AddProductPage() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">Note interne ({activeLang})</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 block px-2 italic">{text.note} ({activeLang})</label>
                   <input 
                     {...register(activeLang === "fr" ? "note" : `note_${activeLang}` as any)}
                     placeholder="Note cuisine, allergènes..."
@@ -246,7 +286,7 @@ export default function AddProductPage() {
                 ${isSubmitting ? 'bg-slate-100 text-slate-400' : 'bg-slate-900 text-white hover:bg-indigo-600 hover:shadow-indigo-200'}`}
             >
               {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-              {isSubmitting ? "Traitement en cours..." : "Confirmer l'enregistrement"}
+              {isSubmitting ? text.processing : text.submit}
           </button>
         </div>
       </form>

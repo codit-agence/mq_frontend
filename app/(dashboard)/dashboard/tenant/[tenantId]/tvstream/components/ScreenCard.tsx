@@ -1,6 +1,8 @@
 import React from 'react';
 import { Tv, Settings, Trash2, RotateCcw, RefreshCw, AlertTriangle } from "lucide-react";
 import { Screen } from '@/src/types/tvstream/tvstream';
+import { useBranding } from '@/src/projects/shared/branding/useBranding';
+import { useAppLocale } from '@/src/projects/shared/branding/useAppLocale';
 
 interface Props {
   screen: Screen;
@@ -19,8 +21,41 @@ const ScreenCard: React.FC<Props> = ({
   onForceRefresh,
   busy,
 }) => {
+  const { branding } = useBranding();
+  const { locale } = useAppLocale(branding);
   const isOnline = screen.is_online;
-  const lastPingLabel = screen.last_ping ? new Date(screen.last_ping).toLocaleString() : "Aucun ping";
+  const text = locale === "ar"
+    ? {
+        noPing: "لا يوجد ping",
+        active: "نشط",
+        waiting: "قيد الانتظار",
+        online: "متصل",
+        offline: "غير متصل",
+        lastPing: "آخر ping",
+        uptime: "مدة التشغيل",
+        moved: "تم رصد تحرك الجهاز",
+        pairing: "ربط",
+        pairingCode: "رمز الربط",
+        resetAlert: "إعادة ضبط تنبيه التحرك",
+        forceRefresh: "فرض التحديث",
+        delete: "حذف الشاشة",
+      }
+    : {
+        noPing: "Aucun ping",
+        active: "Actif",
+        waiting: "En attente",
+        online: "En ligne",
+        offline: "Hors ligne",
+        lastPing: "Dernier ping",
+        uptime: "Uptime",
+        moved: "Deplacement detecte",
+        pairing: "Apparier",
+        pairingCode: "Code d'appairage",
+        resetAlert: "Reinitialiser l'alerte deplacement",
+        forceRefresh: "Forcer le refresh",
+        delete: "Supprimer l'ecran",
+      };
+  const lastPingLabel = screen.last_ping ? new Date(screen.last_ping).toLocaleString(locale === "ar" ? "ar-MA" : "fr-FR") : text.noPing;
   const uptime = screen.total_uptime_hours || 0;
 
   return (
@@ -30,7 +65,7 @@ const ScreenCard: React.FC<Props> = ({
           <Tv size={32} />
         </div>
         <div className={`${screen.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'} px-3 py-1 rounded-full`}>
-          <span className="text-[10px] font-black uppercase">{screen.is_active ? 'Actif' : 'En attente'}</span>
+          <span className="text-[10px] font-black uppercase">{screen.is_active ? text.active : text.waiting}</span>
         </div>
       </div>
 
@@ -38,10 +73,10 @@ const ScreenCard: React.FC<Props> = ({
         <h3 className="text-lg sm:text-xl font-black text-slate-200 mb-2">{screen.name}</h3>
         <p className="text-slate-400 text-sm">ID: {screen.id.slice(0, 8)}...</p>
         <p className={`text-xs font-bold mt-2 ${isOnline ? "text-emerald-400" : "text-rose-400"}`}>
-          {isOnline ? "En ligne" : "Hors ligne"}
+          {isOnline ? text.online : text.offline}
         </p>
-        <p className="text-xs text-slate-400">Dernier ping: {lastPingLabel}</p>
-        <p className="text-xs text-slate-400">Uptime: {uptime.toFixed(2)} h</p>
+        <p className="text-xs text-slate-400">{text.lastPing}: {lastPingLabel}</p>
+        <p className="text-xs text-slate-400">{text.uptime}: {uptime.toFixed(2)} h</p>
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-200">
             {screen.resolved_transport || "polling"}
@@ -55,27 +90,25 @@ const ScreenCard: React.FC<Props> = ({
         </div>
         {screen.moved_alert && (
           <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-rose-400/30 bg-rose-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-rose-300">
-            <AlertTriangle size={12} /> Déplacement détecté
+            <AlertTriangle size={12} /> {text.moved}
           </div>
         )}
       </div>
 
-      {/* Zone d'appairage si pas encore connecté */}
       {screen.pairing_code && !screen.is_online && (
         <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-2xl mb-6 text-center">
-          <p className="text-xs text-blue-400 font-semibold mb-2">Code d'appairage</p>
+          <p className="text-xs text-blue-400 font-semibold mb-2">{text.pairingCode}</p>
           <p className="text-2xl font-mono font-bold tracking-widest text-blue-300">{screen.pairing_code}</p>
         </div>
       )}
 
-      {/* Boutons d'action */}
       <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
         {!screen.is_online && onStartPairing && (
           <button
             onClick={() => onStartPairing(screen.id)}
             className="col-span-2 sm:col-span-1 sm:flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-2xl font-black text-sm transition-all"
           >
-            Apparier
+            {text.pairing}
           </button>
         )}
         {screen.moved_alert && onResetMovedAlert && (
@@ -83,7 +116,7 @@ const ScreenCard: React.FC<Props> = ({
             onClick={() => onResetMovedAlert(screen.id)}
             disabled={busy}
             className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 px-3 py-3 rounded-2xl transition-all disabled:opacity-50"
-            title="Réinitialiser l'alerte déplacement"
+            title={text.resetAlert}
           >
             <RotateCcw size={18} />
           </button>
@@ -93,7 +126,7 @@ const ScreenCard: React.FC<Props> = ({
             onClick={() => onForceRefresh(screen.id)}
             disabled={busy}
             className="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 px-3 py-3 rounded-2xl transition-all disabled:opacity-50"
-            title="Forcer le refresh"
+            title={text.forceRefresh}
           >
             <RefreshCw size={18} />
           </button>
@@ -105,7 +138,7 @@ const ScreenCard: React.FC<Props> = ({
           <button
             onClick={() => onDelete(screen.id)}
             className="p-3 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 rounded-2xl transition-all"
-            title="Supprimer l'écran"
+            title={text.delete}
           >
             <Trash2 size={20} />
           </button>

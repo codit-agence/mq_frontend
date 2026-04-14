@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Edit3, Trash2, CameraOff } from "lucide-react"; 
 import { Product } from "@/src/types/catalogs/catalog_types";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 interface ProductCardProps {
   product: Product;
@@ -15,6 +17,26 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, tenantId, onDelete, disableActions = false }: ProductCardProps) => {
+  const { branding } = useBranding();
+  const { locale } = useAppLocale(branding);
+  const text = locale === "ar"
+    ? {
+        noImage: "لا توجد صورة",
+        soldOut: "غير متوفر",
+        noDescription: "لا يوجد وصف لهذا المنتج.",
+        disabled: "الإدارة معطلة",
+        edit: "تعديل",
+        delete: "حذف",
+      }
+    : {
+        noImage: "Pas d'image",
+        soldOut: "Epuise",
+        noDescription: "Aucune description pour ce produit.",
+        disabled: "Gestion desactivee",
+        edit: "Modifier",
+        delete: "Supprimer",
+      };
+
   return (
     <div className="group bg-slate-50 rounded-[35px] p-2 border border-transparent hover:border-indigo-100 hover:bg-white hover:shadow-2xl transition-all duration-500">
       <div className="p-4 flex flex-col h-full">
@@ -32,14 +54,14 @@ export const ProductCard = ({ product, tenantId, onDelete, disableActions = fals
           ) : (
             <div className="flex flex-col items-center justify-center h-full bg-slate-50 text-slate-200">
               <CameraOff size={32} strokeWidth={1} />
-              <span className="text-[8px] font-black uppercase mt-2 opacity-50">Pas d'image</span>
+              <span className="text-[8px] font-black uppercase mt-2 opacity-50">{text.noImage}</span>
             </div>
           )}
           
           {/* Badge Statut */}
           {!product.is_active && (
             <div className="absolute top-3 right-3 bg-rose-500/90 backdrop-blur-md text-white text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
-              Épuisé
+              {text.soldOut}
             </div>
           )}
         </div>
@@ -52,7 +74,7 @@ export const ProductCard = ({ product, tenantId, onDelete, disableActions = fals
             </h4>
           </div>
           <p className="text-[11px] text-slate-400 font-medium mb-4 line-clamp-2 h-8 leading-relaxed">
-            {product.description || "Aucune description pour ce délice."}
+            {product.description || text.noDescription}
           </p>
           
           <div className="flex flex-col gap-4 pt-4 border-t border-slate-100">
@@ -65,7 +87,7 @@ export const ProductCard = ({ product, tenantId, onDelete, disableActions = fals
             {/* --- ACTIONS --- */}
             {disableActions ? (
               <div className="flex items-center justify-center py-3.5 rounded-2xl border border-slate-200 bg-slate-100 text-slate-400 text-[10px] font-black uppercase tracking-widest">
-                Gestion désactivée
+                {text.disabled}
               </div>
             ) : (
               <div className="flex items-center gap-2">
@@ -74,11 +96,12 @@ export const ProductCard = ({ product, tenantId, onDelete, disableActions = fals
                   className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-slate-100 text-slate-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all duration-300 active:scale-95"
                 >
                   <Edit3 size={14} />
-                  Modifier
+                  {text.edit}
                 </Link>
                 
                 <button 
                   onClick={() => onDelete(product.id)}
+                  title={text.delete}
                   className="p-3.5 bg-white text-slate-300 rounded-2xl border border-slate-100 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50 shadow-sm transition-all active:scale-90"
                 >
                   <Trash2 size={16} />

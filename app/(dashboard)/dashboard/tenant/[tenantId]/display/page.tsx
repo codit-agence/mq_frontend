@@ -49,7 +49,7 @@ const formatHours = (hours: number) => {
 };
 
 const formatLastPing = (lastPing?: string) => {
-  if (!lastPing) return "Aucun ping";
+  if (!lastPing) return "-";
   const date = new Date(lastPing);
   return date.toLocaleString();
 };
@@ -177,6 +177,9 @@ export default function TenantDisplayManagerPage() {
         pause: "ايقاف",
         activate: "تفعيل",
         save: "حفظ",
+        confirmTv: "تأكيد شاشة التلفاز",
+        rotationDesc: "التحكم في زمن تكرار المنتجات حسب الفترات.",
+        diffusionDesc: "قواعد حسب اليوم والوقت لأتمتة القوائم.",
       }
     : {
         manager: "Tenant Display Manager",
@@ -212,6 +215,9 @@ export default function TenantDisplayManagerPage() {
         pause: "Pause",
         activate: "Activer",
         save: "Sauver",
+        confirmTv: "Confirmer la TV",
+        rotationDesc: "Controle du temps de repetition des produits par slot.",
+        diffusionDesc: "Regles par jour/heure pour automatiser les menus.",
       };
 
   const updateScreenConfig = async (screen: Screen, patch: Partial<Screen>) => {
@@ -225,9 +231,9 @@ export default function TenantDisplayManagerPage() {
         gps_required: patch.gps_required ?? screen.gps_required,
       }, tenantId);
       await fetchScreens();
-      toast.success("Configuration écran mise à jour");
+      toast.success(locale === "ar" ? "تم تحديث إعدادات الشاشة" : "Configuration ecran mise a jour");
     } catch (error) {
-      toast.error("Impossible de mettre à jour cet écran");
+      toast.error(locale === "ar" ? "تعذر تحديث هذه الشاشة" : "Impossible de mettre a jour cet ecran");
     } finally {
       setSavingId(null);
     }
@@ -340,7 +346,7 @@ export default function TenantDisplayManagerPage() {
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="rounded-xl bg-slate-50 p-3">
                       <p className="text-xs text-slate-400 font-black uppercase">{text.lastPing}</p>
-                      <p className="text-slate-700 font-semibold mt-1">{formatLastPing(screen.last_ping)}</p>
+                      <p className="text-slate-700 font-semibold mt-1">{formatLastPing(screen.last_ping) === "-" ? (locale === "ar" ? "لا يوجد ping" : "Aucun ping") : formatLastPing(screen.last_ping)}</p>
                     </div>
                     <div className="rounded-xl bg-slate-50 p-3">
                       <p className="text-xs text-slate-400 font-black uppercase">{text.workTime}</p>
@@ -352,7 +358,7 @@ export default function TenantDisplayManagerPage() {
                     </div>
                     <div className="rounded-xl bg-slate-50 p-3">
                       <p className="text-xs text-slate-400 font-black uppercase">{text.gpsStatus}</p>
-                      <p className="text-slate-700 font-semibold mt-1">{screen.last_gps_status || "unknown"}</p>
+                      <p className="text-slate-700 font-semibold mt-1">{screen.last_gps_status || (locale === "ar" ? "غير معروف" : "unknown")}</p>
                     </div>
                   </div>
 
@@ -480,7 +486,7 @@ export default function TenantDisplayManagerPage() {
                       }}
                       className="inline-flex items-center gap-2 text-sm font-black text-slate-700"
                     >
-                      <Signal size={16} /> Confirmer la TV (code sécurité)
+                      <Signal size={16} /> {text.confirmTv}
                     </button>
                   )}
                 </div>
@@ -511,11 +517,11 @@ export default function TenantDisplayManagerPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="rounded-xl bg-slate-50 p-4">
               <p className="text-xs font-black uppercase text-slate-400 flex items-center gap-2"><Clock3 size={14} /> Rotation</p>
-              <p className="text-sm font-semibold text-slate-700 mt-1">Contrôle du temps de répétition des produits par slot.</p>
+              <p className="text-sm font-semibold text-slate-700 mt-1">{text.rotationDesc}</p>
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
               <p className="text-xs font-black uppercase text-slate-400 flex items-center gap-2"><Monitor size={14} /> Diffusion</p>
-              <p className="text-sm font-semibold text-slate-700 mt-1">Règles par jour/heure pour automatiser les menus.</p>
+              <p className="text-sm font-semibold text-slate-700 mt-1">{text.diffusionDesc}</p>
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
               <p className="text-xs font-black uppercase text-slate-400 flex items-center gap-2"><Tv size={14} /> Templates</p>

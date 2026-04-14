@@ -13,6 +13,8 @@ import { useCatalogStore } from "@/src/projects/client-dashboard/catalog/store/c
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { EmptyState, LoadingState, StatMiniCard } from "@/src/projects/client-dashboard/catalog/components/UI/LocalUi";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 export default function MenuPage({ params }: { params: Promise<{ tenantId: string }> }) {
   const resolvedParams = use(params);
@@ -27,9 +29,38 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
   const { products, categories, loading, deleteProduct, deleteCategory } = useCatalogStore();
   const { formData } = useSettingsStore();
   const { tenant } = useAuthStore();
+  const { branding } = useBranding();
+  const { locale, isRtl } = useAppLocale(branding);
   const isOwner = tenant?.role === 'owner';
   const catalogRestricted = !!formData?.display?.catalog_client_restricted;
   const readonlyMode = catalogRestricted && !isOwner;
+  const text = locale === "ar"
+    ? {
+        products: "المنتجات",
+        categories: "التصنيفات",
+        inactive: "غير النشطة",
+        newProduct: "منتج جديد",
+        newCategory: "تصنيف جديد",
+        managementDisabled: "إدارة الكتالوج معطلة هنا",
+        restricted: "الكتالوج مقفل للعملاء. فقط المالك يمكنه تعديل أو إنشاء أو حذف المنتجات والتصنيفات.",
+        search: "بحث...",
+        deleteCategory: "حذف هذا التصنيف؟",
+        deleted: "تم الحذف",
+        error: "حدث خطأ",
+      }
+    : {
+        products: "Produits",
+        categories: "Categories",
+        inactive: "Inactifs",
+        newProduct: "Nouveau produit",
+        newCategory: "Nouvelle categorie",
+        managementDisabled: "Gestion catalogue desactivee ici",
+        restricted: "Le catalogue est verrouille pour les clients. Seuls les proprietaires peuvent modifier, creer ou supprimer des produits et categories.",
+        search: "Rechercher...",
+        deleteCategory: "Supprimer cette categorie ?",
+        deleted: "Supprime",
+        error: "Erreur",
+      };
 
   // --- LOGIQUE FILTRAGE (Optimisée pour le scale) ---
   const filteredProducts = useMemo(() => {
@@ -51,22 +82,22 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
 
   // --- HANDLERS ---
   const handleDeleteCategory = async (id: string) => {
-    if (!confirm("Supprimer cette catégorie ?")) return;
+    if (!confirm(text.deleteCategory)) return;
     try {
       await deleteCategory(id);
-      toast.success("Supprimé");
+      toast.success(text.deleted);
     } catch (err) {
-      toast.error("Erreur");
+      toast.error(text.error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-20">
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-[#F8FAFC] pb-20">
       <header className="bg-white border-b border-slate-100 py-6">
         <div className="max-w-[1600px] mx-auto px-8 flex flex-wrap items-center gap-4">
-          <StatMiniCard icon={Package} label="Produits" value={stats.total} color="bg-indigo-500" />
-          <StatMiniCard icon={Layers} label="Catégories" value={stats.cats} color="bg-emerald-500" />
-          <StatMiniCard icon={EyeOff} label="Inactifs" value={stats.inactive} color="bg-rose-500" />
+          <StatMiniCard icon={Package} label={text.products} value={stats.total} color="bg-indigo-500" />
+          <StatMiniCard icon={Layers} label={text.categories} value={stats.cats} color="bg-emerald-500" />
+          <StatMiniCard icon={EyeOff} label={text.inactive} value={stats.inactive} color="bg-rose-500" />
 
           <div className="flex-1 flex flex-wrap justify-end items-center gap-3">
             {!readonlyMode && (
@@ -77,7 +108,7 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
                   className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-black text-white transition hover:bg-indigo-700"
                 >
                   <Plus size={14} />
-                  Nouveau produit
+                  {text.newProduct}
                 </button>
                 <button
                   type="button"
@@ -85,11 +116,11 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
                   className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800"
                 >
                   <Plus size={14} />
-                  Nouvelle catégorie
+                  {text.newCategory}
                 </button>
               </>
             )}
-            <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">Gestion catalogue désactivée ici</div>
+            <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">{text.managementDisabled}</div>
           </div>
         </div>
       </header>
@@ -97,7 +128,7 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
       {readonlyMode && (
         <div className="max-w-[1600px] mx-auto px-8 py-4">
           <div className="rounded-3xl border border-rose-200 bg-rose-50 p-5 text-rose-700 text-sm font-semibold">
-            Le catalogue est verrouillé pour les clients. Seuls les propriétaires peuvent modifier, créer ou supprimer des produits et catégories.
+            {text.restricted}
           </div>
         </div>
       )}
@@ -108,7 +139,7 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-600" size={18} />
           <input 
             type="text" 
-            placeholder="Rechercher..." 
+            placeholder={text.search} 
             className="search-input"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

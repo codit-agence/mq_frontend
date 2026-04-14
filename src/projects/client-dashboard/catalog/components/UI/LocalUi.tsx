@@ -2,6 +2,8 @@
 
 import React from "react";
 import { Loader2, X, Package } from "lucide-react";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 // --- 1. DRAWER (Panneau latéral coulissant) ---
 interface DrawerProps {
@@ -65,28 +67,54 @@ export const StatMiniCard = ({ icon: Icon, label, value, color }: StatMiniCardPr
 
 // --- 3. LOADING STATE ---
 export const LoadingState = () => (
-  <div className="h-64 flex flex-col items-center justify-center bg-white rounded-[32px] border border-slate-100 gap-4">
-    <div className="relative">
-      <Loader2 className="animate-spin text-indigo-600" size={32} />
-      <div className="absolute inset-0 blur-lg bg-indigo-400/20 animate-pulse" />
-    </div>
-    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-      Synchronisation...
-    </p>
-  </div>
+  <LocalizedLoadingState />
 );
 
-// --- 4. EMPTY STATE ---
 export const EmptyState = () => (
-  <div className="h-64 flex flex-col items-center justify-center bg-white rounded-[32px] border border-dashed border-slate-200">
-    <div className="p-4 bg-slate-50 rounded-full mb-3">
-      <Package className="text-slate-200" size={40} />
-    </div>
-    <p className="text-slate-400 font-bold text-sm text-center">
-      Aucun résultat trouvé<br/>
-      <span className="text-[9px] uppercase font-black opacity-60 tracking-widest">
-        Ajustez vos filtres ou votre recherche
-      </span>
-    </p>
-  </div>
+  <LocalizedEmptyState />
 );
+
+function LocalizedLoadingState() {
+  const { branding } = useBranding();
+  const { locale } = useAppLocale(branding);
+
+  return (
+    <div className="h-64 flex flex-col items-center justify-center bg-white rounded-[32px] border border-slate-100 gap-4">
+      <div className="relative">
+        <Loader2 className="animate-spin text-indigo-600" size={32} />
+        <div className="absolute inset-0 blur-lg bg-indigo-400/20 animate-pulse" />
+      </div>
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+        {locale === "ar" ? "جار المزامنة..." : "Synchronisation..."}
+      </p>
+    </div>
+  );
+}
+
+function LocalizedEmptyState() {
+  const { branding } = useBranding();
+  const { locale } = useAppLocale(branding);
+  const text = locale === "ar"
+    ? {
+        title: "لا توجد نتائج",
+        hint: "عدّل الفلاتر أو البحث",
+      }
+    : {
+        title: "Aucun resultat trouve",
+        hint: "Ajustez vos filtres ou votre recherche",
+      };
+
+  return (
+    <div className="h-64 flex flex-col items-center justify-center bg-white rounded-[32px] border border-dashed border-slate-200">
+      <div className="p-4 bg-slate-50 rounded-full mb-3">
+        <Package className="text-slate-200" size={40} />
+      </div>
+      <p className="text-slate-400 font-bold text-sm text-center">
+        {text.title}<br/>
+        <span className="text-[9px] uppercase font-black opacity-60 tracking-widest">
+          {text.hint}
+        </span>
+      </p>
+    </div>
+  );
+}

@@ -104,7 +104,7 @@ export default function TenantStatisticsPage() {
         syncing: "جاري مزامنة الاحصائيات...",
       }
     : {
-        title: "Statistiques Display",
+        title: "Statistiques d'affichage",
         subtitle: "Etat TV, catalogue actif et parution planning.",
         screens: "Ecrans",
         online: "En ligne",

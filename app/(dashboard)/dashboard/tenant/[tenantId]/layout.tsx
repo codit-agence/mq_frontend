@@ -43,8 +43,8 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
 
   const mobileNav = [
     { href: `/dashboard/tenant/${tenantId}`, label: locale === "ar" ? "الرئيسية" : "Accueil", icon: <Home size={16} />, active: pathname === `/dashboard/tenant/${tenantId}` },
-    { href: `/dashboard/tenant/${tenantId}/menu`, label: "Menu", icon: <LayoutDashboard size={16} />, active: pathname.includes(`/dashboard/tenant/${tenantId}/menu`) },
-    { href: `/dashboard/tenant/${tenantId}/display`, label: "Display", icon: <Tv size={16} />, active: pathname.includes(`/dashboard/tenant/${tenantId}/display`) },
+    { href: `/dashboard/tenant/${tenantId}/menu`, label: locale === "ar" ? "القائمة" : "Menu", icon: <LayoutDashboard size={16} />, active: pathname.includes(`/dashboard/tenant/${tenantId}/menu`) },
+    { href: `/dashboard/tenant/${tenantId}/display`, label: locale === "ar" ? "العرض" : "Display", icon: <Tv size={16} />, active: pathname.includes(`/dashboard/tenant/${tenantId}/display`) },
     { href: `/dashboard/tenant/${tenantId}/settings`, label: locale === "ar" ? "الاعدادات" : "Settings", icon: <Settings size={16} />, active: pathname.includes(`/dashboard/tenant/${tenantId}/settings`) },
   ];
 

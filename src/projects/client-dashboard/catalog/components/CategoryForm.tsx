@@ -5,6 +5,8 @@ import { useCatalogStore } from "@/src/projects/client-dashboard/catalog/store/c
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 type Lang = "fr" | "ar" | "en" | "es";
 
@@ -17,6 +19,8 @@ interface CategoryFormProps {
 export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
   const { createCategory, updateCategory, loading } = useCatalogStore();
   const { formData } = useSettingsStore();
+  const { branding } = useBranding();
+  const { locale } = useAppLocale(branding);
   const activeLanguages = (formData?.display?.active_languages || ["fr"]) as Lang[];
   const defaultLanguage = (formData?.display?.default_language as Lang) || activeLanguages[0] || "fr";
   const [activeLang, setActiveLang] = useState<Lang>(defaultLanguage);
@@ -28,6 +32,29 @@ export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
     name_es: initialData?.name_es || "",
   });
   const [emoji, setEmoji] = useState(initialData?.image || "🍔");
+  const text = locale === "ar"
+    ? {
+        languages: { fr: "الفرنسية", ar: "العربية", en: "الإنجليزية", es: "الإسبانية" } as Record<Lang, string>,
+        missing: "مطلوب: اسم التصنيف باللغة",
+        orChange: "أكمل الحقول أو غيّر اللغات المفعلة من الإعدادات > التصميم.",
+        categoryError: "خطأ أثناء حفظ التصنيف:",
+        icon: "أيقونة / Emoji",
+        groupName: "اسم المجموعة / التصنيف",
+        placeholder: "مثال: المقبلات الساخنة",
+        update: "تحديث",
+        create: "إنشاء التصنيف",
+      }
+    : {
+        languages: { fr: "Francais", ar: "Arabe", en: "Anglais", es: "Espagnol" } as Record<Lang, string>,
+        missing: "Obligatoire: nom categorie en",
+        orChange: "Completez les champs ou modifiez Active languages dans Parametres > Design.",
+        categoryError: "Erreur action categorie:",
+        icon: "Icone / Emoji",
+        groupName: "Nom du groupe / Categorie",
+        placeholder: "Ex: Entrees chaudes",
+        update: "Mettre a jour",
+        create: "Creer la categorie",
+      };
 
   useEffect(() => {
     if (initialData) {
@@ -58,15 +85,9 @@ export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
     });
 
     if (missingLang) {
-      const labels: Record<Lang, string> = {
-        fr: "Français",
-        ar: "Arabe",
-        en: "Anglais",
-        es: "Espagnol",
-      };
       setActiveLang(missingLang);
       toast.error(
-        `Obligatoire: nom categorie en ${labels[missingLang]}. Completez les champs ou modifiez Active languages dans Parametres > Design.`
+        `${text.missing} ${text.languages[missingLang]}. ${text.orChange}`
       );
       return;
     }
@@ -90,13 +111,12 @@ export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
       
       onSuccess();
     } catch (err) {
-      console.error("Erreur action categorie:", err);
+      console.error(text.categoryError, err);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 py-4">
-      {/* Icon Selector */}
       <div className="flex flex-col items-center gap-4">
         <div className="text-5xl p-6 bg-slate-50 rounded-[35px] border-2 border-slate-100 shadow-inner group hover:border-indigo-200 transition-all">
            <input 
@@ -104,10 +124,10 @@ export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
              maxLength={2}
              onChange={(e) => setEmoji(e.target.value)}
              className="w-16 text-center bg-transparent outline-none cursor-pointer"
-             title="Cliquez pour changer l'icône"
+             title={text.icon}
            />
         </div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Icône / Emoji</p>
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{text.icon}</p>
       </div>
 
       <div className="space-y-6">
@@ -126,11 +146,11 @@ export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
 
         <div className="space-y-2" dir={activeLang === "ar" ? "rtl" : "ltr"}>
           <label className="text-[10px] font-black text-slate-400 uppercase ml-2 tracking-wider">
-            Nom du groupe / Catégorie ({activeLang})
+            {text.groupName} ({activeLang})
           </label>
           <input 
             required={activeLang === defaultLanguage}
-            placeholder="Ex: Entrées Chaudes"
+            placeholder={text.placeholder}
             className="w-full p-5 bg-slate-50 border-none rounded-[24px] font-bold text-lg outline-indigo-500 transition-all"
             value={fields[activeLang === 'fr' ? 'name' : `name_${activeLang}`] || ''}
             onChange={(e) => setFields((prev) => ({ ...prev, [activeLang === 'fr' ? 'name' : `name_${activeLang}`]: e.target.value }))}
@@ -138,7 +158,6 @@ export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
         </div>
       </div>
 
-      {/* Submit Button */}
       <button 
         type="submit"
         disabled={loading || !currentName}
@@ -147,7 +166,7 @@ export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
         {loading ? (
           <Loader2 className="animate-spin" size={20} />
         ) : (
-          initialData ? "Mettre à jour" : "Créer la catégorie"
+          initialData ? text.update : text.create
         )}
       </button>
     </form>

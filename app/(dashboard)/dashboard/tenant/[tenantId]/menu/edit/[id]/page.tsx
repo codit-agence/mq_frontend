@@ -10,6 +10,8 @@ import { catalogService } from "@/src/projects/client-dashboard/catalog/catalog.
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { ArrowLeft, Loader2, Save, Trash2, ImageIcon } from "lucide-react";
 import { toast } from "react-hot-toast";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 type Lang = "fr" | "ar" | "en" | "es";
 
@@ -19,6 +21,8 @@ export default function EditProductPage() {
   const { products, categories } = useCatalogStore();
   const { tenant } = useAuthStore();
   const { formData } = useSettingsStore();
+  const { branding } = useBranding();
+  const { locale, isRtl } = useAppLocale(branding);
 
   const [initialData, setInitialData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -28,6 +32,45 @@ export default function EditProductPage() {
   const isOwner = tenant?.role === "owner";
   const catalogRestricted = !!formData?.display?.catalog_client_restricted;
   const readonlyMode = catalogRestricted && !isOwner;
+  const text = locale === "ar"
+    ? {
+        notFound: "المنتج غير موجود",
+        restricted: "وصول مقيّد",
+        restrictedDesc: "الكتالوج مقفل للعملاء. فقط المالك يمكنه تعديل هذا المنتج.",
+        back: "الرجوع إلى القائمة",
+        loading: "جار التحميل...",
+        title: "تعديل المنتج",
+        requiredTitle: "حقول متعددة اللغات مطلوبة",
+        requiredDesc: `للحفظ، يجب تعبئة \`الاسم\` و\`الوصف\` في كل لغة مفعلة (${activeLanguages.join(", ")}). غيّر اللغات المفعلة من الإعدادات > التصميم إذا لزم الأمر.`,
+        image: "إضافة صورة",
+        price: "السعر (MAD)",
+        category: "التصنيف",
+        shortDescription: "وصف مختصر",
+        description: "الوصف",
+        note: "ملاحظة داخلية",
+        add: "+ إضافة",
+        saving: "جار الحفظ...",
+        save: "حفظ التعديلات",
+      }
+    : {
+        notFound: "Produit introuvable",
+        restricted: "Acces restreint",
+        restrictedDesc: "Le catalogue est verrouille pour les clients. Seuls les proprietaires peuvent modifier ou mettre a jour ce produit.",
+        back: "Retour au menu",
+        loading: "Chargement...",
+        title: "Edition produit",
+        requiredTitle: "Champs obligatoires multilingues",
+        requiredDesc: `Pour enregistrer, vous devez remplir \`Nom\` et \`Description\` dans chaque langue active (${activeLanguages.join(", ")}). Sinon, modifiez \`Active languages\` dans Parametres > Design.`,
+        image: "Ajouter image",
+        price: "Prix (MAD)",
+        category: "Categorie",
+        shortDescription: "Courte description",
+        description: "Description",
+        note: "Note interne",
+        add: "+ Ajouter",
+        saving: "Enregistrement...",
+        save: "Sauvegarder les modifications",
+      };
 
   useEffect(() => {
     if (!activeLanguages.includes(activeLang)) {
@@ -47,14 +90,14 @@ export default function EditProductPage() {
           setInitialData(data);
         }
       } catch (err) {
-        toast.error("Produit introuvable");
+        toast.error(text.notFound);
         router.push(`/dashboard/tenant/${tenant?.id}/menu`);
       } finally {
         setLoading(false);
       }
     };
     fetchProduct();
-  }, [id, products, tenant?.id, router]);
+  }, [id, products, tenant?.id, router, text.notFound]);
 
   // 2. Hook de formulaire
   const {
@@ -74,9 +117,9 @@ export default function EditProductPage() {
   if (readonlyMode) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
       <div className="max-w-3xl rounded-3xl border border-rose-200 bg-white p-12 text-center shadow-xl">
-        <h1 className="text-3xl font-black text-rose-600 mb-4">Accès restreint</h1>
-        <p className="text-sm text-slate-600 mb-8">Le catalogue est verrouillé pour les clients. Seuls les propriétaires peuvent modifier ou mettre à jour ce produit.</p>
-        <button onClick={() => router.push(`/dashboard/tenant/${tenant?.id}/menu`)} className="px-8 py-4 rounded-3xl bg-slate-900 text-white font-black uppercase tracking-[0.2em]">Retour au menu</button>
+        <h1 className="text-3xl font-black text-rose-600 mb-4">{text.restricted}</h1>
+        <p className="text-sm text-slate-600 mb-8">{text.restrictedDesc}</p>
+        <button onClick={() => router.push(`/dashboard/tenant/${tenant?.id}/menu`)} className="px-8 py-4 rounded-3xl bg-slate-900 text-white font-black uppercase tracking-[0.2em]">{text.back}</button>
       </div>
     </div>
   );
@@ -84,33 +127,28 @@ export default function EditProductPage() {
   if (loading || !initialData) return (
     <div className="h-[80vh] flex flex-col items-center justify-center gap-4">
       <Loader2 className="animate-spin text-indigo-600" size={48} />
-      <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Chargement...</p>
+      <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">{text.loading}</p>
     </div>
   );
 
   return (
-    <div className="max-w-6xl mx-auto p-4 md:p-10 pb-40">
+    <div dir={isRtl ? "rtl" : "ltr"} className="max-w-6xl mx-auto p-4 md:p-10 pb-40">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-10">
         <div className="flex items-center gap-5">
           <button onClick={() => router.back()} className="p-4 bg-white rounded-[22px] shadow-sm border border-slate-100 hover:bg-indigo-600 group transition-all">
             <ArrowLeft size={20} className="text-slate-500 group-hover:text-white" />
           </button>
-          <h1 className="text-3xl font-black text-slate-900">
-            Édition <span className="text-indigo-600 italic">Produit</span>
-          </h1>
+          <h1 className="text-3xl font-black text-slate-900">{text.title}</h1>
         </div>
       </div>
 
       {activeLanguages.length > 0 && (
         <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
           <p className="text-xs font-black uppercase tracking-wider text-amber-700">
-            Champs obligatoires multilingues
+            {text.requiredTitle}
           </p>
-          <p className="mt-1 text-sm text-amber-800">
-            Pour enregistrer, vous devez remplir `Nom` et `Description` dans chaque langue active ({activeLanguages.join(", ")}).
-            Sinon, modifiez `Active languages` dans Parametres &gt; Design.
-          </p>
+          <p className="mt-1 text-sm text-amber-800">{text.requiredDesc}</p>
         </div>
       )}
 
@@ -125,7 +163,7 @@ export default function EditProductPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-slate-300 gap-3">
                   <ImageIcon size={40} />
-                  <span className="text-[9px] font-black">AJOUTER IMAGE</span>
+                  <span className="text-[9px] font-black">{text.image}</span>
                 </div>
               )}
               <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
@@ -134,7 +172,7 @@ export default function EditProductPage() {
 
           <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-xl space-y-6">
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-400 block px-1 mb-2">Prix (MAD)</label>
+              <label className="text-[10px] font-black uppercase text-slate-400 block px-1 mb-2">{text.price}</label>
               <input 
                 {...register("price", { required: true })} 
                 type="number" step="0.01"
@@ -142,7 +180,7 @@ export default function EditProductPage() {
               />
             </div>
             <div>
-              <label className="text-[10px] font-black uppercase text-slate-400 block px-1 mb-2">Catégorie</label>
+              <label className="text-[10px] font-black uppercase text-slate-400 block px-1 mb-2">{text.category}</label>
               <select 
                 {...register("category_id")} 
                 className="w-full px-6 py-4 bg-slate-50 rounded-[20px] font-bold outline-none"
@@ -176,7 +214,7 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 block px-2 mb-2">Courte description ({activeLang})</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 block px-2 mb-2">{text.shortDescription} ({activeLang})</label>
                 <input
                   {...register(activeLang === "fr" ? "short_description" : `short_description_${activeLang}` as any)}
                   className="w-full px-6 py-4 bg-slate-50 rounded-[22px] border-2 border-transparent focus:border-indigo-500 outline-none shadow-inner"
@@ -185,7 +223,7 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 block px-2 mb-2">Description ({activeLang})</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 block px-2 mb-2">{text.description} ({activeLang})</label>
                 <textarea 
                   {...register(activeLang === "fr" ? "description" : `description_${activeLang}` as any)} 
                   rows={4}
@@ -194,7 +232,7 @@ export default function EditProductPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[10px] font-black uppercase text-slate-400 block px-2 mb-2">Note interne ({activeLang})</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 block px-2 mb-2">{text.note} ({activeLang})</label>
                 <input
                   {...register(activeLang === "fr" ? "note" : `note_${activeLang}` as any)}
                   className="w-full px-6 py-4 bg-slate-50 rounded-[22px] border-2 border-transparent focus:border-indigo-500 outline-none shadow-inner"
@@ -208,7 +246,7 @@ export default function EditProductPage() {
           <div className="bg-white p-8 md:p-10 rounded-[50px] border border-slate-100 shadow-xl">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-black text-slate-900 text-[10px] uppercase tracking-widest">Variantes</h3>
-              <button type="button" onClick={() => append({ label: "", price: 0 })} className="text-[10px] font-black text-indigo-600 hover:underline">+ AJOUTER</button>
+              <button type="button" onClick={() => append({ label: "", price: 0 })} className="text-[10px] font-black text-indigo-600 hover:underline">{text.add}</button>
             </div>
             <div className="space-y-3">
               {fields.map((field, index) => (
@@ -227,7 +265,7 @@ export default function EditProductPage() {
             className="w-full py-6 bg-slate-900 text-white rounded-[32px] font-black text-lg shadow-xl hover:bg-indigo-600 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
           >
             {isSubmitting ? <Loader2 className="animate-spin" /> : <Save />}
-            <span>{isSubmitting ? "ENREGISTREMENT..." : "SAUVEGARDER LES MODIFICATIONS"}</span>
+            <span>{isSubmitting ? text.saving : text.save}</span>
           </button>
         </div>
       </form>

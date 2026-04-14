@@ -6,8 +6,12 @@ import ScreenCard from "./components/ScreenCard";
 import { AddScreenForm } from "./components/AddScreenForm";
 import { PairingModal } from "./components/PairingModal";
 import { useTVStream } from "@/src/projects/client-dashboard/tvstream/hooks/useTVStream";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 export default function TVStreamPage() {
   const params = useParams<{ tenantId?: string }>();
+  const { branding } = useBranding();
+  const { locale, isRtl } = useAppLocale(branding);
   const {
     screens, loading, isAdding, setIsAdding,
     summary,
@@ -21,9 +25,28 @@ export default function TVStreamPage() {
     handleResetMovedAlert,
     handleForceRefresh,
   } = useTVStream(params?.tenantId);
+  const text = locale === "ar"
+    ? {
+        close: "إغلاق",
+        newScreen: "شاشة جديدة",
+        online: "متصل",
+        totalScreens: "إجمالي الشاشات",
+        moved: "تنبيه التحرك",
+        uptime: "مدة التشغيل 7 أيام",
+        empty: "لا توجد شاشة مسجلة لهذا المستأجر.",
+      }
+    : {
+        close: "Fermer",
+        newScreen: "Nouvel ecran",
+        online: "En ligne",
+        totalScreens: "Total ecrans",
+        moved: "Alerte deplacement",
+        uptime: "Uptime 7j (h)",
+        empty: "Aucun ecran enregistre pour ce tenant.",
+      };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-4 sm:p-6 md:p-10">
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-[#020617] text-slate-200 p-4 sm:p-6 md:p-10">
       <div className="max-w-7xl mx-auto space-y-8">
         
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -34,15 +57,15 @@ export default function TVStreamPage() {
             onClick={() => setIsAdding(!isAdding)}
             className="w-full sm:w-auto bg-blue-600 px-6 py-3 rounded-2xl font-black text-sm"
           >
-            {isAdding ? "Fermer" : "NOUVEL ÉCRAN"}
+            {isAdding ? text.close : text.newScreen}
           </button>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <StatCard icon={<Signal size={16} />} label="En ligne" value={summary?.online_screens ?? 0} />
-          <StatCard icon={<Tv size={16} />} label="Total écrans" value={summary?.total_screens ?? screens.length} />
-          <StatCard icon={<AlertTriangle size={16} />} label="Alerte déplacement" value={summary?.moved_alert_count ?? 0} />
-          <StatCard icon={<Clock3 size={16} />} label="Uptime 7j (h)" value={Math.round(((summary?.last_7_days.total_uptime_seconds ?? 0) / 3600) * 10) / 10} />
+          <StatCard icon={<Signal size={16} />} label={text.online} value={summary?.online_screens ?? 0} />
+          <StatCard icon={<Tv size={16} />} label={text.totalScreens} value={summary?.total_screens ?? screens.length} />
+          <StatCard icon={<AlertTriangle size={16} />} label={text.moved} value={summary?.moved_alert_count ?? 0} />
+          <StatCard icon={<Clock3 size={16} />} label={text.uptime} value={Math.round(((summary?.last_7_days.total_uptime_seconds ?? 0) / 3600) * 10) / 10} />
         </div>
 
         <AnimatePresence>
@@ -78,7 +101,7 @@ export default function TVStreamPage() {
 
         {!loading && screens.length === 0 && (
           <div className="rounded-3xl border border-slate-800 bg-slate-900/40 p-10 text-center text-slate-400">
-            Aucun écran enregistré pour ce tenant.
+            {text.empty}
           </div>
         )}
       </div>
