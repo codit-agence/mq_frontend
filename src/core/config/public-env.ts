@@ -21,6 +21,27 @@ function deriveOrigin(value: string, fallback: string) {
   }
 }
 
+function deriveWebsocketOrigin(value: string, fallback: string) {
+  try {
+    const url = new URL(value);
+
+    if (url.protocol === "https:") {
+      url.protocol = "wss:";
+    } else if (url.protocol === "http:") {
+      url.protocol = "ws:";
+    } else if (url.protocol !== "ws:" && url.protocol !== "wss:") {
+      return fallback;
+    }
+
+    url.pathname = "";
+    url.search = "";
+    url.hash = "";
+    return trimTrailingSlash(url.origin);
+  } catch {
+    return fallback;
+  }
+}
+
 export function getSiteUrl() {
   return trimTrailingSlash(safeUrl(process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL, DEFAULT_SITE_URL));
 }
@@ -41,19 +62,12 @@ export function getBackendOrigin() {
 }
 
 export function getWebsocketOrigin() {
+  const fallback = deriveWebsocketOrigin(DEFAULT_API_URL, "ws://127.0.0.1:8000");
   const explicitWs = process.env.NEXT_PUBLIC_WS_URL?.trim();
+
   if (explicitWs) {
-    return trimTrailingSlash(explicitWs);
+    return deriveWebsocketOrigin(explicitWs, fallback);
   }
 
-  try {
-    const apiUrl = new URL(getApiBaseUrl());
-    apiUrl.protocol = apiUrl.protocol === "https:" ? "wss:" : "ws:";
-    apiUrl.pathname = "";
-    apiUrl.search = "";
-    apiUrl.hash = "";
-    return trimTrailingSlash(apiUrl.origin);
-  } catch {
-    return "ws://127.0.0.1:8000";
-  }
+  return deriveWebsocketOrigin(getApiBaseUrl(), fallback);
 }

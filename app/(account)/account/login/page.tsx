@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, Loader2, ArrowRight } from "lucide-react";
 
 import { authService } from "@/src/projects/client-dashboard/account/auth.services";
+import { resolveAuthenticatedRoute } from "@/src/projects/client-dashboard/account/auth-routing";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { getErrorMessage } from "@/src/utils/errors";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
@@ -14,8 +15,7 @@ import { BrandingFooter } from "@/src/projects/shared/branding/components/Brandi
 
 
 function LoginContent() {
-
-const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
   const isRegistered = searchParams.get('registered') === 'true';
   const router = useRouter();
   const { branding } = useBranding();
@@ -62,10 +62,38 @@ const searchParams = useSearchParams();
   }[locale];
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/dashboard");
+    if (!isAuthenticated || isLoading) {
+      return;
     }
-  }, [isAuthenticated, router]);
+
+    let cancelled = false;
+
+    const syncExistingSession = async () => {
+      try {
+        const fullContext = await authService.getMe();
+
+        if (cancelled) {
+          return;
+        }
+
+        useAuthStore.getState().setContext(fullContext.user, fullContext.current_tenant);
+        router.replace(resolveAuthenticatedRoute({ user: fullContext.user, tenant: fullContext.current_tenant }));
+      } catch {
+        if (cancelled) {
+          return;
+        }
+
+        const { user, tenant } = useAuthStore.getState();
+        router.replace(resolveAuthenticatedRoute({ user, tenant }));
+      }
+    };
+
+    void syncExistingSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, isLoading, router]);
 
   const validateForm = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -91,16 +119,19 @@ const searchParams = useSearchParams();
       const response = await authService.login({ email, password });
       loginSuccess(response, rememberMe);
 
+      let resolvedUser = useAuthStore.getState().user;
+      let resolvedTenant = useAuthStore.getState().tenant;
+
       try {
         const fullContext = await authService.getMe();
         useAuthStore.getState().setContext(fullContext.user, fullContext.current_tenant);
+        resolvedUser = fullContext.user;
+        resolvedTenant = fullContext.current_tenant;
       } catch (meErr) {
         console.warn("Contexte non récupéré, utilisation des données de base.");
       }
 
-      const isInternalUser = Boolean(response.is_staff || response.is_superuser);
-      const hasTenant = Boolean(response.tenant_id || useAuthStore.getState().tenant?.id);
-      router.push(isInternalUser ? "/dashboard/internal" : hasTenant ? "/dashboard" : "/account/register");
+      router.replace(resolveAuthenticatedRoute({ user: resolvedUser, tenant: resolvedTenant, loginResponse: response }));
 
     } catch (err: unknown) {
       setError(getErrorMessage(err));
