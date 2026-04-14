@@ -29,20 +29,18 @@ export default function InternalDashboardLayout({ children }: { children: React.
 
   const text = locale === "ar"
     ? {
-        hub: "لوحة الادمن",
+        appConfig: "اعدادات التطبيق",
         clients: "العملاء",
         users: "المستخدمون",
-        settings: "اعدادات الادمن",
         preview: "وضع المعاينة",
         previewHint: "عرض المحتوى بدون مصادقة حقيقية",
         restricted: "وصول غير مسموح",
         restrictedHint: "هذه المساحة مخصصة فقط لفريق الادمن الداخلي.",
       }
     : {
-        hub: "Admin Hub",
+        appConfig: "Config App",
         clients: "Clients",
         users: "Utilisateurs",
-        settings: "Config Admin",
         preview: "Mode Preview",
         previewHint: "Revue du contenu sans authentification reelle",
         restricted: "Acces refuse",
@@ -50,10 +48,9 @@ export default function InternalDashboardLayout({ children }: { children: React.
       };
 
   const navLinks = [
-    { href: withPreview("/dashboard/internal"), icon: <ShieldCheck size={16} />, label: text.hub, active: pathname === "/dashboard/internal" },
+    { href: withPreview("/dashboard/internal/settings"), icon: <ShieldCheck size={16} />, label: text.appConfig, active: pathname === "/dashboard/internal" || pathname.includes("/dashboard/internal/settings") },
     { href: withPreview("/dashboard/internal/tenants"), icon: <LayoutDashboard size={16} />, label: text.clients, active: pathname.includes("/dashboard/internal/tenants") },
     { href: withPreview("/dashboard/internal/users"), icon: <Users size={16} />, label: text.users, active: pathname.includes("/dashboard/internal/users") },
-    { href: withPreview("/dashboard/internal/settings"), icon: <Settings size={16} />, label: text.settings, active: pathname.includes("/dashboard/internal/settings") },
   ];
 
   if (!canAccessInternal) {
@@ -90,13 +87,13 @@ export default function InternalDashboardLayout({ children }: { children: React.
               <Menu size={18} />
             </button>
 
-            <Link href={withPreview("/dashboard/internal")} className="flex items-center gap-3 group">
+            <Link href={withPreview("/dashboard/internal/settings")} className="flex items-center gap-3 group">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black shadow-sm group-hover:scale-105 transition-all overflow-hidden" style={{ backgroundColor: branding.primary_color }}>
                 {branding.logo ? <img src={branding.logo} alt={branding.app_name} className="w-full h-full object-cover" /> : branding.app_name.charAt(0)}
               </div>
               <div>
                 <span className="block font-black text-white uppercase text-xs tracking-tight">{branding.app_name}</span>
-                <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{text.hub}</span>
+                <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{text.appConfig}</span>
               </div>
             </Link>
 
