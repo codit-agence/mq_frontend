@@ -136,12 +136,6 @@ function LoginContent() {
         useAuthStore.getState().setInitializing(false);
       }
 
-      console.log("🔐 DEBUG LOGIN FLOW:", {
-        isMeSuccessful,
-        resolvedUser: { id: resolvedUser?.id, is_staff: resolvedUser?.is_staff, is_superuser: resolvedUser?.is_superuser },
-        loginResponse: { is_staff: response.is_staff, is_superuser: response.is_superuser },
-      });
-
       router.replace(resolveAuthenticatedRoute({ user: resolvedUser, tenant: resolvedTenant, loginResponse: response }));
 
     } catch (err: unknown) {
