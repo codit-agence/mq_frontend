@@ -11,6 +11,7 @@ import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 import { LocaleToggle } from "@/src/projects/shared/branding/components/LocaleToggle";
 import { BrandingFooter } from "@/src/projects/shared/branding/components/BrandingFooter";
+import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 
 
 
@@ -166,7 +167,7 @@ function LoginContent() {
             style={{ backgroundColor: branding.primary_color, boxShadow: `0 15px 35px -20px ${branding.primary_color}` }}
           >
             {branding.logo ? (
-              <img src={branding.logo} alt="QALYAS" className="w-full h-full object-cover" />
+              <img src={getImageUrl(branding.logo)} alt="QALYAS" className="w-full h-full object-cover" />
             ) : (
               <span className="text-white text-2xl font-black italic">Q</span>
             )}
