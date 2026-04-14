@@ -11,8 +11,10 @@ interface AuthState {
   tenant: Tenant | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isInitializing: boolean;
   handleLoginSuccess: (data: LoginResponse, rememberMe?: boolean) => void;
   setContext: (user: UserProfile, tenant: Tenant | null) => void;
+  setInitializing: (value: boolean) => void;
   logout: () => void;
 }
 
@@ -23,6 +25,7 @@ export const useAuthStore = create<AuthState>()(
       tenant: null,
       isAuthenticated: false,
       isLoading: false,
+      isInitializing: true,
 
       handleLoginSuccess: (data: LoginResponse, rememberMe = false) => {
         // Durée d'expiration basée sur rememberMe
@@ -75,7 +78,11 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setContext: (user, tenant) => {
-        set({ user, tenant, isAuthenticated: true, isLoading: false });
+        set({ user, tenant, isAuthenticated: true, isLoading: false, isInitializing: false });
+      },
+
+      setInitializing: (value) => {
+        set({ isInitializing: value });
       },
 
       logout: () => {
@@ -102,7 +109,7 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
         user: state.user,
         tenant: state.tenant
-      }), 
+      }),
     }
   )
 );

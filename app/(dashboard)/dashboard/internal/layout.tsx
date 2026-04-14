@@ -9,18 +9,23 @@ import { useInternalPreviewMode } from "@/src/projects/admin-dashboard/internal/
 import { internalModules } from "@/src/projects/admin-dashboard/internal/internal-modules";
 
 export default function InternalDashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, isInitializing } = useAuthStore();
   const { previewMode, withPreview } = useInternalPreviewMode();
   const pathname = usePathname();
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
-  const canAccessInternal = previewMode || Boolean(user?.is_staff || user?.is_superuser);
+  const isInternalUser = Boolean(user?.is_staff || user?.is_superuser);
+  const canAccessInternal = previewMode || isInternalUser;
 
   useEffect(() => {
-    if (!canAccessInternal) {
+    // Skip redirection check while auth is initializing
+    if (isInitializing) return;
+    
+    // If authenticated but not an internal user, redirect to /dashboard
+    if (isAuthenticated && !isInternalUser) {
       router.replace("/dashboard");
     }
-  }, [canAccessInternal, router]);
+  }, [isAuthenticated, isInternalUser, isInitializing, router]);
 
   const navLinks = internalModules.map((module) => ({
     href: withPreview(module.href),
@@ -32,6 +37,18 @@ export default function InternalDashboardLayout({ children }: { children: React.
   }));
 
   if (!canAccessInternal) {
+    // Show loading while initializing
+    if (isInitializing) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-950">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p className="font-bold text-sm text-slate-400">Verification accès...</p>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 px-6">
         <div className="max-w-xl rounded-[2rem] border border-slate-800 bg-slate-900 p-8 text-center shadow-sm">

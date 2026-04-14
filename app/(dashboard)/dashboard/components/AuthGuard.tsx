@@ -6,13 +6,13 @@ import { authService } from "@/src/projects/client-dashboard/account/auth.servic
 import { useInternalPreviewMode } from "@/src/projects/admin-dashboard/internal/hooks/useInternalPreviewMode";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { logout, setContext } = useAuthStore();
-  const [isInitializing, setIsInitializing] = useState(true);
+  const { logout, setContext, setInitializing } = useAuthStore();
+  const { isInitializing } = useAuthStore();
   const { previewMode } = useInternalPreviewMode();
 
   useEffect(() => {
     if (previewMode) {
-      setIsInitializing(false);
+      setInitializing(false);
       return;
     }
 
@@ -25,13 +25,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     authService.getMe()
       .then(data => {
         setContext(data.user, data.current_tenant);
-        setIsInitializing(false);
       })
       .catch((err) => {
         if (err.response?.status === 401) logout();
-        setIsInitializing(false);
+        setInitializing(false);
       });
-  }, [logout, previewMode, setContext]);
+  }, [logout, previewMode, setContext, setInitializing]);
 
   if (isInitializing) {
     return (
