@@ -15,14 +15,22 @@ export function isInternalAccount(params: {
   const tenantRole = normalizeRole(tenant?.role);
   const responseRole = normalizeRole(loginResponse?.role);
 
-  return Boolean(
-    user?.is_staff ||
-      user?.is_superuser ||
-      loginResponse?.is_staff ||
-      loginResponse?.is_superuser ||
-      INTERNAL_ROLE_KEYS.has(tenantRole) ||
-      INTERNAL_ROLE_KEYS.has(responseRole),
-  );
+  const isStaff = user?.is_staff || loginResponse?.is_staff;
+  const isSuperuser = user?.is_superuser || loginResponse?.is_superuser;
+  const isRoleMatch = INTERNAL_ROLE_KEYS.has(tenantRole) || INTERNAL_ROLE_KEYS.has(responseRole);
+
+  const result = Boolean(isStaff || isSuperuser || isRoleMatch);
+  
+  console.log("🔐 isInternalAccount DEBUG:", {
+    isStaff,
+    isSuperuser,
+    isRoleMatch,
+    tenantRole,
+    responseRole,
+    result,
+  });
+
+  return result;
 }
 
 export function resolveAuthenticatedRoute(params: {
@@ -32,7 +40,19 @@ export function resolveAuthenticatedRoute(params: {
 }) {
   const { tenant } = params;
 
-  if (isInternalAccount(params)) {
+  const isInternal = isInternalAccount(params);
+  console.log("🔐 resolveAuthenticatedRoute DEBUG:", {
+    isInternal,
+    user: params.user?.is_staff,
+    userSuperuser: params.user?.is_superuser,
+    loginResponse: {
+      is_staff: params.loginResponse?.is_staff,
+      is_superuser: params.loginResponse?.is_superuser,
+    },
+    tenantRole: tenant?.role,
+  });
+
+  if (isInternal) {
     return "/dashboard/internal/settings";
   }
 

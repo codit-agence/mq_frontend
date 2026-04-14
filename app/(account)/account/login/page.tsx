@@ -122,17 +122,25 @@ function LoginContent() {
 
       let resolvedUser = useAuthStore.getState().user;
       let resolvedTenant = useAuthStore.getState().tenant;
+      let isMeSuccessful = false;
 
       try {
         const fullContext = await authService.getMe();
         useAuthStore.getState().setContext(fullContext.user, fullContext.current_tenant);
         resolvedUser = fullContext.user;
         resolvedTenant = fullContext.current_tenant;
+        isMeSuccessful = true;
       } catch (meErr) {
-        console.warn("Contexte getMe() failed, using LoginResponse data.", meErr);
+        console.warn("getMe() failed, using LoginResponse data.", meErr);
         // Mark initialization as complete even if getMe failed
         useAuthStore.getState().setInitializing(false);
       }
+
+      console.log("🔐 DEBUG LOGIN FLOW:", {
+        isMeSuccessful,
+        resolvedUser: { id: resolvedUser?.id, is_staff: resolvedUser?.is_staff, is_superuser: resolvedUser?.is_superuser },
+        loginResponse: { is_staff: response.is_staff, is_superuser: response.is_superuser },
+      });
 
       router.replace(resolveAuthenticatedRoute({ user: resolvedUser, tenant: resolvedTenant, loginResponse: response }));
 
