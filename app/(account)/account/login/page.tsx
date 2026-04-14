@@ -130,6 +130,16 @@ function LoginContent() {
         resolvedTenant = fullContext.current_tenant;
       } catch (meErr) {
         console.warn("Contexte non récupéré, utilisation des données de base.");
+        // Fallback: ensure admin flags from LoginResponse are preserved in local resolvedUser
+        if (resolvedUser && response) {
+          resolvedUser = {
+            ...resolvedUser,
+            is_staff: resolvedUser.is_staff || Boolean(response.is_staff),
+            is_superuser: resolvedUser.is_superuser || Boolean(response.is_superuser),
+          };
+        }
+        // Mark initialization as complete even if getMe failed
+        useAuthStore.getState().setInitializing(false);
       }
 
       router.replace(resolveAuthenticatedRoute({ user: resolvedUser, tenant: resolvedTenant, loginResponse: response }));
