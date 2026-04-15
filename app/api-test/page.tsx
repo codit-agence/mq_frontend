@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import { getApiBaseUrl } from "@/src/core/config/public-env";
 import { authService } from "@/src/projects/client-dashboard/account/auth.services";
 
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+const apiBaseUrl = getApiBaseUrl();
 
 export default function ApiTestPage() {
   const [results, setResults] = useState<string[]>([]);

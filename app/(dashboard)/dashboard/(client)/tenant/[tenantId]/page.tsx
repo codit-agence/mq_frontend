@@ -125,13 +125,13 @@ export default function TenantManagerPage() {
       href: "#",
       locked: true,
     },
-    {
-      title: text.support,
-      desc: text.supportDesc,
-      icon: <LifeBuoy size={24} />,
-      href: "/dashboard/support",
-      badge: "Help",
-    },
+    // {
+    //   title: text.support,
+    //   desc: text.supportDesc,
+    //   icon: <LifeBuoy size={24} />,
+    //   href: "/dashboard/support",
+    //   badge: "Help",
+    // },
   ];
 
   return (
@@ -139,15 +139,13 @@ export default function TenantManagerPage() {
       <section className="dashboard-surface p-5 sm:p-7">
         <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-6">
           <div className="space-y-3">
-            <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-indigo-700">
+            <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.2em] text-green-700">
               <Sparkles size={13} /> {text.console}
             </span>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-green-900">
               {tenant.name}
             </h1>
-            <p className="max-w-2xl text-sm leading-7 dashboard-muted">
-              {text.intro}
-            </p>
+           
           </div>
 
           <div className="grid grid-cols-2 gap-3 min-w-[240px]">
@@ -177,23 +175,23 @@ export default function TenantManagerPage() {
               )}
             </div>
 
-            <h2 className="mt-5 text-xl font-black text-slate-900 tracking-tight">{service.title}</h2>
+            <h2 className="mt-5 text-xl font-black text-green-900 tracking-tight">{service.title}</h2>
             <p className="mt-2 text-sm dashboard-muted min-h-[44px]">{service.desc}</p>
 
-            <div className="mt-5 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-slate-700 group-hover:text-slate-900">
+            <div className="mt-5 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-green-700 group-hover:text-green-900">
               {text.open}
               <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
         ))}
 
-        <Link href={`/dashboard/tenant/${tenant.id}/settings`} className="group dashboard-surface p-5 sm:p-6 bg-slate-900 border-slate-900 text-white hover:bg-slate-800">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 text-white flex items-center justify-center mb-5">
+        <Link href={`/dashboard/tenant/${tenant.id}/settings`} className="group dashboard-surface p-5 sm:p-6 bg-slate-900 border-slate-900 text-black hover:bg-blue-800">
+          <div className="w-12 h-12 rounded-2xl bg-white/10 text-black flex items-center justify-center mb-5">
             <Settings size={24} />
           </div>
           <h2 className="text-xl font-black tracking-tight">{text.settings}</h2>
-          <p className="mt-2 text-sm text-slate-300">{text.settingsDesc}</p>
-          <div className="mt-5 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-white">
+          <p className="mt-2 text-sm text-slate-900">{text.settingsDesc}</p>
+          <div className="mt-5 inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-black">
             {text.configure}
             <ArrowRight size={14} />
           </div>

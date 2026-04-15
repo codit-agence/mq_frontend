@@ -52,8 +52,8 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
         products: "Produits",
         categories: "Categories",
         inactive: "Inactifs",
-        newProduct: "Nouveau produit",
-        newCategory: "Nouvelle categorie",
+        newProduct: "Produit",
+        newCategory: "Categorie",
         managementDisabled: "Gestion catalogue desactivee ici",
         restricted: "Le catalogue est verrouille pour les clients. Seuls les proprietaires peuvent modifier, creer ou supprimer des produits et categories.",
         search: "Rechercher...",
@@ -107,7 +107,7 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
                   onClick={() => router.push(`/dashboard/tenant/${tenantId}/menu/add`)}
                   className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-black text-white transition hover:bg-indigo-700"
                 >
-                  <Plus size={14} />
+                  <Plus size={30} />
                   {text.newProduct}
                 </button>
                 <button
@@ -115,12 +115,12 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
                   onClick={() => router.push(`/dashboard/tenant/${tenantId}/menu/category/add`)}
                   className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800"
                 >
-                  <Plus size={14} />
+                  <Plus size={30} />
                   {text.newCategory}
                 </button>
               </>
             )}
-            <div className="rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">{text.managementDisabled}</div>
+            
           </div>
         </div>
       </header>

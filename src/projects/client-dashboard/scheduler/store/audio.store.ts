@@ -6,18 +6,23 @@ interface AudioTrack {
   id: string;
   title: string;
   file: string;
+  duration?: number;
+  category?: string;
+  track_type?: string;
 }
 
 interface AudioState {
   tracks: AudioTrack[];
-  fetchTracks: () => Promise<void>;
+  fetchTracks: (tenantId?: string | null) => Promise<void>;
 }
 
 export const useAudioStore = create<AudioState>((set) => ({
   tracks: [],
-  fetchTracks: async () => {
+  fetchTracks: async (tenantId) => {
     try {
-      const res = await api.get('/medialib/audio'); // Ajuste l'URL selon ton Swagger
+      const res = await api.get('/medialib/audio', {
+        headers: tenantId ? { 'X-Tenant-ID': tenantId } : undefined,
+      });
       set({ tracks: res.data });
     } catch (error) {
       console.error("Erreur tracks:", error);

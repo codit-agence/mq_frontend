@@ -4,10 +4,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authService } from "@/src/projects/client-dashboard/account/auth.services"; // Nouveau service
+import { AUTH_PATHS, buildRegisteredLoginPath } from "@/src/projects/client-dashboard/account/auth-paths";
 import { getErrorMessage } from "@/src/utils/errors";
 import { RegisterIn } from "@/src/types/accounts/auth.payloads";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
+import { getAuthPageBackgroundStyle } from "@/src/projects/shared/branding/branding-page.styles";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { LocaleToggle } from "@/src/projects/shared/branding/components/LocaleToggle";
 import { BrandingFooter } from "@/src/projects/shared/branding/components/BrandingFooter";
@@ -135,9 +137,6 @@ export default function RegisterPage() {
       return false;
     }
 
-    formData.accepted_terms = true;
-    formData.terms_locale = locale;
-
     return true;
   };
 
@@ -163,7 +162,7 @@ export default function RegisterPage() {
       
       // Succès : On redirige vers login pour qu'il se connecte proprement
       // Ou tu peux le connecter automatiquement si tu as les tokens
-      router.push("/account/login?registered=true");
+      router.replace(buildRegisteredLoginPath());
     } catch (err: unknown) {
       console.error("Erreur d'inscription:", err);
       setError(getErrorMessage(err));
@@ -176,7 +175,7 @@ export default function RegisterPage() {
     <div
       dir={isRtl ? "rtl" : "ltr"}
       className="min-h-screen py-6 sm:py-10 px-4"
-      style={{ background: `linear-gradient(145deg, ${branding.app_background_color}, #fff 40%, ${branding.primary_color}14)` }}
+      style={getAuthPageBackgroundStyle(branding)}
     >
       <div className="max-w-2xl mx-auto">
         <div className="flex justify-end mb-3">
@@ -296,7 +295,7 @@ export default function RegisterPage() {
               <span className="text-sm font-semibold text-slate-700">
                 {text.terms} {" "}
                 <Link
-                  href="/account/terms"
+                  href={AUTH_PATHS.terms}
                   className="underline"
                   style={{ color: branding.primary_color }}
                 >
@@ -317,13 +316,12 @@ export default function RegisterPage() {
         </form>
 
         <div className="mt-8 space-y-4">
-          <button
-            type="button"
-            onClick={() => router.push("/account/login")}
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700"
+          <Link
+            href={AUTH_PATHS.login}
+            className="block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-black text-slate-700"
           >
             {text.login}
-          </button>
+          </Link>
           <BrandingFooter branding={branding} locale={locale} compact />
         </div>
         </div>

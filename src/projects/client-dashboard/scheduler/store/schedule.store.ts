@@ -9,6 +9,7 @@ interface SchedulerState {
   fetchSchedules: () => Promise<void>;
   createSchedule: (data: CreateScheduleInput) => Promise<void>;
   deleteSchedule: (id: string) => Promise<void>;
+  toggleSchedule: (id: string) => Promise<void>;
 }
 
 
@@ -39,19 +40,40 @@ export const useSchedulerStore = create<SchedulerState>((set, get) => ({
     }
   },
 
-deleteSchedule: async (id: string) => {
-  try {
-    await SchedulerService.deleteSchedule(id);
-    
-    // Mise à jour de l'état local pour faire disparaître la ligne immédiatement
+  deleteSchedule: async (id: string) => {
+    try {
+      await SchedulerService.deleteSchedule(id);
+      set((state) => ({
+        schedules: state.schedules.filter((s) => s.id !== id),
+      }));
+      toast.success("Plage horaire supprimée");
+    } catch (error) {
+      console.error("Erreur suppression:", error);
+      toast.error("Erreur lors de la suppression");
+    }
+  },
+
+  toggleSchedule: async (id: string) => {
+    const current = get().schedules.find((s) => s.id === id);
+    if (!current) return;
+    const newActive = !current.is_active;
+    // Optimistic update
     set((state) => ({
-      schedules: state.schedules.filter((s) => s.id !== id),
+      schedules: state.schedules.map((s) =>
+        s.id === id ? { ...s, is_active: newActive } : s
+      ),
     }));
-    
-    toast.success("Plage horaire supprimée");
-  } catch (error) {
-    console.error("Erreur suppression:", error);
-    toast.error("Erreur lors de la suppression");
-  }
-}
+    try {
+      await SchedulerService.patchSchedule(id, { is_active: newActive });
+      toast.success(newActive ? "Plage activée" : "Plage désactivée");
+    } catch (error) {
+      // Rollback on error
+      set((state) => ({
+        schedules: state.schedules.map((s) =>
+          s.id === id ? { ...s, is_active: !newActive } : s
+        ),
+      }));
+      toast.error("Erreur lors de la mise à jour");
+    }
+  },
 }));

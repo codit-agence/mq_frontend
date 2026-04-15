@@ -1,8 +1,10 @@
-import React from 'react';
+"use client";
+
+import React from "react";
 import { Tv, Settings, Trash2, RotateCcw, RefreshCw, AlertTriangle } from "lucide-react";
-import { Screen } from '@/src/types/tvstream/tvstream';
-import { useBranding } from '@/src/projects/shared/branding/useBranding';
-import { useAppLocale } from '@/src/projects/shared/branding/useAppLocale';
+import { Screen } from "@/src/types/tvstream/tvstream";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 interface Props {
   screen: Screen;
@@ -13,58 +15,67 @@ interface Props {
   busy?: boolean;
 }
 
-const ScreenCard: React.FC<Props> = ({
+export function ScreenCard({
   screen,
   onStartPairing,
   onDelete,
   onResetMovedAlert,
   onForceRefresh,
   busy,
-}) => {
+}: Props) {
   const { branding } = useBranding();
   const { locale } = useAppLocale(branding);
   const isOnline = screen.is_online;
-  const text = locale === "ar"
-    ? {
-        noPing: "لا يوجد ping",
-        active: "نشط",
-        waiting: "قيد الانتظار",
-        online: "متصل",
-        offline: "غير متصل",
-        lastPing: "آخر ping",
-        uptime: "مدة التشغيل",
-        moved: "تم رصد تحرك الجهاز",
-        pairing: "ربط",
-        pairingCode: "رمز الربط",
-        resetAlert: "إعادة ضبط تنبيه التحرك",
-        forceRefresh: "فرض التحديث",
-        delete: "حذف الشاشة",
-      }
-    : {
-        noPing: "Aucun ping",
-        active: "Actif",
-        waiting: "En attente",
-        online: "En ligne",
-        offline: "Hors ligne",
-        lastPing: "Dernier ping",
-        uptime: "Uptime",
-        moved: "Deplacement detecte",
-        pairing: "Apparier",
-        pairingCode: "Code d'appairage",
-        resetAlert: "Reinitialiser l'alerte deplacement",
-        forceRefresh: "Forcer le refresh",
-        delete: "Supprimer l'ecran",
-      };
-  const lastPingLabel = screen.last_ping ? new Date(screen.last_ping).toLocaleString(locale === "ar" ? "ar-MA" : "fr-FR") : text.noPing;
+  const text =
+    locale === "ar"
+      ? {
+          noPing: "لا يوجد ping",
+          active: "نشط",
+          waiting: "قيد الانتظار",
+          online: "متصل",
+          offline: "غير متصل",
+          lastPing: "آخر ping",
+          uptime: "مدة التشغيل",
+          moved: "تم رصد تحرك الجهاز",
+          pairing: "ربط",
+          pairingCode: "رمز الربط",
+          resetAlert: "إعادة ضبط تنبيه التحرك",
+          forceRefresh: "فرض التحديث",
+          delete: "حذف الشاشة",
+        }
+      : {
+          noPing: "Aucun ping",
+          active: "Actif",
+          waiting: "En attente",
+          online: "En ligne",
+          offline: "Hors ligne",
+          lastPing: "Dernier ping",
+          uptime: "Uptime",
+          moved: "Deplacement detecte",
+          pairing: "Apparier",
+          pairingCode: "Code d'appairage",
+          resetAlert: "Reinitialiser l'alerte deplacement",
+          forceRefresh: "Forcer le refresh",
+          delete: "Supprimer l'ecran",
+        };
+  const lastPingLabel = screen.last_ping
+    ? new Date(screen.last_ping).toLocaleString(locale === "ar" ? "ar-MA" : "fr-FR")
+    : text.noPing;
   const uptime = screen.total_uptime_hours || 0;
 
   return (
-    <div className={`bg-slate-900/40 border-2 ${screen.is_active ? 'border-slate-800' : 'border-blue-500/30'} p-5 rounded-[2rem] transition-all hover:border-blue-500/50`}>
+    <div
+      className={`bg-slate-900/40 border-2 ${screen.is_active ? "border-slate-800" : "border-blue-500/30"} p-5 rounded-[2rem] transition-all hover:border-blue-500/50`}
+    >
       <div className="flex justify-between items-start mb-6">
-        <div className={`p-4 rounded-2xl ${screen.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'}`}>
+        <div
+          className={`p-4 rounded-2xl ${screen.is_active ? "bg-emerald-500/10 text-emerald-500" : "bg-blue-500/10 text-blue-500"}`}
+        >
           <Tv size={32} />
         </div>
-        <div className={`${screen.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'} px-3 py-1 rounded-full`}>
+        <div
+          className={`${screen.is_active ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"} px-3 py-1 rounded-full`}
+        >
           <span className="text-[10px] font-black uppercase">{screen.is_active ? text.active : text.waiting}</span>
         </div>
       </div>
@@ -75,8 +86,12 @@ const ScreenCard: React.FC<Props> = ({
         <p className={`text-xs font-bold mt-2 ${isOnline ? "text-emerald-400" : "text-rose-400"}`}>
           {isOnline ? text.online : text.offline}
         </p>
-        <p className="text-xs text-slate-400">{text.lastPing}: {lastPingLabel}</p>
-        <p className="text-xs text-slate-400">{text.uptime}: {uptime.toFixed(2)} h</p>
+        <p className="text-xs text-slate-400">
+          {text.lastPing}: {lastPingLabel}
+        </p>
+        <p className="text-xs text-slate-400">
+          {text.uptime}: {uptime.toFixed(2)} h
+        </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <span className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-200">
             {screen.resolved_transport || "polling"}
@@ -84,7 +99,13 @@ const ScreenCard: React.FC<Props> = ({
           <span className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-200">
             {screen.device_tier || "standard"}
           </span>
-          <span className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${screen.last_gps_status === "ok" ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300" : "border-amber-500/30 bg-amber-500/10 text-amber-200"}`}>
+          <span
+            className={`rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider ${
+              screen.last_gps_status === "ok"
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                : "border-amber-500/30 bg-amber-500/10 text-amber-200"
+            }`}
+          >
             GPS {screen.last_gps_status || "unknown"}
           </span>
         </div>
@@ -146,6 +167,6 @@ const ScreenCard: React.FC<Props> = ({
       </div>
     </div>
   );
-};
+}
 
 export default ScreenCard;

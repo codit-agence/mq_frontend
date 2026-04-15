@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Clock3, Home, Monitor, RefreshCw, Signal, Tv, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock3, Home, Monitor, RefreshCw, RotateCcw, Signal, Trash2, Tv, XCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
@@ -11,14 +11,17 @@ import { useTVStream } from "@/src/projects/client-dashboard/tvstream/hooks/useT
 import { tvStreamService } from "@/src/projects/client-dashboard/tvstream/services/tvstream.service";
 import { Screen } from "@/src/types/tvstream/tvstream";
 
-import { AddScreenForm } from "../tvstream/components/AddScreenForm";
-import { PairingModal } from "../tvstream/components/PairingModal";
+import { AddScreenForm } from "@/src/projects/client-dashboard/tvstream/components/AddScreenForm";
+import { PairingModal } from "@/src/projects/client-dashboard/tvstream/components/PairingModal";
 import ScheduleManager from "@/src/projects/client-dashboard/scheduler/components/ScheduleManager";
 import DisplayContent from "@/src/projects/client-dashboard/display/components/DisplayContent";
+import PlaylistStudio from "@/src/projects/client-dashboard/scheduler/components/PlaylistStudio";
+import DisplayStatus from "@/src/projects/client-dashboard/scheduler/components/DisplayStatus";
+import AnalyticsDashboard from "@/src/projects/client-dashboard/scheduler/components/AnalyticsDashboard";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
-type DisplayTab = "screens" | "content" | "schedule";
+type DisplayTab = "screens" | "content" | "schedule" | "status" | "analytics" | "music";
 
 const TEMPLATE_OPTIONS = [
   { id: "standard", label: "Standard" },
@@ -54,6 +57,25 @@ const formatLastPing = (lastPing?: string) => {
   return date.toLocaleString();
 };
 
+/** « En ligne » = dernier heartbeat récent ; affiche l’écart pour éviter la confusion avec « bloqué ». */
+const formatLastSeenRelative = (lastPing?: string | null, localeCode: "fr" | "ar" = "fr") => {
+  if (!lastPing) return null;
+  const diffMs = Date.now() - new Date(lastPing).getTime();
+  if (Number.isNaN(diffMs) || diffMs < 0) return null;
+  const mins = Math.floor(diffMs / 60000);
+  if (localeCode === "ar") {
+    if (mins < 1) return "الآن";
+    if (mins < 60) return `منذ ${mins} د`;
+    const h = Math.floor(mins / 60);
+    return h < 24 ? `منذ ${h} س` : `منذ ${Math.floor(h / 24)} ي`;
+  }
+  if (mins < 1) return "a l'instant";
+  if (mins < 60) return `il y a ${mins} min`;
+  const h = Math.floor(mins / 60);
+  if (h < 24) return `il y a ${h} h`;
+  return `il y a ${Math.floor(h / 24)} j`;
+};
+
 export default function TenantDisplayManagerPage() {
   const params = useParams<{ tenantId: string }>();
   const tenantId = params?.tenantId;
@@ -77,6 +99,8 @@ export default function TenantDisplayManagerPage() {
     setCurrentScreenId,
     handleCreateScreen,
     handleVerifySecurity,
+    handleDeleteScreen,
+    handleResetPairing,
   } = useTVStream(tenantId);
 
   const [activeTab, setActiveTab] = useState<DisplayTab>("screens");
@@ -165,6 +189,7 @@ export default function TenantDisplayManagerPage() {
         fleet: "اسطول الشاشات",
         content: "محتوى التلفاز",
         schedule: "البرمجة",
+        music: "الموسيقى",
         connectedScreens: "الشاشات المتصلة",
         close: "اغلاق",
         newScreen: "شاشة جديدة",
@@ -180,6 +205,11 @@ export default function TenantDisplayManagerPage() {
         confirmTv: "تأكيد شاشة التلفاز",
         rotationDesc: "التحكم في زمن تكرار المنتجات حسب الفترات.",
         diffusionDesc: "قواعد حسب اليوم والوقت لأتمتة القوائم.",
+        lastActivity: "آخر نشاط",
+        deleteScreen: "حذف الشاشة",
+        resetPairing: "إعادة تهيئة الإقران",
+        securityCode: "رمز الأمان (4 أرقام)",
+        securityCodeHint: "أدخل هذا الرمز في لوحة التحكم لتأكيد التلفاز",
       }
     : {
         manager: "Tenant Display Manager",
@@ -203,6 +233,9 @@ export default function TenantDisplayManagerPage() {
         fleet: "Parc TV",
         content: "Contenu TV",
         schedule: "Programmation",
+        status: "État d'affichage",
+        analytics: "Analytique",
+        music: "Musique",
         connectedScreens: "Ecrans connectes",
         close: "Fermer",
         newScreen: "Nouvel ecran",
@@ -218,6 +251,11 @@ export default function TenantDisplayManagerPage() {
         confirmTv: "Confirmer la TV",
         rotationDesc: "Controle du temps de repetition des produits par slot.",
         diffusionDesc: "Regles par jour/heure pour automatiser les menus.",
+        lastActivity: "Derniere activite",
+        deleteScreen: "Supprimer l'ecran",
+        resetPairing: "Réinitialiser l'appairage",
+        securityCode: "Code sécurité (4 chiffres)",
+        securityCodeHint: "La TV affiche ce code — entrez-le pour confirmer",
       };
 
   const updateScreenConfig = async (screen: Screen, patch: Partial<Screen>) => {
@@ -292,6 +330,9 @@ export default function TenantDisplayManagerPage() {
           { id: "screens", label: text.fleet },
           { id: "content", label: text.content },
           { id: "schedule", label: text.schedule },
+          { id: "status", label: text.status },
+          { id: "analytics", label: text.analytics },
+          { id: "music", label: text.music },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -337,9 +378,16 @@ export default function TenantDisplayManagerPage() {
                       <p className="text-sm font-black text-slate-900">{screen.name}</p>
                       <p className="text-xs text-slate-500 mt-1">#{screen.id.slice(0, 8)}</p>
                     </div>
-                    <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-black ${screen.is_online ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
-                      {screen.is_online ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
-                      {screen.is_online ? text.onlineLabel : text.offlineLabel}
+                    <div className="flex flex-col items-end gap-1">
+                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-black ${screen.is_online ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                        {screen.is_online ? <CheckCircle2 size={14} /> : <XCircle size={14} />}
+                        {screen.is_online ? text.onlineLabel : text.offlineLabel}
+                      </div>
+                      {screen.is_online && screen.last_ping ? (
+                        <span className="text-[10px] font-semibold text-slate-500">
+                          {text.lastActivity}: {formatLastSeenRelative(screen.last_ping, locale === "ar" ? "ar" : "fr")}
+                        </span>
+                      ) : null}
                     </div>
                   </div>
 
@@ -362,10 +410,20 @@ export default function TenantDisplayManagerPage() {
                     </div>
                   </div>
 
+                  {/* Phase 1 — TV doit saisir ce code 6 chiffres */}
                   {screen.pairing_code && !screen.is_online && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
                       <p className="text-xs font-black uppercase text-amber-700">{text.pairingCode}</p>
                       <p className="text-2xl tracking-widest font-black text-amber-900 mt-1">{screen.pairing_code}</p>
+                    </div>
+                  )}
+
+                  {/* Phase 2 — TV a initié : dashboard affiche le code 4 chiffres pour confirmation */}
+                  {screen.security_code && !screen.is_online && (
+                    <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3">
+                      <p className="text-xs font-black uppercase text-emerald-700">{text.securityCode}</p>
+                      <p className="text-3xl tracking-[0.4em] font-black text-emerald-900 mt-1">{screen.security_code}</p>
+                      <p className="text-xs text-emerald-600 mt-1">{text.securityCodeHint}</p>
                     </div>
                   )}
 
@@ -463,32 +521,69 @@ export default function TenantDisplayManagerPage() {
                     </label>
                   </div>
 
-                  <button
-                    onClick={() =>
-                      updateScreenConfig(screen, {
-                        preferred_transport: transportDrafts[screen.id] || "auto",
-                        poll_interval_seconds: pollDrafts[screen.id] || 30,
-                        gps_required: gpsRequiredDrafts[screen.id] ?? true,
-                      })
-                    }
-                    disabled={savingId === screen.id}
-                    className="px-4 py-3 rounded-xl text-sm font-black text-white"
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    {text.saveTransport}
-                  </button>
-
-                  {!screen.is_online && (
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
-                      onClick={() => {
-                        setCurrentScreenId(screen.id);
-                        setStep(3);
-                      }}
-                      className="inline-flex items-center gap-2 text-sm font-black text-slate-700"
+                      onClick={() =>
+                        updateScreenConfig(screen, {
+                          preferred_transport: transportDrafts[screen.id] || "auto",
+                          poll_interval_seconds: pollDrafts[screen.id] || 30,
+                          gps_required: gpsRequiredDrafts[screen.id] ?? true,
+                        })
+                      }
+                      disabled={savingId === screen.id}
+                      className="flex-1 px-4 py-3 rounded-xl text-sm font-black text-white"
+                      style={{ backgroundColor: primaryColor }}
                     >
-                      <Signal size={16} /> {text.confirmTv}
+                      {text.saveTransport}
                     </button>
-                  )}
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const ok = await handleDeleteScreen(screen.id);
+                        if (ok) {
+                          toast.success(locale === "ar" ? "تم حذف الشاشة" : "Ecran supprime");
+                        }
+                      }}
+                      disabled={savingId === screen.id}
+                      className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-black border-2 border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100 disabled:opacity-50"
+                    >
+                      <Trash2 size={16} />
+                      {text.deleteScreen}
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    {!screen.is_online && (
+                      <button
+                        onClick={() => {
+                          setCurrentScreenId(screen.id);
+                          setStep(3);
+                        }}
+                        className="inline-flex items-center gap-2 text-sm font-black text-slate-700"
+                      >
+                        <Signal size={16} /> {text.confirmTv}
+                      </button>
+                    )}
+
+                    {/* Bouton reset appairage — permet à une TV déjà enregistrée de se reconnecter sans suppression */}
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const ok = await handleResetPairing(screen.id);
+                        if (ok) {
+                          toast.success(
+                            locale === "ar"
+                              ? "تم إعادة تهيئة الإقران — رمز جديد ظهر"
+                              : "Appairage réinitialisé — nouveau code généré"
+                          );
+                        }
+                      }}
+                      disabled={savingId === screen.id}
+                      className="inline-flex items-center gap-2 text-sm font-black text-amber-700 hover:text-amber-900"
+                    >
+                      <RotateCcw size={16} /> {text.resetPairing}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -529,6 +624,24 @@ export default function TenantDisplayManagerPage() {
             </div>
           </div>
           <ScheduleManager />
+        </div>
+      )}
+
+      {activeTab === "status" && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
+          <DisplayStatus />
+        </div>
+      )}
+
+      {activeTab === "analytics" && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
+          <AnalyticsDashboard />
+        </div>
+      )}
+
+      {activeTab === "music" && (
+        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
+          <PlaylistStudio tenantId={tenantId} />
         </div>
       )}
     </div>

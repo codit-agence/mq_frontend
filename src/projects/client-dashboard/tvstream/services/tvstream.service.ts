@@ -89,4 +89,13 @@ verifySecurityCode: async (screenId: string, code: string, tenantId?: string) =>
     );
     return response.data;
   },
+
+  resetPairing: async (screenId: string, tenantId?: string): Promise<Screen> => {
+    const response = await api.post(
+      `/screens/dashboard/${screenId}/reset-pairing`,
+      {},
+      { headers: buildTenantHeaders(tenantId) }
+    );
+    return response.data;
+  },
 };

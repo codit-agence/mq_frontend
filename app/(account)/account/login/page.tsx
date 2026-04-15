@@ -1,14 +1,17 @@
 "use client";
 import React, { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, Lock, Mail, Loader2, ArrowRight } from "lucide-react";
 
 import { authService } from "@/src/projects/client-dashboard/account/auth.services";
+import { AUTH_PATHS } from "@/src/projects/client-dashboard/account/auth-paths";
 import { resolveAuthenticatedRoute } from "@/src/projects/client-dashboard/account/auth-routing";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { getErrorMessage } from "@/src/utils/errors";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
+import { getAuthPageBackgroundStyle } from "@/src/projects/shared/branding/branding-page.styles";
 import { LocaleToggle } from "@/src/projects/shared/branding/components/LocaleToggle";
 import { BrandingFooter } from "@/src/projects/shared/branding/components/BrandingFooter";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
@@ -78,7 +81,8 @@ function LoginContent() {
         }
 
         useAuthStore.getState().setContext(fullContext.user, fullContext.current_tenant);
-        router.replace(resolveAuthenticatedRoute({ user: fullContext.user, tenant: fullContext.current_tenant }));
+        const { user, tenant } = useAuthStore.getState();
+        router.replace(resolveAuthenticatedRoute({ user, tenant }));
       } catch {
         if (cancelled) {
           return;
@@ -127,8 +131,8 @@ function LoginContent() {
       try {
         const fullContext = await authService.getMe();
         useAuthStore.getState().setContext(fullContext.user, fullContext.current_tenant);
-        resolvedUser = fullContext.user;
-        resolvedTenant = fullContext.current_tenant;
+        resolvedUser = useAuthStore.getState().user;
+        resolvedTenant = useAuthStore.getState().tenant;
         isMeSuccessful = true;
       } catch (meErr) {
         console.warn("getMe() failed, using LoginResponse data.", meErr);
@@ -149,9 +153,7 @@ function LoginContent() {
     <div
       dir={isRtl ? "rtl" : "ltr"}
       className="min-h-screen flex items-center justify-center px-4 py-6"
-      style={{
-        background: `linear-gradient(145deg, ${branding.app_background_color}, #ffffff 45%, ${branding.primary_color}14)`,
-      }}
+      style={getAuthPageBackgroundStyle(branding)}
     >
       {/* Si l'URL contient ?registered=true, on affiche ce bloc */}
       {isRegistered && (
@@ -168,7 +170,7 @@ function LoginContent() {
         <div className="flex justify-center mb-8">
           <div
             className="w-16 h-16 rounded-[20px] flex items-center justify-center shadow-xl transform -rotate-3 overflow-hidden"
-            style={{ backgroundColor: branding.primary_color, boxShadow: `0 15px 35px -20px ${branding.primary_color}` }}
+        
           >
             {branding.logo ? (
               <img src={getImageUrl(branding.logo)} alt="QALYAS" className="w-full h-full object-cover" />
@@ -226,13 +228,12 @@ function LoginContent() {
             <div className="space-y-2">
               <div className="flex justify-between items-center px-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em]">{text.password}</label>
-                <button 
-                  type="button"
-                  onClick={() => router.push("/account/forgot-password")}
+                <Link
+                  href={AUTH_PATHS.forgotPassword}
                   className="text-[10px] font-black text-indigo-600 uppercase hover:underline"
                 >
                   {text.forgot}
-                </button>
+                </Link>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-indigo-500 transition-colors" size={18} />
@@ -293,13 +294,13 @@ function LoginContent() {
             {branding.show_register_button && (
               <p className="text-slate-400 text-[11px] font-black uppercase tracking-widest">
                 {text.noAccount}
-                <button 
-                  onClick={() => router.push("/account/register")}
+                <Link
+                  href={AUTH_PATHS.register}
                   className="ml-2 transition-colors border-b-2"
                   style={{ color: branding.primary_color, borderBottomColor: `${branding.primary_color}33` }}
                 >
                   {text.createAccount}
-                </button>
+                </Link>
               </p>
             )}
             <BrandingFooter branding={branding} locale={locale} compact />

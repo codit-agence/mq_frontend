@@ -1,20 +1,24 @@
 import api from "@/src/core/api/axios";
 
-export interface PlaylistDayPlan {
-  opening: string[];
-  cruise: string[];
+export type PlaylistPlayMode = "repeat" | "shuffle";
+
+export interface PlaylistTimeSlot {
+  id: string;
+  start_time: string;
+  end_time: string;
+  category: string;
+  track_type: string;
+  play_mode: PlaylistPlayMode;
+  repeat_count: number;
+  notes?: string;
 }
 
 export interface PlaylistConfigPayload {
   name: string;
   active_day: number;
   plan: {
-    days: Record<string, PlaylistDayPlan>;
-    interrupt?: {
-      mode?: string;
-      crossfade_seconds?: number;
-      listener?: string;
-    };
+    version: 2;
+    days: Record<string, PlaylistTimeSlot[]>;
   };
 }
 

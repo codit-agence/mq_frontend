@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Activity, Globe, Save, ShieldCheck, Wifi } from "lucide-react";
 import { adminConfigService, AdminSystemStatus, BrandingAdminOptions } from "@/src/projects/admin-dashboard/internal/services/admin-config.service";
+import { isInternalAccount } from "@/src/projects/client-dashboard/account/auth-routing";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { getAccessToken } from "@/src/core/ws/authToken";
 import { wsUrl } from "@/src/core/ws/buildWsUrl";
@@ -19,7 +20,7 @@ import { parseCmsEditorValue, serializeCmsValue } from "@/src/projects/admin-das
 import { AdminBrandingState, CmsEditorKey, NetworkProbe } from "@/src/projects/admin-dashboard/internal/admin-settings/admin-settings.types";
 
 export default function InternalSettingsPage() {
-  const { user } = useAuthStore();
+  const { user, tenant } = useAuthStore();
   const { previewMode } = useInternalPreviewMode();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -91,7 +92,7 @@ export default function InternalSettingsPage() {
     setCmsErrors({});
   }, [branding]);
 
-  const canAccess = previewMode || (Boolean(user?.is_staff || user?.is_superuser) && !forbidden);
+  const canAccess = previewMode || (isInternalAccount({ user, tenant }) && !forbidden);
 
   const updateField = (key: string, value: unknown) => {
     setBranding((prev) => (prev ? { ...prev, [key]: value } : prev));

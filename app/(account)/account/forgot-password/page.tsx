@@ -1,9 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { authService } from "@/src/projects/client-dashboard/account/auth.services";
+import { AUTH_PATHS } from "@/src/projects/client-dashboard/account/auth-paths";
 import { getErrorMessage } from "@/src/utils/errors";
 
 export default function ForgotPasswordPage() {
@@ -42,12 +44,12 @@ export default function ForgotPasswordPage() {
           <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">
             Si un compte existe pour <strong>{email}</strong>, vous recevrez un lien pour réinitialiser votre mot de passe sous peu.
           </p>
-          <button 
-            onClick={() => router.push("/account/login")}
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-800 transition-all"
+          <Link
+            href={AUTH_PATHS.login}
+            className="block w-full rounded-2xl bg-slate-900 py-4 text-center text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-slate-800"
           >
             Retour au Login
-          </button>
+          </Link>
         </div>
       </div>
     );

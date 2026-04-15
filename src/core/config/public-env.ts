@@ -1,5 +1,20 @@
+/** Base URL du front (liens absolus, emails). */
 const DEFAULT_SITE_URL = "http://localhost:3000";
-const DEFAULT_API_URL = "http://127.0.0.1:8000/api";
+/** Racine Ninja Django : `path("api/", api.urls)` — toujours `{origin}/api` (un seul segment). */
+const DEFAULT_API_URL = "http://localhost:8000/api";
+const NINJA_API_PATH = "/api";
+
+/** Hôtes typiques Docker / K8s : inaccessibles depuis le navigateur si utilisés dans NEXT_PUBLIC_* */
+const BROWSER_BLOCKED_HOSTNAMES = new Set([
+  "backend",
+  "django",
+  "web",
+  "api",
+  "app",
+  "mq-back",
+  "mq_back",
+  "mq-backend",
+]);
 
 function trimTrailingSlash(value: string) {
   return value.replace(/\/$/, "");
@@ -42,12 +57,124 @@ function deriveWebsocketOrigin(value: string, fallback: string) {
   }
 }
 
-export function getSiteUrl() {
-  return trimTrailingSlash(safeUrl(process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL, DEFAULT_SITE_URL));
+/**
+ * Ajoute http:// si l’utilisateur a collé `localhost:8000/api` (sans schéma).
+ */
+function withHttpSchemeIfMissing(value: string): string {
+  const v = value.trim();
+  if (!v || /^https?:\/\//i.test(v)) {
+    return v;
+  }
+  if (v.startsWith("//")) {
+    return `http:${v}`;
+  }
+  if (v.startsWith("[")) {
+    return `http://${v}`;
+  }
+  if (
+    /^[a-z0-9_.-]+(:\d+)?(\/|$)/i.test(v) ||
+    /^\d{1,3}(\.\d{1,3}){3}(:\d+)?(\/|$)/.test(v)
+  ) {
+    return `http://${v}`;
+  }
+  return v;
 }
 
+/**
+ * Force l’URL publique vers la racine Ninja unique : `{origin}/api`.
+ * - `http://host` → `http://host/api`
+ * - `http://host/api/api` → `http://host/api`
+ * - `http://host/api/openapi.json` → `http://host/api` (collage d’URL complète)
+ */
+function normalizeToNinjaApiRoot(resolvedAbsoluteUrl: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(resolvedAbsoluteUrl);
+  } catch {
+    return trimTrailingSlash(DEFAULT_API_URL);
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return trimTrailingSlash(DEFAULT_API_URL);
+  }
+
+  let path = parsed.pathname.replace(/\/+$/, "") || "/";
+  while (path.includes("/api/api")) {
+    path = path.replace("/api/api", "/api");
+  }
+
+  if (path === "/" || path === "") {
+    path = NINJA_API_PATH;
+  } else if (path === NINJA_API_PATH) {
+    /* ok */
+  } else if (path.startsWith(`${NINJA_API_PATH}/`)) {
+    path = NINJA_API_PATH;
+  } else {
+    path = NINJA_API_PATH;
+  }
+
+  parsed.pathname = path;
+  parsed.search = "";
+  parsed.hash = "";
+  return trimTrailingSlash(parsed.toString());
+}
+
+function warnIfBrowserCannotReachApi(u: URL, rawEnv: string) {
+  if (process.env.NODE_ENV === "production") {
+    return;
+  }
+  const h = u.hostname.toLowerCase();
+  if (BROWSER_BLOCKED_HOSTNAMES.has(h)) {
+    console.warn(
+      `[public-env] NEXT_PUBLIC_API_URL="${rawEnv || "(absent)"}" → hôte « ${h} ». ` +
+        "Depuis le navigateur, utilisez l’URL publiée du backend (ex. http://localhost:8000/api), " +
+        "pas le nom de service Docker.",
+    );
+  }
+  if (
+    h !== "host.docker.internal" &&
+    (h.endsWith(".internal") || h.endsWith(".svc.cluster.local"))
+  ) {
+    console.warn(
+      `[public-env] NEXT_PUBLIC_API_URL semble interne (${h}). ` +
+        "Le client navigateur ne pourra pas l’atteindre.",
+    );
+  }
+}
+
+export function getSiteUrl() {
+  return trimTrailingSlash(
+    safeUrl(process.env.NEXT_PUBLIC_SITE_URL || DEFAULT_SITE_URL, DEFAULT_SITE_URL),
+  );
+}
+
+/**
+ * Base URL pour axios : toujours `{origin}/api` (Django Ninja).
+ *
+ * - `NEXT_PUBLIC_API_URL` vide → défaut local.
+ * - Hôte seul (`http://127.0.0.1:8000`) → ajout de `/api`.
+ * - Doublons (`.../api/api`) → normalisés.
+ * - Suffixe (`.../api/docs`, `.../api/openapi.json`) → tronqué à `.../api`.
+ * - Schéma absent (`localhost:8000/api`) → préfixe `http://`.
+ *
+ * Docker : dans le **navigateur**, définir l’URL du host (port mappé), ex. `http://localhost:8000/api`,
+ * pas `http://backend:8000/api`.
+ */
 export function getApiBaseUrl() {
-  return trimTrailingSlash(safeUrl(process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL, DEFAULT_API_URL));
+  const raw = (process.env.NEXT_PUBLIC_API_URL || "").trim();
+  const preliminary = raw
+    ? trimTrailingSlash(safeUrl(withHttpSchemeIfMissing(raw), DEFAULT_API_URL))
+    : trimTrailingSlash(DEFAULT_API_URL);
+
+  const normalized = normalizeToNinjaApiRoot(preliminary);
+
+  try {
+    warnIfBrowserCannotReachApi(new URL(normalized), raw);
+  } catch {
+    /* ignore */
+  }
+
+  return normalized;
 }
 
 export function getBackendOrigin() {
@@ -55,7 +182,8 @@ export function getBackendOrigin() {
   const explicitBackend = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
 
   if (explicitBackend) {
-    return deriveOrigin(explicitBackend, fallback);
+    const abs = withHttpSchemeIfMissing(explicitBackend);
+    return deriveOrigin(trimTrailingSlash(safeUrl(abs, DEFAULT_API_URL)), fallback);
   }
 
   return deriveOrigin(getApiBaseUrl(), fallback);
@@ -66,7 +194,8 @@ export function getWebsocketOrigin() {
   const explicitWs = process.env.NEXT_PUBLIC_WS_URL?.trim();
 
   if (explicitWs) {
-    return deriveWebsocketOrigin(explicitWs, fallback);
+    const abs = withHttpSchemeIfMissing(explicitWs);
+    return deriveWebsocketOrigin(trimTrailingSlash(safeUrl(abs, DEFAULT_API_URL)), fallback);
   }
 
   return deriveWebsocketOrigin(getApiBaseUrl(), fallback);

@@ -153,10 +153,10 @@ export default function GlobalDashboard() {
   ].filter(Boolean) as string[];
 
   const pulseCards = [
-    { label: text.screens, value: tenant?.id ? "04" : "00", detail: text.connected, icon: <Tv size={18} /> },
-    { label: text.schedule, value: tenant?.id ? "12" : "00", detail: text.ready, icon: <Clock3 size={18} /> },
-    { label: text.catalog, value: tenant?.id ? "36" : "00", detail: text.synced, icon: <ShoppingBag size={18} /> },
-    { label: text.response, value: tenant?.id ? "98%" : "--", detail: text.fast, icon: <BarChart3 size={18} /> },
+    { label: text.screens, value: tenant?.id ? "00" : "00", detail: text.connected, icon: <Tv size={18} /> },
+    { label: text.schedule, value: tenant?.id ? "00" : "00", detail: text.ready, icon: <Clock3 size={18} /> },
+    { label: text.catalog, value: tenant?.id ? "00" : "00", detail: text.synced, icon: <ShoppingBag size={18} /> },
+    { label: text.response, value: tenant?.id ? "--" : "--", detail: text.fast, icon: <BarChart3 size={18} /> },
   ];
 
   const quickLinks = tenant
@@ -189,8 +189,8 @@ export default function GlobalDashboard() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:min-w-[420px]">
-              <HeroMetric title={text.wallet} value="110.00 DHS" subtitle="Prepaid" tone="dark" />
-              <HeroMetric title={text.fidelity} value="1,250 pts" subtitle="Rewards" tone="light" />
+              <HeroMetric title={text.wallet} value="137.00 QRT" subtitle="Prepaid" tone="dark" />
+              <HeroMetric title={text.fidelity} value="13 250 pts" subtitle="Rewards" tone="light" />
               <HeroMetric title={text.accountScore} value={`${readinessScore}%`} subtitle={text.readiness} tone="accent" color={primaryColor} />
             </div>
           </div>
@@ -221,7 +221,7 @@ export default function GlobalDashboard() {
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
                       <span className="font-semibold text-slate-500">{text.status}: </span>
-                      <span className="font-black text-slate-950">{tenant.status || "-"}</span>
+                      <span className="font-black text-slate-950">{tenant.status || "---"}</span>
                     </div>
                   </div>
 
@@ -315,15 +315,16 @@ export default function GlobalDashboard() {
                 <Wallet className="text-slate-500" size={18} />
               </div>
               <div className="mt-4 flex items-end justify-between gap-3">
-                <p className="text-3xl font-black tracking-tight text-slate-950">110.00 <span className="text-xs text-slate-500">DHS</span></p>
+                <p className="text-3xl font-black tracking-tight text-slate-950">00.00 <span className="text-xs text-slate-500">DHS</span></p>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{text.since}: {registrationDate}</p>
               </div>
             </div>
           </div>
-
+{/* 
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-amber-50 p-3 text-amber-600">
+               
                 <ShoppingBag size={18} />
               </div>
               <div>
@@ -348,7 +349,7 @@ export default function GlobalDashboard() {
             <button className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-4 py-4 text-xs font-black uppercase tracking-[0.18em] text-slate-950 transition hover:bg-slate-100">
               <PlayCircle size={16} /> {text.watch}
             </button>
-          </div>
+          </div> */}
 
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">{text.nextActions}</p>

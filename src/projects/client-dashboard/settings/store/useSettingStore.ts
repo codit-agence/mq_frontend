@@ -1,7 +1,20 @@
 import { create } from 'zustand';
 import { TenantSettingsData } from "@/src/types/settings/settings.type";
 import { tenantService } from "../services/tenant.services";
+import { mapTenantSettingsResponse } from "../utils/mapTenantSettingsResponse";
 import toast from 'react-hot-toast';
+import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
+import { buildTenantSummaryFromSettings } from "@/src/projects/client-dashboard/tenant/tenant-display";
+
+function syncAuthTenant(settings: TenantSettingsData) {
+  const currentTenant = useAuthStore.getState().tenant;
+  const nextTenant = buildTenantSummaryFromSettings(settings, currentTenant);
+
+  if (nextTenant) {
+    useAuthStore.getState().setTenant(nextTenant);
+  }
+}
+
 interface SettingsState {
   activeTab: 'identity' | 'design' | 'business';
   formData: Partial<TenantSettingsData>;
@@ -36,7 +49,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   fetchSettings: async (tenantId?: string) => {
     set({ isLoading: true });
     try {
-      const data = await tenantService.getMyTenant(tenantId);
+      const raw = await tenantService.getMyTenant(tenantId);
+      const data = mapTenantSettingsResponse(raw as Record<string, unknown>);
+      syncAuthTenant(data);
       set({ formData: data });
     } catch (err) {
       console.error("Fetch settings error:", err);
@@ -62,7 +77,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
 
   if (formData.business) {
     const { id, created_at, logo, cover_image, ...restBusiness } = formData.business as any;
-    finalData.append('business', JSON.stringify(restBusiness));
+    finalData.append(
+      "business",
+      JSON.stringify({
+        ...restBusiness,
+        show_prices: formData.business.show_prices !== false,
+        show_images: formData.business.show_images !== false,
+      }),
+    );
 
     if (logo instanceof File) {
       finalData.append('logo', logo);
@@ -74,13 +96,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   }
 
   if (formData.display) {
-    const { is_rtl, ...restDisplay } = formData.display as any;
-    finalData.append('display', JSON.stringify(restDisplay));
+    finalData.append('display', JSON.stringify(formData.display));
   }
 
   try {
-    const updated = await tenantService.updateTenant(finalData, tenantId);
-    set({ formData: updated });
+    await tenantService.updateTenant(finalData, tenantId);
+    const raw = await tenantService.getMyTenant(tenantId);
+    const refreshed = mapTenantSettingsResponse(raw as Record<string, unknown>);
+    syncAuthTenant(refreshed);
+    set({ formData: refreshed });
     toast.success("Configuration mise à jour !");
   } catch (err) {
     console.error("Save Error:", err);

@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { tvStreamService } from "../services/tvstream.service";
 import { Screen, TenantScreenSummary } from "@/src/types/tvstream/tvstream";
-import { useRef } from "react";
 
 export function useTVStream(tenantId?: string | null) {
   const [screens, setScreens] = useState<Screen[]>([]);
@@ -45,7 +44,11 @@ export function useTVStream(tenantId?: string | null) {
 
     const startPolling = () => {
       if (interval) clearInterval(interval);
-      interval = setInterval(fetchScreens, 30000);
+      const period = document.hidden ? 60000 : 30000;
+      interval = setInterval(() => {
+        void fetchScreens();
+        void fetchSummary();
+      }, period);
     };
 
     fetchScreens();
@@ -86,8 +89,12 @@ export function useTVStream(tenantId?: string | null) {
       await tvStreamService.createScreen({ name: screenName }, tenantId || undefined);
       resetForm();
       fetchScreens();
-    } catch (err) {
-      alert("Erreur lors de la création de l'écran.");
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number; data?: { detail?: string; message?: string } } };
+      const detail = ax.response?.data?.detail || ax.response?.data?.message;
+      const status = ax.response?.status;
+      const hint = detail || (status ? `Erreur HTTP ${status}` : "Réseau ou serveur indisponible");
+      alert(`Impossible de créer l'écran.\n${hint}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -107,14 +114,20 @@ export function useTVStream(tenantId?: string | null) {
     }
   };
 
-  const handleDeleteScreen = async (screenId: string) => {
+  const handleDeleteScreen = async (screenId: string): Promise<boolean> => {
     const ok = window.confirm("Supprimer cet écran ? Cette action est définitive.");
-    if (!ok) return;
+    if (!ok) return false;
     try {
       await tvStreamService.deleteScreen(screenId, tenantId || undefined);
       await fetchScreens();
-    } catch (err) {
-      alert("Impossible de supprimer cet écran.");
+      return true;
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number; data?: { detail?: string; message?: string } } };
+      const detail = ax.response?.data?.detail || ax.response?.data?.message;
+      const status = ax.response?.status;
+      const hint = detail || (status ? `Erreur HTTP ${status}` : "Réseau ou serveur indisponible");
+      alert(`Impossible de supprimer cet écran.\n${hint}`);
+      return false;
     }
   };
 
@@ -146,6 +159,25 @@ export function useTVStream(tenantId?: string | null) {
     );
   };
 
+  const handleResetPairing = async (screenId: string): Promise<boolean> => {
+    const ok = window.confirm(
+      "Réinitialiser l'appairage de cet écran ?\nUn nouveau code 6 chiffres sera généré et la TV devra se reconnecter."
+    );
+    if (!ok) return false;
+    try {
+      await tvStreamService.resetPairing(screenId, tenantId || undefined);
+      await fetchScreens();
+      return true;
+    } catch (err: unknown) {
+      const ax = err as { response?: { status?: number; data?: { detail?: string; message?: string } } };
+      const detail = ax.response?.data?.detail || ax.response?.data?.message;
+      const status = ax.response?.status;
+      const hint = detail || (status ? `Erreur HTTP ${status}` : "Réseau ou serveur indisponible");
+      alert(`Impossible de réinitialiser l'appairage.\n${hint}`);
+      return false;
+    }
+  };
+
   return {
     screens,
     loading,
@@ -169,5 +201,6 @@ export function useTVStream(tenantId?: string | null) {
     handleDeleteScreen,
     handleResetMovedAlert,
     handleForceRefresh,
+    handleResetPairing,
   };
 }

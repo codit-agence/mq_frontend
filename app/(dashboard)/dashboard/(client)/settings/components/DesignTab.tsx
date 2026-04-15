@@ -1,17 +1,18 @@
 "use client";
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
+import { getTenantSettingsTabsText } from "@/src/projects/client-dashboard/settings/tenant-settings/tenant-settings.constants";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
+import { useMemo } from "react";
 
 export default function DesignTab() {
   const { formData, setNestedField } = useSettingsStore();
+  const { branding } = useBranding();
+  const { locale } = useAppLocale(branding);
+  const td = useMemo(() => getTenantSettingsTabsText(locale).design, [locale]);
   const colors = ["#EAB308", "#EF4444", "#3B82F6", "#10B981", "#111827", "#0EA5E9"];
   const languages = ["fr", "en", "ar", "es"] as const;
-  const templates = [
-    { id: "standard", label: "Standard" },
-    { id: "full_promo", label: "Full Promo" },
-    { id: "branded", label: "Branded" },
-    { id: "tvplayer", label: "TV Player" },
-    { id: "display", label: "Display" },
-  ];
+  const templateIds = ["standard", "full_promo", "branded", "tvplayer", "display"] as const;
 
   const normalizeTemplate = (value?: string) => {
     if (!value) return "tvplayer";
@@ -40,22 +41,43 @@ export default function DesignTab() {
     }
   };
 
+  const designNote =
+    locale === "ar"
+      ? {
+          title: "العرض داخل مساحة العميل",
+          body:
+            "لغات القائمة أدناه تحدد ما يراه زبائنك على الشاشات والمنيو. إن لم تختر لغات، يُستخدم الوضع الافتراضي (فرنسي) للعرض. أزرار FR/AR أعلى الصفحة تخص واجهة الإدارة فقط.",
+        }
+      : {
+          title: "Affichage cote client",
+          body:
+            "Les langues ci-dessous definissent ce que vos clients voient sur les ecrans et le menu. Si aucune langue n'est activee pour l'affichage, le defaut est le francais. Les boutons FR / AR dans l'en-tete reglent uniquement la langue de cette console admin.",
+        };
+
   return (
     <div className="space-y-12 animate-in fade-in duration-500">
+      <div
+        role="note"
+        className="rounded-2xl border border-sky-200 bg-sky-50/90 px-4 py-3 text-xs text-sky-950 leading-relaxed"
+      >
+        <p className="font-black text-sky-950">{designNote.title}</p>
+        <p className="mt-1 text-sky-900/90">{designNote.body}</p>
+      </div>
+
       <div className="p-6 bg-white border-2 border-slate-100 rounded-[2rem] space-y-4">
-        <p className="font-black text-slate-800">Template client</p>
+        <p className="font-black text-slate-800">{td.clientTemplate}</p>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-          {templates.map((template) => (
+          {templateIds.map((id) => (
             <button
-              key={template.id}
-              onClick={() => setNestedField("display", "template", template.id)}
+              key={id}
+              onClick={() => setNestedField("display", "template", id)}
               className={`py-4 rounded-2xl border-2 font-black text-sm transition ${
-                selectedTemplate === template.id
+                selectedTemplate === id
                   ? "bg-slate-900 text-white border-slate-900"
                   : "bg-slate-50 text-slate-600 border-slate-200"
               }`}
             >
-              {template.label}
+              {td.templates[id] ?? id}
             </button>
           ))}
         </div>
@@ -63,7 +85,7 @@ export default function DesignTab() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="space-y-6 p-8 bg-slate-50 rounded-[2.5rem]">
-          <label className="text-[10px] font-black text-slate-400 uppercase">Couleur Primaire</label>
+          <label className="text-[10px] font-black text-slate-400 uppercase">{td.primaryColor}</label>
           <div className="flex flex-wrap gap-4">
             {colors.map((c) => (
               <button
@@ -81,7 +103,7 @@ export default function DesignTab() {
             />
           </div>
 
-          <label className="text-[10px] font-black text-slate-400 uppercase">Couleur Secondaire</label>
+          <label className="text-[10px] font-black text-slate-400 uppercase">{td.secondaryColor}</label>
           <div className="flex items-center gap-4">
             <input
               type="color"
@@ -99,7 +121,7 @@ export default function DesignTab() {
 
         <div className="space-y-6">
           <div className="p-6 bg-white border-2 border-slate-100 rounded-[2rem] space-y-4">
-            <p className="font-black text-slate-800">Configuration des Langues</p>
+            <p className="font-black text-slate-800">{td.languageConfig}</p>
             <div className="grid grid-cols-2 gap-3">
               {languages.map((lang) => (
                 <button
@@ -113,7 +135,7 @@ export default function DesignTab() {
             </div>
 
             <div className="pt-4 border-t border-slate-50">
-              <label className="text-[10px] font-black text-slate-400 uppercase">Langue par défaut</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase">{td.defaultLanguage}</label>
               <select
                 value={defaultLanguage}
                 onChange={(e) => setNestedField("display", "default_language", e.target.value)}

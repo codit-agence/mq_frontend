@@ -14,6 +14,7 @@ interface AuthState {
   isInitializing: boolean;
   handleLoginSuccess: (data: LoginResponse, rememberMe?: boolean) => void;
   setContext: (user: UserProfile, tenant: Tenant | null) => void;
+  setTenant: (tenant: Tenant | null) => void;
   setInitializing: (value: boolean) => void;
   logout: () => void;
 }
@@ -58,6 +59,7 @@ export const useAuthStore = create<AuthState>()(
             is_verified: data.is_verified,
             is_staff: Boolean(data.is_staff),
             is_superuser: Boolean(data.is_superuser),
+            role: data.role || null,
           },
           tenant: data.tenant_id ? {
             id: data.tenant_id,
@@ -78,7 +80,20 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setContext: (user, tenant) => {
-        set({ user, tenant, isAuthenticated: true, isLoading: false, isInitializing: false });
+        // Merge new user data with existing user to preserve role from login response
+        set((state) => ({ 
+          user: state.user ? { ...state.user, ...user } : user,
+          tenant, 
+          isAuthenticated: true, 
+          isLoading: false, 
+          isInitializing: false 
+        }));
+      },
+
+      setTenant: (tenant) => {
+        set((state) => ({
+          tenant: tenant ? { ...state.tenant, ...tenant } : null,
+        }));
       },
 
       setInitializing: (value) => {

@@ -117,18 +117,8 @@ export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 py-4">
-      <div className="flex flex-col items-center gap-4">
-        <div className="text-5xl p-6 bg-slate-50 rounded-[35px] border-2 border-slate-100 shadow-inner group hover:border-indigo-200 transition-all">
-           <input 
-             value={emoji}
-             maxLength={2}
-             onChange={(e) => setEmoji(e.target.value)}
-             className="w-16 text-center bg-transparent outline-none cursor-pointer"
-             title={text.icon}
-           />
-        </div>
-        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{text.icon}</p>
-      </div>
+     
+       
 
       <div className="space-y-6">
         <div className="flex bg-slate-100 p-2 rounded-[25px] gap-2 overflow-x-auto no-scrollbar">

@@ -8,7 +8,7 @@ function buildMediaPattern(value: string): RemotePattern | null {
       protocol: url.protocol === "https:" ? "https" : "http",
       hostname: url.hostname,
       port: url.port,
-      pathname: "/media/**",
+      pathname: "/**",
     };
   } catch {
     return null;

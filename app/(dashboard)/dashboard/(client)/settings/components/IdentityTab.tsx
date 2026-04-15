@@ -1,10 +1,18 @@
 "use client";
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
+import { getTenantSettingsTabsText } from "@/src/projects/client-dashboard/settings/tenant-settings/tenant-settings.constants";
+import { resolveTenantDisplayName } from "@/src/projects/client-dashboard/tenant/tenant-display";
+import { useBranding } from "@/src/projects/shared/branding/useBranding";
+import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function IdentityTab() {
   const { formData, setField, setNestedField } = useSettingsStore();
+  const { branding } = useBranding();
+  const { locale } = useAppLocale(branding);
+  const t = useMemo(() => getTenantSettingsTabsText(locale).identity, [locale]);
+  const dateLocale = locale === "ar" ? "ar-MA" : "fr-FR";
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
 
@@ -48,8 +56,9 @@ export default function IdentityTab() {
   }, [formData.business?.cover_image]);
 
   const tenantCreatedAt = formData.created_at ? new Date(formData.created_at) : null;
+  const registrationDate = formData.registration_date ? new Date(formData.registration_date) : null;
   const businessCreatedAt = formData.business?.created_at ? new Date(formData.business.created_at) : null;
-  const referenceDate = tenantCreatedAt || businessCreatedAt;
+  const referenceDate = registrationDate || tenantCreatedAt || businessCreatedAt;
   const subscriptionEnd = referenceDate ? new Date(referenceDate) : null;
   if (subscriptionEnd) {
     subscriptionEnd.setMonth(subscriptionEnd.getMonth() + 5);
@@ -61,13 +70,15 @@ export default function IdentityTab() {
     ? Math.ceil((subscriptionEnd.getTime() - now.getTime()) / msPerDay)
     : null;
 
+  const tenantDisplayName = resolveTenantDisplayName(formData) || t.establishmentFallback;
+
   return (
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-500">
       <div className="flex flex-col md:flex-row items-center gap-8 p-8 bg-slate-50 rounded-[3rem] border border-slate-100">
         <div className="relative group">
           <div className="w-32 h-32 bg-white rounded-[2.5rem] shadow-2xl flex items-center justify-center overflow-hidden border-4 border-white transition-transform group-hover:scale-105">
             {previewUrl ? (
-              <img src={previewUrl} className="w-full h-full object-cover" alt="Logo" />
+              <img src={previewUrl} className="w-full h-full object-cover" alt={t.logoAlt} />
             ) : (
               <span className="text-4xl">🍽️</span>
             )}
@@ -85,47 +96,52 @@ export default function IdentityTab() {
           </label>
         </div>
         <div className="text-center md:text-left space-y-1">
-          <h2 className="text-2xl font-black text-slate-800">{formData.name || "Établissement"}</h2>
+          <h2 className="text-2xl font-black text-slate-800">{tenantDisplayName}</h2>
           <p className="text-yellow-600 font-bold tracking-tight">@{formData.slug}</p>
           <div className="px-3 py-1 bg-white inline-block rounded-full text-[10px] font-black uppercase text-slate-400 border border-slate-200">
-            {formData.business_type || "SaaS Partner"}
+            {formData.business_type || t.partnerFallback}
           </div>
+          {formData.business?.name_override ? (
+            <p className="text-xs font-bold text-slate-500">
+              {t.legalNamePrefix} {formData.name || "-"}
+            </p>
+          ) : null}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-4 rounded-2xl border border-slate-200 bg-white">
-          <p className="text-[10px] font-black uppercase text-slate-400">Crée le</p>
+          <p className="text-[10px] font-black uppercase text-slate-400">{t.registrationDate}</p>
           <p className="text-sm font-bold text-slate-700 mt-1">
-            {referenceDate ? referenceDate.toLocaleDateString() : "N/A"}
+            {referenceDate ? referenceDate.toLocaleDateString(dateLocale) : t.na}
           </p>
         </div>
         <div className="p-4 rounded-2xl border border-slate-200 bg-white">
-          <p className="text-[10px] font-black uppercase text-slate-400">Échéance (5 mois)</p>
+          <p className="text-[10px] font-black uppercase text-slate-400">{t.deadlineFiveMonths}</p>
           <p className="text-sm font-bold text-slate-700 mt-1">
-            {subscriptionEnd ? subscriptionEnd.toLocaleDateString() : "N/A"}
+            {subscriptionEnd ? subscriptionEnd.toLocaleDateString(dateLocale) : t.na}
           </p>
         </div>
         <div className="p-4 rounded-2xl border border-slate-200 bg-white">
-          <p className="text-[10px] font-black uppercase text-slate-400">Jours restants</p>
+          <p className="text-[10px] font-black uppercase text-slate-400">{t.remainingDays}</p>
           <p className={`text-sm font-black mt-1 ${remainingDays !== null && remainingDays <= 10 ? "text-red-600" : "text-emerald-600"}`}>
-            {remainingDays === null ? "N/A" : `${remainingDays} jours`}
+            {remainingDays === null ? t.na : `${remainingDays} ${t.daysSuffix}`}
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Localisation</label>
+          <label className="text-[10px] font-black text-slate-400 uppercase ml-2">{t.localization}</label>
           <div className="flex gap-2">
             <input 
-              placeholder="Ville"
+              placeholder={t.cityPlaceholder}
               value={formData.city || ""} 
               onChange={(e) => setField('city', e.target.value)}
               className="w-full p-4 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-yellow-500 outline-none transition-all" 
             />
             <input 
-              placeholder="Pays"
+              placeholder={t.countryPlaceholder}
               value={formData.country || ""} 
               onChange={(e) => setField('country', e.target.value)}
               className="w-full p-4 bg-slate-50 rounded-2xl font-bold border-2 border-transparent focus:border-yellow-500 outline-none transition-all" 
@@ -133,7 +149,7 @@ export default function IdentityTab() {
           </div>
         </div>
         <div className="space-y-2">
-          <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Adresse</label>
+          <label className="text-[10px] font-black text-slate-400 uppercase ml-2">{t.address}</label>
           <input 
             value={formData.business?.address || ""} 
             onChange={(e) => setNestedField('business', 'address', e.target.value)}
@@ -143,17 +159,17 @@ export default function IdentityTab() {
       </div>
 
       <div className="space-y-2">
-        <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Image de couverture</label>
+        <label className="text-[10px] font-black text-slate-400 uppercase ml-2">{t.coverImage}</label>
         <div className="rounded-[2rem] border border-slate-200 bg-white p-4">
           <div className="w-full h-44 rounded-[1.5rem] overflow-hidden bg-slate-100 flex items-center justify-center">
             {coverPreviewUrl ? (
-              <img src={coverPreviewUrl} className="w-full h-full object-cover" alt="Cover" />
+              <img src={coverPreviewUrl} className="w-full h-full object-cover" alt={t.coverAlt} />
             ) : (
-              <p className="text-sm font-bold text-slate-400">Aucune image de couverture</p>
+              <p className="text-sm font-bold text-slate-400">{t.noCover}</p>
             )}
           </div>
           <label className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-black cursor-pointer">
-            Choisir cover
+            {t.chooseCover}
             <input
               type="file"
               accept="image/*"

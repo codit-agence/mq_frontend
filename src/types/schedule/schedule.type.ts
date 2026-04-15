@@ -16,6 +16,7 @@ export interface CreateScheduleInput {
 
 export interface Schedule extends CreateScheduleInput {
   id: string;
+  is_active: boolean;
   category_name?: string;
 }
 

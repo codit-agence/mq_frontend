@@ -8,6 +8,7 @@ export interface AuthUserProfile {
   is_verified: boolean;
   is_staff?: boolean;
   is_superuser?: boolean;
+  role?: string | null;
 }
 
 export interface TenantSummary {

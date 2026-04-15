@@ -84,6 +84,45 @@ export interface InternalScreenMapRow {
   moved_alert: boolean;
 }
 
+/** Réponse GET /internal/admin/tenants/{id} — détail gestion (écrans + stats journalières). */
+export interface InternalTenantDetailResponse {
+  tenant: {
+    id: string;
+    name: string;
+    slug: string;
+    city: string;
+    country: string;
+    business_type: string;
+    status: string;
+    client_category: string;
+    subscription_pack: string;
+    subscription_offer: string;
+    tenant_level: number;
+    payment_type: string;
+    followed_by_type: string;
+    followed_by_name: string;
+    technician_name: string;
+    commercial_name: string;
+    lead_source: string;
+    lead_source_detail: string;
+    coupon_code: string;
+  };
+  screens: Array<{
+    id: string;
+    name: string;
+    is_online: boolean;
+    last_ping: string | null;
+    last_latitude: number | null;
+    last_longitude: number | null;
+    moved_alert: boolean;
+  }>;
+  daily_stats: Array<{
+    day: string;
+    uptime_seconds: number;
+    heartbeats: number;
+  }>;
+}
+
 export const internalTenantsService = {
   getOptions: async () => {
     const response = await api.get("/internal/admin/tenants/options");
@@ -114,6 +153,11 @@ export const internalTenantsService = {
       params: filters,
     });
     return response.data as { count: number; results: InternalTenantRow[] };
+  },
+
+  getTenantDetail: async (tenantId: string) => {
+    const response = await api.get(`/internal/admin/tenants/${tenantId}`);
+    return response.data as InternalTenantDetailResponse;
   },
 
   getScreensMap: async (onlineOnly = false) => {

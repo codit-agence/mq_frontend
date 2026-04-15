@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { BrandingFooter } from "@/src/projects/shared/branding/components/BrandingFooter";
 import { LocaleToggle } from "@/src/projects/shared/branding/components/LocaleToggle";
+import { AUTH_PATHS, buildRegisteredLoginPath } from "@/src/projects/client-dashboard/account/auth-paths";
+import { getAuthPageBackgroundStyle } from "@/src/projects/shared/branding/branding-page.styles";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 import { authService } from "@/src/projects/client-dashboard/account/auth.services";
@@ -124,7 +126,7 @@ export default function OnboardingPage() {
         accepted_terms: true,
         terms_locale: locale,
       });
-      router.push("/account/login?registered=true");
+      router.replace(buildRegisteredLoginPath());
     } catch (err: unknown) {
       setError(getErrorMessage(err));
     } finally {
@@ -133,7 +135,7 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-[linear-gradient(145deg,#f5f9f1,#ffffff_48%,#87bf5a14)] px-4 py-6 sm:py-10">
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen px-4 py-6 sm:py-10" style={getAuthPageBackgroundStyle(branding)}>
       <div className="mx-auto max-w-5xl">
         <div className="mb-4 flex justify-end">
           <LocaleToggle locale={locale} onChange={setLocale} />
@@ -211,7 +213,7 @@ export default function OnboardingPage() {
             </form>
 
             <div className="mt-6 text-center text-sm font-semibold text-slate-500">
-              <Link href="/account/login" className="hover:text-slate-900">{text.login}</Link>
+              <Link href={AUTH_PATHS.login} className="hover:text-slate-900">{text.login}</Link>
             </div>
           </div>
         </div>

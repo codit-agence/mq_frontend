@@ -11,9 +11,10 @@ import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { BrandingFooter } from "@/src/projects/shared/branding/components/BrandingFooter";
 import { LocaleToggle } from "@/src/projects/shared/branding/components/LocaleToggle";
+import { TenantAccountSummaryStrip } from "@/src/projects/client-dashboard/tenant/components/TenantAccountSummaryStrip";
 
 export default function ClientDashboardLayout({ children }: { children: React.ReactNode }) {
-  const { logout, user } = useAuthStore();
+  const { logout, user, tenant } = useAuthStore();
   const { branding } = useBranding();
   const { locale, setLocale, isRtl } = useAppLocale(branding);
   const pathname = usePathname();
@@ -35,9 +36,9 @@ export default function ClientDashboardLayout({ children }: { children: React.Re
 
   const navLinks = [
     { href: "/dashboard", icon: <LayoutDashboard size={16} />, label: text.stats, active: pathname === "/dashboard" },
-    { href: "/dashboard/settings", icon: <Settings size={16} />, label: text.config, active: pathname === "/dashboard/settings" },
+    // { href: "/dashboard/settings", icon: <Settings size={16} />, label: text.config, active: pathname === "/dashboard/settings" },
     { href: "/dashboard/support", icon: <LifeBuoy size={16} />, label: text.help, active: pathname === "/dashboard/support" },
-    { href: "/dashboard/notifications", icon: <Bell size={16} />, label: text.alerts, active: pathname.includes("/notifications") },
+    // { href: "/dashboard/notifications", icon: <Bell size={16} />, label: text.alerts, active: pathname.includes("/notifications") },
   ];
 
   return (
@@ -54,10 +55,10 @@ export default function ClientDashboardLayout({ children }: { children: React.Re
             </button>
 
             <Link href="/dashboard" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black shadow-sm group-hover:scale-105 transition-all overflow-hidden" style={{ backgroundColor: branding.primary_color }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black shadow-sm group-hover:scale-105 transition-all overflow-hidden">
                 {branding.logo ? <img src={getImageUrl(branding.logo)} alt={branding.app_name} className="w-full h-full object-cover" /> : branding.app_name.charAt(0)}
               </div>
-              <span className="font-black text-slate-900 uppercase text-xs sm:text-sm tracking-tight">{branding.app_name}</span>
+              <span className="font-black text-blue-900 uppercase text-xs sm:text-sm tracking-tight">{branding.app_name}</span>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">
@@ -94,6 +95,9 @@ export default function ClientDashboardLayout({ children }: { children: React.Re
       </header>
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
+        {tenant?.id && !pathname.includes("/dashboard/tenant/") ? (
+          <TenantAccountSummaryStrip tenantId={tenant.id} locale={locale === "ar" ? "ar" : "fr"} />
+        ) : null}
         {children}
       </main>
 

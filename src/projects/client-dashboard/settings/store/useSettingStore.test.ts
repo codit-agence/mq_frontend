@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import MockAdapter from 'axios-mock-adapter';
 import api from '@/src/core/api/axios';
 import { tenantService } from '../services/tenant.services';
+import { useAuthStore } from '@/src/projects/client-dashboard/account/store/useAuthStore';
+import { useSettingsStore } from './useSettingStore';
 
 const mockTenantData = {
   id: 'tenant-1',
@@ -45,6 +47,27 @@ describe('tenantService integration with store', () => {
 
   beforeEach(() => {
     mock = new MockAdapter(api);
+    useAuthStore.setState({
+      user: {
+        id: 'user-1',
+        email: 'admin@test.com',
+        first_name: 'Admin',
+        last_name: 'User',
+        avatar: null,
+        is_active: true,
+        is_verified: true,
+      },
+      tenant: {
+        id: 'tenant-1',
+        name: 'Test Restaurant',
+        slug: 'test-restaurant',
+        logo: null,
+      },
+      isAuthenticated: true,
+      isLoading: false,
+      isInitializing: false,
+    });
+    useSettingsStore.setState({ activeTab: 'identity', formData: {}, isLoading: false });
   });
 
   afterEach(() => {
@@ -79,6 +102,28 @@ describe('tenantService integration with store', () => {
     const result = await tenantService.updateTenant(formData, 'tenant-1');
 
     expect(result).toEqual(updatedData);
+  });
+
+  it('should refetch after save and sync override name into auth tenant', async () => {
+    mock.onPost('/tenants/setting/update').reply(200, { ok: true });
+    mock.onGet('/tenants/setting/me').reply(200, mockTenantData);
+
+    useSettingsStore.setState({
+      activeTab: 'identity',
+      isLoading: false,
+      formData: {
+        ...mockTenantData,
+        business: {
+          ...mockTenantData.business,
+          name_override: 'Le Test',
+        },
+      },
+    });
+
+    await useSettingsStore.getState().saveAll('tenant-1');
+
+    expect(useSettingsStore.getState().formData.business?.name_override).toBe('Le Test');
+    expect(useAuthStore.getState().tenant?.name).toBe('Le Test');
   });
 
   it('should work without tenant ID (uses default from auth interceptor)', async () => {

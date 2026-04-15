@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getSiteUrl } from "@/src/core/config/public-env";
+import { AUTH_PATHS } from "@/src/projects/client-dashboard/account/auth-paths";
 import { brandingService } from "@/src/projects/shared/branding/branding.service";
 
 const siteUrl = getSiteUrl();
@@ -34,13 +35,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.85,
     })),
     {
-      url: `${siteUrl}/account/register`,
+      url: `${siteUrl}${AUTH_PATHS.register}`,
       lastModified,
       changeFrequency: "monthly",
       priority: 0.8,
     },
     {
-      url: `${siteUrl}/account/terms`,
+      url: `${siteUrl}${AUTH_PATHS.terms}`,
       lastModified,
       changeFrequency: "yearly",
       priority: 0.4,

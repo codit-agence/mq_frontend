@@ -36,6 +36,7 @@ export function BrandingFooter({
   return (
     <footer className={`${compact ? "pt-4" : "pt-6"}`}>
       <div className={`rounded-[1.8rem] border border-slate-200 bg-[linear-gradient(135deg,rgba(45,79,158,0.06),rgba(119,187,101,0.09))] ${compact ? "p-4" : "p-5 sm:p-6"}`}>
+       
         <div className={`flex ${compact ? "flex-col gap-4" : "flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"}`}>
           <div className="space-y-3">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[#2D4F9E]">{branding.app_name}</p>
@@ -47,7 +48,7 @@ export function BrandingFooter({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-slate-600">
-            <Link href="/offres" className="rounded-full border border-slate-200 bg-white px-3 py-2 transition hover:border-slate-300 hover:text-slate-900">
+            {/* <Link href="/offres" className="rounded-full border border-slate-200 bg-white px-3 py-2 transition hover:border-slate-300 hover:text-slate-900">
               {text.offers}
             </Link>
             <Link href="/solutions" className="rounded-full border border-slate-200 bg-white px-3 py-2 transition hover:border-slate-300 hover:text-slate-900">
@@ -58,7 +59,7 @@ export function BrandingFooter({
             </Link>
             <Link href="/account/terms" className="rounded-full border border-slate-200 bg-white px-3 py-2 transition hover:border-slate-300 hover:text-slate-900">
               {text.terms}
-            </Link>
+            </Link> */}
           </div>
         </div>
 

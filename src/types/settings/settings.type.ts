@@ -54,6 +54,7 @@ export interface TenantSettingsData {
   business_type?: BusinessType;
   status?: string;
   created_at?: string;
+  registration_date?: string;
   business?: {
     id?: string;
     name_override?: string;

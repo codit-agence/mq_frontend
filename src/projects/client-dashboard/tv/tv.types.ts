@@ -51,13 +51,28 @@ export interface TVManifestProduct {
   image: string;
 }
 
+export interface AudioPlaylistTrack {
+  url: string;
+  title: string;
+  duration: number;
+}
+
+export interface AudioPlaylist {
+  mode: "repeat" | "shuffle";
+  repeat_count: number;
+  category: string;
+  track_type?: string;
+  slot_label?: string;
+  tracks: AudioPlaylistTrack[];
+}
+
 export interface TVManifest {
   label: string;
   category_name: string;
   template_name: string;
   slot_duration: number;
   audio_url?: string | null;
-  audio_playlist?: string[] | null;
+  audio_playlist?: AudioPlaylist | null;
   products: TVManifestProduct[];
   tenant: {
     name: string;

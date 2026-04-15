@@ -2,17 +2,20 @@
 
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
-import { Building2, Monitor, AlertTriangle, Search, MapPinned, Sparkles, ShieldCheck, Wallet, Radio, Save, PauseCircle, PlayCircle, Plus } from "lucide-react";
+import { Building2, Monitor, AlertTriangle, Search, MapPinned, Sparkles, ShieldCheck, Wallet, Radio, Save, PauseCircle, PlayCircle, Plus, CreditCard } from "lucide-react";
 import {
   InternalTenantCreateInput,
   internalTenantsService,
   InternalOption,
   InternalScreenMapRow,
+  InternalTenantDetailResponse,
   InternalTenantRow,
   InternalTenantStats,
 } from "@/src/projects/admin-dashboard/internal/services/internal-tenants.service";
 import { useInternalPreviewMode } from "@/src/projects/admin-dashboard/internal/hooks/useInternalPreviewMode";
 import { filterPreviewTenantRows, previewOptionsBase, previewRowsBase, previewScreenMapBase, previewStats } from "@/src/projects/admin-dashboard/internal/preview/internal-tenants.preview";
+import { getErrorMessage } from "@/src/utils/errors";
+import { getApiBaseUrl } from "@/src/core/config/public-env";
 
 export default function InternalTenantsPage() {
   const { previewMode } = useInternalPreviewMode();
@@ -64,6 +67,10 @@ export default function InternalTenantsPage() {
     payment_type: "",
   });
   const [mapOnlineOnly, setMapOnlineOnly] = useState(false);
+  const [tenantDetail, setTenantDetail] = useState<InternalTenantDetailResponse | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
   const deferredSearch = useDeferredValue(search);
   const loading = bootstrapping || rowsLoading;
 
@@ -95,6 +102,8 @@ export default function InternalTenantsPage() {
       setRows(previewRowsBase);
       setScreenMapRows(mapOnlineOnly ? previewScreenMapBase.filter((row) => row.is_online) : previewScreenMapBase);
       setOptions(previewOptionsBase);
+      setBootstrapError(null);
+      setListError(null);
       setBootstrapping(false);
       return;
     }
@@ -118,8 +127,13 @@ export default function InternalTenantsPage() {
           followed_by_types: optionsData.followed_by_types,
           lead_sources: optionsData.lead_sources,
         });
+        setBootstrapError(null);
       } catch (error) {
         console.error("Internal dashboard error", error);
+        setBootstrapError(
+          getErrorMessage(error) ||
+            "Erreur chargement API interne (stats / options / carte). Verifiez la base URL API, le JWT staff et CORS.",
+        );
       } finally {
         setBootstrapping(false);
       }
@@ -128,19 +142,43 @@ export default function InternalTenantsPage() {
   }, [mapOnlineOnly, previewMode]);
 
   useEffect(() => {
-    const reloadRows = async () => {
+    const run = async () => {
       setRowsLoading(true);
-
       try {
         await reloadRows();
+        setListError(null);
       } catch (error) {
         console.error("Filter reload error", error);
+        setListError(getErrorMessage(error) || "Impossible de charger la liste des tenants.");
       } finally {
         setRowsLoading(false);
       }
     };
-    reloadRows();
+    void run();
   }, [deferredSearch, filters.business_type, filters.status, filters.client_category, filters.subscription_pack, previewMode]);
+
+  useEffect(() => {
+    if (!selectedTenantId || previewMode) {
+      setTenantDetail(null);
+      return;
+    }
+    let cancelled = false;
+    const loadDetail = async () => {
+      setDetailLoading(true);
+      try {
+        const data = await internalTenantsService.getTenantDetail(selectedTenantId);
+        if (!cancelled) setTenantDetail(data);
+      } catch {
+        if (!cancelled) setTenantDetail(null);
+      } finally {
+        if (!cancelled) setDetailLoading(false);
+      }
+    };
+    void loadDetail();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedTenantId, previewMode]);
 
   const mapBounds = useMemo(() => {
     if (!screenMapRows.length) {
@@ -204,6 +242,11 @@ export default function InternalTenantsPage() {
       });
       toast.success("Tenant mis a jour");
       await reloadRows();
+      try {
+        setTenantDetail(await internalTenantsService.getTenantDetail(selectedTenant.id));
+      } catch {
+        /* ignore */
+      }
     } catch (error: any) {
       toast.error(error?.response?.data?.detail || "Impossible de mettre a jour ce tenant");
     } finally {
@@ -274,6 +317,11 @@ export default function InternalTenantsPage() {
       await internalTenantsService.updateTenant(selectedTenant.id, { status: nextStatus });
       toast.success(nextStatus === "active" ? "Tenant reactive" : "Tenant suspendu");
       await reloadRows();
+      try {
+        setTenantDetail(await internalTenantsService.getTenantDetail(selectedTenant.id));
+      } catch {
+        /* ignore */
+      }
     } catch (error: any) {
       toast.error(error?.response?.data?.detail || "Impossible de changer le statut du tenant");
     } finally {
@@ -287,6 +335,20 @@ export default function InternalTenantsPage() {
         <section className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
           <p className="font-black uppercase tracking-[0.2em] text-[10px]">Preview interne</p>
           <p className="mt-2">Cette page est ouverte sans login uniquement pour revue du contenu. Les chiffres et tenants affiches ici sont des donnees de demonstration.</p>
+        </section>
+      ) : null}
+
+      {(bootstrapError || listError) && !previewMode ? (
+        <section className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-950">
+          <p className="font-black uppercase tracking-[0.2em] text-[10px] text-rose-800">Erreur API (tenants internes)</p>
+          {bootstrapError ? <p className="mt-2 font-semibold leading-relaxed">Stats / options : {bootstrapError}</p> : null}
+          {listError ? <p className="mt-2 font-semibold leading-relaxed">Liste tenants : {listError}</p> : null}
+          <p className="mt-3 text-xs text-rose-900/90 break-all">
+            Base URL API utilisee : <code className="rounded bg-white/80 px-1.5 py-0.5">{getApiBaseUrl()}</code>
+            {" — "}
+            Attendu : URL Django Ninja avec suffixe <code className="rounded bg-white/80 px-1">/api</code> (ex.{" "}
+            <code className="rounded bg-white/80 px-1">http://127.0.0.1:8000/api</code>).
+          </p>
         </section>
       ) : null}
 
@@ -595,6 +657,86 @@ export default function InternalTenantsPage() {
               <p className="mt-2 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">Slug: {selectedTenant.slug || "-"}</p>
             </div>
 
+            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/90 to-white p-4 space-y-3">
+              <div className="flex items-center gap-2 text-indigo-900">
+                <CreditCard size={16} />
+                <p className="text-[10px] font-black uppercase tracking-[0.2em]">Vue portail client (abonnement & contacts)</p>
+              </div>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Espace abonne : ces champs alimentent le bandeau <strong>Abonnement &amp; suivi</strong> dans l&apos;espace tenant client (API{" "}
+                <code className="rounded bg-white/80 px-1">/tenants/account/summary</code>). Plus le pack, l&apos;offre, le paiement, la categorie,
+                le commercial et le technicien sont renseignes, plus le tableau de bord client est lisible.
+              </p>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Renseignez aussi les champs du formulaire ci-dessous (lead, coupon, suivi) pour un pilotage complet depuis la console interne.
+              </p>
+              {previewMode ? (
+                <dl className="grid grid-cols-2 gap-2 text-xs text-slate-800">
+                  <StatDt label="Pack" value={selectedTenant.subscription_pack || "—"} />
+                  <StatDt label="Statut compte" value={selectedTenant.status || "—"} />
+                  <StatDt label="Offre" value={selectedTenant.subscription_offer || "—"} />
+                  <StatDt label="Niveau" value={String(selectedTenant.tenant_level ?? "—")} />
+                </dl>
+              ) : tenantDetail?.tenant ? (
+                <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs text-slate-800">
+                  <StatDt label="Statut compte" value={tenantDetail.tenant.status || "—"} />
+                  <StatDt label="Pack" value={tenantDetail.tenant.subscription_pack || "—"} />
+                  <StatDt label="Offre" value={tenantDetail.tenant.subscription_offer || "—"} />
+                  <StatDt label="Niveau" value={String(tenantDetail.tenant.tenant_level ?? "—")} />
+                  <StatDt label="Paiement" value={tenantDetail.tenant.payment_type || "—"} />
+                  <StatDt label="Categorie" value={tenantDetail.tenant.client_category || "—"} />
+                  <StatDt label="Commercial" value={tenantDetail.tenant.commercial_name || "—"} />
+                  <StatDt label="Technicien" value={tenantDetail.tenant.technician_name || "—"} />
+                  <StatDt label="Coupon" value={tenantDetail.tenant.coupon_code || "—"} />
+                  <StatDt label="Lead" value={tenantDetail.tenant.lead_source || "—"} />
+                  <StatDt label="Suivi" value={`${tenantDetail.tenant.followed_by_type || ""} ${tenantDetail.tenant.followed_by_name || ""}`.trim() || "—"} />
+                </dl>
+              ) : detailLoading ? (
+                <p className="text-xs text-slate-500">Chargement synthese detail...</p>
+              ) : (
+                <dl className="grid grid-cols-2 gap-2 text-xs text-slate-800">
+                  <StatDt label="Pack" value={selectedTenant.subscription_pack || "—"} />
+                  <StatDt label="Statut" value={selectedTenant.status || "—"} />
+                  <StatDt label="Commercial" value={selectedTenant.commercial_name || "—"} />
+                  <StatDt label="Technicien" value={selectedTenant.technician_name || "—"} />
+                </dl>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Detail API (ecrans + stats)</p>
+              {detailLoading ? (
+                <p className="text-xs text-slate-500">Chargement...</p>
+              ) : tenantDetail?.screens?.length ? (
+                <ul className="max-h-44 overflow-auto space-y-2 text-xs">
+                  {tenantDetail.screens.map((s) => (
+                    <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2 last:border-0">
+                      <span className="font-semibold text-slate-800">{s.name}</span>
+                      <span className={s.is_online ? "font-black text-emerald-600" : "text-slate-400"}>
+                        {s.is_online ? "En ligne" : "Hors ligne"}
+                      </span>
+                      {s.moved_alert ? <span className="text-[10px] font-black uppercase text-rose-600">Alerte deplacement</span> : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-slate-400">Aucun ecran ou indisponible.</p>
+              )}
+              {!detailLoading && tenantDetail?.daily_stats?.length ? (
+                <div className="pt-2 border-t border-slate-100">
+                  <p className="text-[10px] font-black uppercase text-slate-400 mb-2">Stats journalieres (14 derniers jours)</p>
+                  <div className="max-h-36 overflow-auto space-y-1 text-[11px] text-slate-600">
+                    {tenantDetail.daily_stats.slice(-14).map((d) => (
+                      <div key={d.day} className="flex justify-between gap-2">
+                        <span className="font-mono text-slate-500">{d.day.slice(0, 10)}</span>
+                        <span>{Math.round((d.uptime_seconds || 0) / 3600)}h uptime</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Statut">
                 <select value={editDraft.status || ""} onChange={(e) => setEditDraft((prev) => ({ ...prev, status: e.target.value }))} className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm">
@@ -792,5 +934,16 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-2 block text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">{label}</span>
       {children}
     </label>
+  );
+}
+
+function StatDt({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</dt>
+      <dd className="mt-0.5 font-bold text-slate-900 truncate" title={value}>
+        {value}
+      </dd>
+    </div>
   );
 }

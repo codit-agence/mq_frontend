@@ -18,5 +18,11 @@ export const SchedulerService = {
   deleteSchedule: async (id: string): Promise<{ success: boolean }> => {
     const res = await api.delete<{ success: boolean }>(`/manifest/schedule/${id}`);
     return res.data;
-  }
+  },
+
+  // Mise à jour partielle (toggle is_active, etc.)
+  patchSchedule: async (id: string, data: Partial<Schedule>): Promise<Schedule> => {
+    const res = await api.patch<Schedule>(`/manifest/schedule/${id}`, data);
+    return res.data;
+  },
 };

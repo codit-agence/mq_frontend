@@ -4,7 +4,21 @@ import { useEffect, useMemo, useState } from "react";
 
 import { PublicBranding } from "@/src/projects/shared/branding/branding.types";
 
-const LOCALE_STORAGE_KEY = "qalyas-app-locale";
+export const APP_LOCALE_STORAGE_KEY = "qalyas-app-locale";
+
+export function readStoredAppLocale(): "fr" | "ar" {
+  if (typeof window === "undefined") return "fr";
+  const stored = window.localStorage.getItem(APP_LOCALE_STORAGE_KEY);
+  return stored === "ar" ? "ar" : "fr";
+}
+
+/** Met à jour <html lang dir> pour l’UI client (hors console internal). */
+export function applyDocumentLocale(locale: "fr" | "ar") {
+  if (typeof document === "undefined") return;
+  const html = document.documentElement;
+  html.setAttribute("lang", locale === "ar" ? "ar" : "fr");
+  html.setAttribute("dir", locale === "ar" ? "rtl" : "ltr");
+}
 
 export function useAppLocale(branding: PublicBranding) {
   const defaultLocale = useMemo(() => {
@@ -15,7 +29,7 @@ export function useAppLocale(branding: PublicBranding) {
   const [locale, setLocale] = useState<"fr" | "ar">(defaultLocale);
 
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? window.localStorage.getItem(LOCALE_STORAGE_KEY) : null;
+    const stored = typeof window !== "undefined" ? window.localStorage.getItem(APP_LOCALE_STORAGE_KEY) : null;
     if (stored === "fr" || stored === "ar") {
       setLocale(stored);
       return;
@@ -25,8 +39,12 @@ export function useAppLocale(branding: PublicBranding) {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+      window.localStorage.setItem(APP_LOCALE_STORAGE_KEY, locale);
     }
+  }, [locale]);
+
+  useEffect(() => {
+    applyDocumentLocale(locale);
   }, [locale]);
 
   return {

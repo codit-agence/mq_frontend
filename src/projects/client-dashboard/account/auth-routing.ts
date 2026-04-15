@@ -1,6 +1,6 @@
 import type { LoginResponse, Tenant, UserProfile } from "@/src/types/accounts/account.types";
 
-const INTERNAL_ROLE_KEYS = new Set(["admin", "super_admin", "internal_admin", "platform_admin"]);
+const INTERNAL_ROLE_KEYS = new Set(["admin", "super_admin", "internal_admin", "platform_admin", "staff"]);
 
 function normalizeRole(value?: string | null) {
   return value?.trim().toLowerCase().replace(/[-\s]+/g, "_") || "";
@@ -12,6 +12,7 @@ export function isInternalAccount(params: {
   loginResponse?: LoginResponse | null;
 }) {
   const { user, tenant, loginResponse } = params;
+  const userRole = normalizeRole(user?.role);
   const tenantRole = normalizeRole(tenant?.role);
   const responseRole = normalizeRole(loginResponse?.role);
 
@@ -20,6 +21,7 @@ export function isInternalAccount(params: {
       user?.is_superuser ||
       loginResponse?.is_staff ||
       loginResponse?.is_superuser ||
+      INTERNAL_ROLE_KEYS.has(userRole) ||
       INTERNAL_ROLE_KEYS.has(tenantRole) ||
       INTERNAL_ROLE_KEYS.has(responseRole),
   );

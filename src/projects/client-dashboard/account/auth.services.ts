@@ -1,7 +1,51 @@
 import api from "@/src/core/api/axios";
+import axios from "axios";
 
 import { LoginIn, RegisterIn } from "@/src/types/accounts/auth.payloads"; // À créer pour tes inputs
 import { LoginResponse, RegisterResponse, MeResponse } from "@/src/types/accounts/account.types"; // À créer pour les réponses de l'API
+
+function getRawResponseText(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return undefined;
+  }
+
+  const request = error.request as { responseText?: string } | undefined;
+  return request?.responseText;
+}
+
+function serializeForDebug(value: unknown) {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function redactSensitiveData(value: unknown): unknown {
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return redactSensitiveData(parsed);
+    } catch {
+      return value;
+    }
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(redactSensitiveData);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [
+        key,
+        key.toLowerCase().includes("password") ? "[REDACTED]" : redactSensitiveData(entry),
+      ]),
+    );
+  }
+
+  return value;
+}
 
 export const authService = {
   async register(data: RegisterIn): Promise<RegisterResponse> {
@@ -35,7 +79,24 @@ export const authService = {
       console.log("API Response: login success");
       return response.data;
     } catch (error) {
-      console.error("API Error: login failed", error);
+      if (axios.isAxiosError(error)) {
+        const axiosSnapshot = redactSensitiveData(error.toJSON());
+        const debugPayload = {
+          message: error.message,
+          code: error.code,
+          status: error.response?.status ?? null,
+          statusText: error.response?.statusText ?? null,
+          data: error.response?.data ?? null,
+          responseText: getRawResponseText(error) ?? null,
+          url: error.config?.url ?? null,
+          method: error.config?.method ?? null,
+          axios: axiosSnapshot,
+        };
+
+        console.warn(`API Error: login failed\n${serializeForDebug(debugPayload)}`);
+      } else {
+        console.warn(`API Error: login failed\n${serializeForDebug(error)}`);
+      }
       throw error;
     }
   },

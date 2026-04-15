@@ -31,7 +31,7 @@ export function BrandingRuntime() {
       document.title = branding.app_name;
     }
 
-    const favicon = branding.favicon;
+    const favicon = branding.favicon || branding.logo;
     if (favicon) {
       let link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
       if (!link) {

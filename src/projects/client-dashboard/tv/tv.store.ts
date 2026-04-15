@@ -8,7 +8,6 @@ interface TVStoreState {
   template: string;
   manifest: TVManifest | null;
   welcomeUntil: number | null;
-  hasHydrated: boolean;
   controlTransport: TVControlTransport;
   pollIntervalSeconds: number;
   gpsRequired: boolean;
@@ -23,7 +22,6 @@ interface TVStoreState {
     deviceTier?: TVDeviceTier;
   }) => void;
   clearWelcome: () => void;
-  setHydrated: (value: boolean) => void;
   logout: () => void;
 }
 
@@ -35,7 +33,6 @@ export const useTVStore = create<TVStoreState>()(
       template: "classic",
       manifest: null,
       welcomeUntil: null,
-      hasHydrated: false,
       controlTransport: "polling",
       pollIntervalSeconds: 30,
       gpsRequired: true,
@@ -45,7 +42,7 @@ export const useTVStore = create<TVStoreState>()(
         set({
           screenId: id,
           accessToken: token,
-          welcomeUntil: Date.now() + 2500,
+          welcomeUntil: Date.now() + 1200,
         }),
       setTemplate: (template) => set({ template }),
       setManifest: (manifest) => set({ manifest }),
@@ -57,22 +54,46 @@ export const useTVStore = create<TVStoreState>()(
           deviceTier: deviceTier || state.deviceTier,
         })),
       clearWelcome: () => set({ welcomeUntil: null }),
-      setHydrated: (value) => set({ hasHydrated: value }),
-      logout: () => set({
-        accessToken: null,
-        screenId: null,
-        manifest: null,
-        welcomeUntil: null,
-        controlTransport: "polling",
-        pollIntervalSeconds: 30,
-        gpsRequired: true,
-        deviceTier: "standard",
-      }),
+      logout: () =>
+        set({
+          accessToken: null,
+          screenId: null,
+          manifest: null,
+          welcomeUntil: null,
+          controlTransport: "polling",
+          pollIntervalSeconds: 30,
+          gpsRequired: true,
+          deviceTier: "standard",
+        }),
     }),
     {
       name: "tv-storage",
-      onRehydrateStorage: () => (state) => {
-        state?.setHydrated(true);
+      partialize: (s) => ({
+        accessToken: s.accessToken,
+        screenId: s.screenId,
+        template: s.template,
+        welcomeUntil: s.welcomeUntil,
+        controlTransport: s.controlTransport,
+        pollIntervalSeconds: s.pollIntervalSeconds,
+        gpsRequired: s.gpsRequired,
+        deviceTier: s.deviceTier,
+      }),
+      merge: (persisted, current) => {
+        if (!persisted || typeof persisted !== "object") {
+          return current;
+        }
+        const p = persisted as Partial<TVStoreState>;
+        return {
+          ...current,
+          accessToken: p.accessToken ?? current.accessToken,
+          screenId: p.screenId ?? current.screenId,
+          template: p.template ?? current.template,
+          welcomeUntil: p.welcomeUntil ?? current.welcomeUntil,
+          controlTransport: p.controlTransport ?? current.controlTransport,
+          pollIntervalSeconds: p.pollIntervalSeconds ?? current.pollIntervalSeconds,
+          gpsRequired: p.gpsRequired ?? current.gpsRequired,
+          deviceTier: p.deviceTier ?? current.deviceTier,
+        };
       },
     }
   )

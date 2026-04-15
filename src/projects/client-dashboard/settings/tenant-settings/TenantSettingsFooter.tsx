@@ -12,7 +12,7 @@ export function TenantSettingsFooter({
   onSave: () => void;
 }) {
   return (
-    <footer className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 p-6 z-40">
+    <footer className="fixed left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-100 px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:px-6 md:py-6 bottom-24 md:bottom-0">
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row gap-4 justify-between items-center">
         <div className="flex items-center gap-3">
           <div className={`w-2 h-2 rounded-full ${isLoading ? "bg-yellow-500 animate-pulse" : "bg-green-500"}`} />
