@@ -2,13 +2,26 @@
 
 import { getBackendOrigin } from "@/src/core/config/public-env";
 
+/**
+ * Construit l’URL absolue d’un média servi par Django.
+ * Les fichiers sont exposés sous MEDIA_URL (`/media/…`). Les anciennes entrées
+ * JSON (ex. `/mq/…`) sans préfixe `/media/` sont corrigées automatiquement.
+ */
 export const getImageUrl = (path: string | null | undefined): string => {
-  if (!path) return "/mq/petitedejeuner.jpg"; // Image par défaut dans ton dossier public
-  
-  // Si le path est déjà une URL complète (ex: S3 ou externe)
-  if (path.startsWith("http")) return path;
-  
-  // On nettoie le path pour éviter les doubles slashes //
-  const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  return `${getBackendOrigin()}${cleanPath}`;
+  if (!path) return "/mq/petitedejeuner.jpg";
+
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+
+  let cleanPath = path.startsWith("/") ? path : `/${path}`;
+
+  if (
+    cleanPath.startsWith("/media/") ||
+    cleanPath.startsWith("/static/") ||
+    cleanPath.startsWith("/api/")
+  ) {
+    return `${getBackendOrigin()}${cleanPath}`;
+  }
+
+  // Chemins relatifs au MEDIA_ROOT sans préfixe (ex. défaut branding `/mq/…`)
+  return `${getBackendOrigin()}/media${cleanPath}`;
 };

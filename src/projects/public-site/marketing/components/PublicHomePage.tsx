@@ -14,6 +14,7 @@ import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 import { getLocalizedText } from "./public-home/public-home.utils";
 import type { PublicHomeLocale } from "./public-home/public-home.utils";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
+import { getApiBaseUrl } from "@/src/core/config/public-env";
 import { BrandingFooter } from "@/src/projects/shared/branding/components/BrandingFooter";
 import axios from "axios";
 
@@ -24,7 +25,8 @@ const GREEN = "#77BB65";
 // ─── Translations ─────────────────────────────────────────────────────────────
 const T = {
   fr: {
-    nav: { features: "Fonctionnalités", how: "Comment ça marche", pricing: "Tarifs", contact: "Contact" },
+    // Navigation : un mot par lien (lisible sur mobile)
+    nav: { features: "Fonctions", how: "Étapes", pricing: "Tarifs", contact: "Contact" },
     badge: "Plateforme d'affichage digital SaaS",
     hero: {
       title: "Transformez vos écrans en machine à vendre",
@@ -151,7 +153,7 @@ const T = {
     },
   },
   ar: {
-    nav: { features: "المميزات", how: "كيف يعمل", pricing: "الأسعار", contact: "تواصل معنا" },
+    nav: { features: "مزايا", how: "خطوات", pricing: "أسعار", contact: "تواصل" },
     badge: "منصة العرض الرقمي SaaS",
     hero: {
       title: "حوّل شاشاتك إلى آلة مبيعات",
@@ -280,7 +282,7 @@ export function PublicHomePage({ branding }: { branding: PublicBranding }) {
   const [scrolled, setScrolled] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
-  // Hero slides
+  // Slides hero : JSON `site_hero_slides` (Django Admin → AppBrandingSettings). Chaque entrée : image_url absolue ou chemin sous MEDIA, ex. /media/…/photo.jpg
   const slides = branding.site_hero_slides?.length
     ? branding.site_hero_slides
     : [{ code: "default", image_url: null, title: { fr: t.hero.title, ar: t.hero.title }, description: { fr: t.hero.sub, ar: t.hero.sub }, cta_label: { fr: t.hero.cta1, ar: t.hero.cta1 } }];
@@ -309,7 +311,7 @@ export function PublicHomePage({ branding }: { branding: PublicBranding }) {
     setFormState("sending");
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL || ""}/api/branding/public/ads-contact`,
+        `${getApiBaseUrl()}/branding/public/ads-contact`,
         { ...form, preferred_language: locale, source: "homepage" },
       );
       setFormState("ok");
@@ -320,7 +322,7 @@ export function PublicHomePage({ branding }: { branding: PublicBranding }) {
   }
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} lang={locale} className="min-h-screen bg-white text-slate-950 antialiased">
+    <div dir={isRtl ? "rtl" : "ltr"} lang={locale} className="min-h-screen overflow-x-hidden bg-white text-slate-950 antialiased">
 
       {/* ── NAVBAR ──────────────────────────────────────────────────────────── */}
       <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/95 shadow-sm backdrop-blur-sm border-b border-slate-100" : "bg-transparent"}`}>
@@ -333,7 +335,7 @@ export function PublicHomePage({ branding }: { branding: PublicBranding }) {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden items-center gap-6 text-sm font-bold md:flex">
+          <nav className="hidden items-center gap-4 text-sm font-bold lg:gap-6 md:flex">
             <a href="#features" className="text-slate-600 hover:text-slate-950 transition-colors">{t.nav.features}</a>
             <a href="#how" className="text-slate-600 hover:text-slate-950 transition-colors">{t.nav.how}</a>
             <a href="#pricing" className="text-slate-600 hover:text-slate-950 transition-colors">{t.nav.pricing}</a>

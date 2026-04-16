@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
 import { getSiteUrl } from "@/src/core/config/public-env";
@@ -7,6 +7,12 @@ import { BrandingProvider } from "@/src/projects/shared/branding/components/Bran
 import { BrandingRuntime } from "@/src/projects/shared/branding/components/BrandingRuntime";
 
 const siteUrl = getSiteUrl();
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#2D4F9E",
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const branding = await getPublicBrandingServer();
