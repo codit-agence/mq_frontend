@@ -34,7 +34,7 @@ const TVPlayerTemplate: React.FC<Props> = ({ manifest, productIndex }) => {
       >
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-white overflow-hidden">
-            <img src={getImageUrl(manifest.tenant.logo) || "/mq/petitdejeuner.jpg"} alt="logo" className="h-full w-full object-cover" />
+            <img src={getImageUrl(manifest.tenant.logo)} alt="logo" className="h-full w-full object-cover" />
           </div>
           <p className="font-black truncate" style={{ fontSize: "clamp(12px, 1.6vw, 24px)" }}>{brandName}</p>
         </div>

@@ -30,7 +30,7 @@ export function buildHomeMetadata(branding: PublicBranding): Metadata {
     branding.seo_meta_description || `${branding.app_name} propose site web commercial, TV connectee, QR gratuit, promotions, tracking et dashboard client pour piloter votre activite.`;
 
   const heroRaw = branding.site_hero_slides?.[0]?.image_url;
-  const ogImageAbs = heroRaw ? getImageUrl(heroRaw) : `${siteUrl}/mq/petitedejeuner.jpg`;
+  const ogImageAbs = getImageUrl(heroRaw);
 
   return {
     metadataBase: new URL(siteUrl),
@@ -74,7 +74,7 @@ export function buildHomeMetadata(branding: PublicBranding): Metadata {
       type: "website",
       images: [
         {
-          url: branding.site_hero_slides?.[0]?.image_url || "/mq/jus2.jfif",
+          url: ogImageAbs,
           width: 1200,
           height: 630,
           alt: branding.app_name,
@@ -85,7 +85,7 @@ export function buildHomeMetadata(branding: PublicBranding): Metadata {
       card: "summary_large_image",
       title,
       description,
-      images: [branding.site_hero_slides?.[0]?.image_url || "/mq/jus2.jfif"],
+      images: [ogImageAbs],
     },
   };
 }
@@ -104,7 +104,7 @@ export function buildMarketingPageMetadata({
   keywords?: string[];
 }): Metadata {
   const heroRaw = branding.site_hero_slides?.[0]?.image_url;
-  const ogImageAbs = heroRaw ? getImageUrl(heroRaw) : `${siteUrl}/mq/petitedejeuner.jpg`;
+  const ogImageAbs = getImageUrl(heroRaw);
 
   return {
     metadataBase: new URL(siteUrl),

@@ -3,16 +3,21 @@
 import { getBackendOrigin } from "@/src/core/config/public-env";
 
 /**
- * Construit l’URL absolue d’un média servi par Django.
- * Les fichiers sont exposés sous MEDIA_URL (`/media/…`). Les anciennes entrées
- * JSON (ex. `/mq/…`) sans préfixe `/media/` sont corrigées automatiquement.
+ * Fichiers marketing (slides, logos référencés en JSON, etc.) : tout passe par l’API Django,
+ * sous `MEDIA_ROOT`, URL publique **`/media/...`** (ex. `/media/mq/slide.png`).
+ *
+ * Anciens chemins **`/mq/...`** (sans `media`) : complétés en `/media/mq/...` automatiquement.
  */
+export const DEFAULT_MEDIA_MARKETING_IMAGE = "/media/mq/qalyas_service_1.png";
+
 export const getImageUrl = (path: string | null | undefined): string => {
-  if (!path) return "/mq/petitedejeuner.jpg";
+  if (!path) {
+    return `${getBackendOrigin()}${DEFAULT_MEDIA_MARKETING_IMAGE}`;
+  }
 
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
 
-  let cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
 
   if (
     cleanPath.startsWith("/media/") ||
@@ -22,6 +27,5 @@ export const getImageUrl = (path: string | null | undefined): string => {
     return `${getBackendOrigin()}${cleanPath}`;
   }
 
-  // Chemins relatifs au MEDIA_ROOT sans préfixe (ex. défaut branding `/mq/…`)
   return `${getBackendOrigin()}/media${cleanPath}`;
 };

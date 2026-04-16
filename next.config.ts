@@ -20,7 +20,7 @@ const remotePatterns = [
   process.env.NEXT_PUBLIC_API_URL,
   "http://localhost:8000",
   "http://127.0.0.1:8000",
-  // Hôte API prod : utile si le build CI n’injecte pas les NEXT_PUBLIC_* (images _next/image)
+  // Hôte API prod (médias /media/…, logos, slides)
   "https://api.qalyas.com",
 ]
   .filter((value): value is string => Boolean(value))

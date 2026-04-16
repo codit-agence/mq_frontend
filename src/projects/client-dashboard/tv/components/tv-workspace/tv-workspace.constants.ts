@@ -8,5 +8,6 @@ export const tvTemplateOptions = [
 
 export const DEFAULT_PRIMARY = "#22c55e";
 export const DEFAULT_SECONDARY = "#0f172a";
-export const DEFAULT_LOGO = "/mq/petitdejeuner.jpg";
+/** Chemin Django `MEDIA` (voir `media/mq/` sur l’API). */
+export const DEFAULT_LOGO = "/media/mq/qalyas_service_1.png";
 export const DEFAULT_TICKER = "Bienvenue - Nos offres changent en direct - Bon appetit";

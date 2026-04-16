@@ -10,6 +10,7 @@ import { applyManifestPersonalization, buildManifestFromCatalog } from "@/src/pr
 import { TVManifest } from "@/src/projects/client-dashboard/tv/tv.types";
 import { TVWorkspaceControls } from "@/src/projects/client-dashboard/tv/components/tv-workspace/TVWorkspaceControls";
 import { TVWorkspaceOverlay } from "@/src/projects/client-dashboard/tv/components/tv-workspace/TVWorkspaceOverlay";
+import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { DEFAULT_LOGO, DEFAULT_PRIMARY, DEFAULT_SECONDARY, DEFAULT_TICKER, tvTemplateOptions } from "@/src/projects/client-dashboard/tv/components/tv-workspace/tv-workspace.constants";
 import { normalizeTemplate } from "@/src/projects/client-dashboard/tv/components/tv-workspace/tv-workspace.utils";
 
@@ -98,7 +99,7 @@ const TVTemplateWorkspace: React.FC<Props> = ({ mode, pageName }) => {
     });
   }, [baseManifest, selectedTemplate, displayName, primaryColor, secondaryColor]);
 
-  const logoSrc = previewManifest?.tenant.logo || DEFAULT_LOGO;
+  const logoSrc = getImageUrl(previewManifest?.tenant.logo || DEFAULT_LOGO);
 
   if (isLoading || loading) {
     return (
