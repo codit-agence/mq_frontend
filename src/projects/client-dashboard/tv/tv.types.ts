@@ -45,10 +45,14 @@ export interface HeartbeatResponse {
 
 export interface TVManifestProduct {
   id: string;
+  /** Libellé langue primaire (souvent AR si bilingue). */
   name: string;
   description: string;
   price: number;
   image: string;
+  /** Présent si le tenant a ≥ 2 langues actives (ex. FR + AR). */
+  name_secondary?: string;
+  description_secondary?: string;
 }
 
 export interface AudioPlaylistTrack {
@@ -66,9 +70,21 @@ export interface AudioPlaylist {
   tracks: AudioPlaylistTrack[];
 }
 
+export type TVLanguageMode = "single" | "bilingual";
+
+export interface TVManifestTenantLanguages {
+  mode: TVLanguageMode;
+  /** Langue affichée en premier (priorité AR si « ar » dans les langues actives). */
+  primary: string;
+  secondary?: string | null;
+  all: string[];
+}
+
 export interface TVManifest {
   label: string;
   category_name: string;
+  /** Libellé catégorie langue secondaire (si bilingue). */
+  category_name_secondary?: string | null;
   template_name: string;
   slot_duration: number;
   audio_url?: string | null;
@@ -91,6 +107,13 @@ export interface TVManifest {
     qr_is_active?: boolean | null;
     public_landing_url?: string | null;
     qr_redirect_url?: string | null;
+    /** URL site vitrine (si exposée par l’API) */
+    website?: string | null;
+    /** Langues d’affichage TV (manifest Django). */
+    tv_languages?: TVManifestTenantLanguages;
+    active_languages?: string[];
+    default_language?: string;
+    is_rtl?: boolean;
   };
   server_time: string;
 }

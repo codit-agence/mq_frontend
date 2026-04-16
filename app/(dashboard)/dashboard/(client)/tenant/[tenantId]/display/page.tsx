@@ -15,13 +15,12 @@ import { AddScreenForm } from "@/src/projects/client-dashboard/tvstream/componen
 import { PairingModal } from "@/src/projects/client-dashboard/tvstream/components/PairingModal";
 import ScheduleManager from "@/src/projects/client-dashboard/scheduler/components/ScheduleManager";
 import DisplayContent from "@/src/projects/client-dashboard/display/components/DisplayContent";
-import PlaylistStudio from "@/src/projects/client-dashboard/scheduler/components/PlaylistStudio";
 import DisplayStatus from "@/src/projects/client-dashboard/scheduler/components/DisplayStatus";
 import AnalyticsDashboard from "@/src/projects/client-dashboard/scheduler/components/AnalyticsDashboard";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
-type DisplayTab = "screens" | "content" | "schedule" | "status" | "analytics" | "music";
+type DisplayTab = "screens" | "content" | "schedule" | "status" | "analytics";
 
 const TEMPLATE_OPTIONS = [
   { id: "standard", label: "Standard" },
@@ -189,7 +188,8 @@ export default function TenantDisplayManagerPage() {
         fleet: "اسطول الشاشات",
         content: "محتوى التلفاز",
         schedule: "البرمجة",
-        music: "الموسيقى",
+        status: "حالة العرض",
+        analytics: "التحليلات",
         connectedScreens: "الشاشات المتصلة",
         close: "اغلاق",
         newScreen: "شاشة جديدة",
@@ -210,6 +210,9 @@ export default function TenantDisplayManagerPage() {
         resetPairing: "إعادة تهيئة الإقران",
         securityCode: "رمز الأمان (4 أرقام)",
         securityCodeHint: "أدخل هذا الرمز في لوحة التحكم لتأكيد التلفاز",
+        playlistShortcut:
+          "الصوت وقوائم التشغيل: استخدم تبويب «الجدولة» في الأسفل فقط — لا يوجد تكرار هنا لتجنب الالتباس.",
+        openPlaylist: "قائمة التشغيل",
       }
     : {
         manager: "Tenant Display Manager",
@@ -235,7 +238,6 @@ export default function TenantDisplayManagerPage() {
         schedule: "Programmation",
         status: "État d'affichage",
         analytics: "Analytique",
-        music: "Musique",
         connectedScreens: "Ecrans connectes",
         close: "Fermer",
         newScreen: "Nouvel ecran",
@@ -256,6 +258,9 @@ export default function TenantDisplayManagerPage() {
         resetPairing: "Réinitialiser l'appairage",
         securityCode: "Code sécurité (4 chiffres)",
         securityCodeHint: "La TV affiche ce code — entrez-le pour confirmer",
+        playlistShortcut:
+          "Audio / playlists : utilisez l’onglet Planif du menu (pas de doublon ici — évite la confusion avec l’accueil tenant).",
+        openPlaylist: "Ouvrir playlist",
       };
 
   const updateScreenConfig = async (screen: Screen, patch: Partial<Screen>) => {
@@ -325,14 +330,24 @@ export default function TenantDisplayManagerPage() {
         </div>
       </section>
 
-      <section className="flex items-center gap-2 border-b border-slate-200">
+      <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        <p className="text-[11px] sm:text-xs font-semibold text-slate-600 leading-snug">{text.playlistShortcut}</p>
+        <Link
+          href={`/dashboard/tenant/${tenantId}/playlist`}
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-wide text-white"
+          style={{ backgroundColor: primaryColor }}
+        >
+          {text.openPlaylist}
+        </Link>
+      </div>
+
+      <section className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto">
         {[
           { id: "screens", label: text.fleet },
           { id: "content", label: text.content },
           { id: "schedule", label: text.schedule },
           { id: "status", label: text.status },
           { id: "analytics", label: text.analytics },
-          { id: "music", label: text.music },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -636,12 +651,6 @@ export default function TenantDisplayManagerPage() {
       {activeTab === "analytics" && (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 md:p-6">
           <AnalyticsDashboard />
-        </div>
-      )}
-
-      {activeTab === "music" && (
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-          <PlaylistStudio tenantId={tenantId} />
         </div>
       )}
     </div>

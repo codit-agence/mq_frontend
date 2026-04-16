@@ -49,6 +49,8 @@ export interface TenantSettingsData {
   qr_slug?: string;
   qr_is_active?: boolean;
   public_landing_url?: string;
+  /** Cible QR explicite (chemin ou URL) — prioritaire sur public_landing_url si renseigné. */
+  qr_redirect_url?: string;
   city?: string;
   country?: string;
   business_type?: BusinessType;

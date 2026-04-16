@@ -1,8 +1,52 @@
 "use client";
+
+import React, { useEffect, useRef, useState } from "react";
+
+import { getApiBaseUrl, getSiteUrl } from "@/src/core/config/public-env";
 import { tvApi } from "@/src/projects/client-dashboard/tv/tv.api";
 import { useTVStore } from "@/src/projects/client-dashboard/tv/tv.store";
+import type { PublicBranding } from "@/src/projects/shared/branding/branding.types";
+import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { getDeviceInfo } from "@/src/utils/helpers/getDeviceInfo";
-import React, { useEffect, useRef, useState } from "react";
+
+function BrandingHeader({ branding }: { branding: PublicBranding | null }) {
+  const site = getSiteUrl();
+  const logoSrc = branding?.logo ? getImageUrl(branding.logo) : null;
+  const name = branding?.app_name || "Menu digital";
+
+  return (
+    <div style={{ textAlign: "center" as const, maxWidth: 720, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+      {logoSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logoSrc} alt="" style={{ height: 56, width: "auto", maxWidth: 220, objectFit: "contain" }} />
+      ) : (
+        <div style={{ height: 8 }} />
+      )}
+      <div>
+        <h1 style={{ fontSize: "2rem", fontWeight: 900, margin: "0 0 8px", letterSpacing: "-0.02em" }}>{name}</h1>
+        <p style={{ fontSize: "1.05rem", color: "#9ca3af", margin: 0, lineHeight: 1.5 }}>
+          Connexion TV — saisissez le code affiché dans votre tableau de bord.
+        </p>
+        <p lang="ar" dir="rtl" style={{ fontSize: "1.05rem", color: "#6ee7b7", margin: "10px 0 0", lineHeight: 1.6 }}>
+          اتصال التلفزيون — أدخل الرمز الظاهر في لوحة التحكم.
+        </p>
+      </div>
+      <a
+        href={site}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          fontSize: "0.85rem",
+          color: "#38bdf8",
+          textDecoration: "none",
+          wordBreak: "break-all" as const,
+        }}
+      >
+        {site.replace(/^https?:\/\//, "")}
+      </a>
+    </div>
+  );
+}
 
 const PairingScreen: React.FC = () => {
   const [pairingCode, setPairingCode] = useState("");
@@ -11,10 +55,24 @@ const PairingScreen: React.FC = () => {
   const [displaySecurityCode, setDisplaySecurityCode] = useState("");
   const [screenId, setScreenId] = useState<string | null>(null);
   const [isWaitingForSecurity, setIsWaitingForSecurity] = useState(false);
+  const [branding, setBranding] = useState<PublicBranding | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const setAuth = useTVStore((s) => s.setAuth);
   const setControlConfig = useTVStore((s) => s.setControlConfig);
+
+  useEffect(() => {
+    let alive = true;
+    void fetch(`${getApiBaseUrl()}/branding/public`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: PublicBranding | null) => {
+        if (alive && data) setBranding(data);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     setTimeout(() => inputRef.current?.focus(), 100);
@@ -66,7 +124,6 @@ const PairingScreen: React.FC = () => {
     }
   };
 
-  // Poll check-auth after TV sends its code
   useEffect(() => {
     if (!isWaitingForSecurity || !screenId) return;
     const poll = setInterval(async () => {
@@ -92,15 +149,18 @@ const PairingScreen: React.FC = () => {
     return () => clearInterval(poll);
   }, [isWaitingForSecurity, screenId, displaySecurityCode, setAuth, setControlConfig]);
 
-  /* ── SECURITY CODE SCREEN ─────────────────────────────────────────── */
   if (isWaitingForSecurity) {
     return (
       <div style={styles.page}>
-        <p style={{ fontSize: "1.4rem", color: "#aaa", margin: 0 }}>
+        <BrandingHeader branding={branding} />
+        <p style={{ fontSize: "1.25rem", color: "#d1d5db", margin: 0, textAlign: "center" }}>
           Code de sécurité — à confirmer sur le Dashboard
         </p>
+        <p lang="ar" dir="rtl" style={{ fontSize: "1.1rem", color: "#86efac", margin: 0, textAlign: "center" }}>
+          رمز الأمان — يُرجى تأكيده من لوحة التحكم
+        </p>
 
-        <div style={{ display: "flex", gap: "20px", margin: "12px 0" }}>
+        <div style={{ display: "flex", gap: "20px", margin: "12px 0", flexWrap: "wrap", justifyContent: "center" }}>
           {(displaySecurityCode || "----").split("").map((ch, i) => (
             <div key={i} style={styles.secBox}>
               {ch}
@@ -110,27 +170,22 @@ const PairingScreen: React.FC = () => {
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={styles.dot} />
-          <p style={{ fontSize: "1.1rem", color: "#555", margin: 0 }}>
+          <p style={{ fontSize: "1.1rem", color: "#6b7280", margin: 0 }}>
             En attente de confirmation par le gérant…
           </p>
         </div>
+        <p lang="ar" dir="rtl" style={{ fontSize: "1rem", color: "#4b5563", margin: 0 }}>
+          في انتظار التأكيد من المسؤول…
+        </p>
 
         <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.15}}`}</style>
       </div>
     );
   }
 
-  /* ── PAIRING CODE FORM ────────────────────────────────────────────── */
   return (
     <div style={styles.page}>
-      <div style={{ textAlign: "center" }}>
-        <h1 style={{ fontSize: "3rem", fontWeight: 900, margin: "0 0 12px" }}>
-          Connexion TV
-        </h1>
-        <p style={{ fontSize: "1.3rem", color: "#777", margin: 0 }}>
-          Entrez le code à 6 chiffres affiché sur votre Dashboard
-        </p>
-      </div>
+      <BrandingHeader branding={branding} />
 
       <div style={{ width: "100%", maxWidth: "480px" }}>
         <input
@@ -162,12 +217,14 @@ const PairingScreen: React.FC = () => {
         />
 
         {error && (
-          <p style={{
-            color: "#f44336",
-            fontSize: "1rem",
-            textAlign: "center",
-            marginTop: "12px",
-          }}>
+          <p
+            style={{
+              color: "#f44336",
+              fontSize: "1rem",
+              textAlign: "center",
+              marginTop: "12px",
+            }}
+          >
             {error}
           </p>
         )}
@@ -195,8 +252,16 @@ const PairingScreen: React.FC = () => {
         </button>
       </div>
 
-      <p style={{ fontSize: "0.9rem", color: "#444", marginTop: "-8px" }}>
-        La validation se déclenche automatiquement au 6ᵉ chiffre
+      <p style={{ fontSize: "0.9rem", color: "#444", marginTop: "-8px", textAlign: "center" }}>
+        La validation se déclenche automatiquement au 6ᵉ chiffre · يُفعّل تلقائياً عند الرقم السادس
+      </p>
+
+      <p style={{ fontSize: "0.75rem", color: "#525252", textAlign: "center", maxWidth: 520, lineHeight: 1.5 }}>
+        Sur téléphone : ouvrez cette page depuis le site ({getSiteUrl().replace(/^https?:\/\//, "")}) puis utilisez
+        « Installer » lorsque le navigateur le propose (PWA).
+        <span lang="ar" dir="rtl" style={{ display: "block", marginTop: 8, color: "#737373" }}>
+          على الهاتف: افتح هذه الصفحة من الموقع ثم استخدم « تثبيت » عندما يعرضه المتصفح (تطبيق ويب تقدّمي).
+        </span>
       </p>
     </div>
   );
@@ -210,21 +275,21 @@ const styles = {
     justifyContent: "center" as const,
     background: "#050505",
     color: "white",
-    height: "100vh",
+    minHeight: "100vh",
     fontFamily: "sans-serif",
     gap: "28px",
     padding: "24px",
   },
   secBox: {
-    width: "90px",
-    height: "110px",
+    width: "72px",
+    height: "92px",
     background: "#0d1f0d",
     border: "2px solid #00e676",
     borderRadius: "16px",
     display: "flex" as const,
     alignItems: "center" as const,
     justifyContent: "center" as const,
-    fontSize: "5rem",
+    fontSize: "3.2rem",
     fontWeight: 900,
     color: "#00e676",
   },

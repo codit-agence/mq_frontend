@@ -42,7 +42,8 @@ export const useTVStore = create<TVStoreState>()(
         set({
           screenId: id,
           accessToken: token,
-          welcomeUntil: Date.now() + 1200,
+          // Quelques secondes pour lire l’écran d’accueil bilingue (logo, site, téléphone).
+          welcomeUntil: Date.now() + 6500,
         }),
       setTemplate: (template) => set({ template }),
       setManifest: (manifest) => set({ manifest }),

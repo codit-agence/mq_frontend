@@ -5,6 +5,7 @@ import { useTVHeartbeat } from "@/src/projects/client-dashboard/tv/useTVHeartbea
 import { useTVStore } from "@/src/projects/client-dashboard/tv/tv.store";
 import TemplateManager from "./componenents/TemplateManager";
 import PairingScreen from "./componenents/PairingScreen";
+import TVWelcomeScreen from "./componenents/TVWelcomeScreen";
 import { tvApi } from "@/src/projects/client-dashboard/tv/tv.api";
 import { useTvSocket } from "@/src/projects/client-dashboard/socket-tv/useTvSocket";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
@@ -228,12 +229,7 @@ const TVApp: React.FC = () => {
   }
 
   if (showWelcome) {
-    return (
-      <div className="h-screen w-screen bg-slate-950 text-white flex flex-col items-center justify-center">
-        <h1 className="text-5xl font-black">Bienvenue</h1>
-        <p className="text-slate-400 text-lg mt-3">Connexion réussie. Chargement du contenu…</p>
-      </div>
-    );
+    return <TVWelcomeScreen />;
   }
 
   const hasProducts = Boolean(manifest?.products?.length);

@@ -34,6 +34,11 @@ const T = {
       cta1: "Démarrer gratuitement",
       cta2: "Voir une démo",
       trust: "Aucune carte bancaire · Installation en 5 minutes · Support inclus",
+      tvApp: {
+        title: "App TV & mobile (PWA)",
+        sub: "Ouvrez la même page sur votre téléviseur ou votre portable : couplage, affichage menu, installation sur l’écran d’accueil quand le navigateur le propose.",
+        cta: "Obtenir l’app — ouvrir /tv",
+      },
     },
     stats: [
       { value: "2 min", label: "Pour connecter une TV" },
@@ -89,8 +94,8 @@ const T = {
           color: BLUE,
           tag: "",
           features: [
-            "2 TV connectées",
-            "Menu digital illimité",
+            "1 TV connectées",
+            "Menu digital limité à 5 catégories",
             "QR code gratuit",
             "Promotions basiques",
             "Site web commercial",
@@ -105,11 +110,11 @@ const T = {
           color: GREEN,
           tag: "Le plus populaire",
           features: [
-            "5 TV connectées",
+            "3-5 TV connectées",
             "Playlists avancées",
             "Campagnes programmées",
             "Analytique détaillée",
-            "Multi-langues complet",
+            "Multi-langues complet 2 langues",
             "Support prioritaire",
           ],
           cta: "Choisir Growth",
@@ -161,6 +166,11 @@ const T = {
       cta1: "ابدأ مجاناً",
       cta2: "شاهد عرضاً توضيحياً",
       trust: "بدون بطاقة بنكية · تثبيت في 5 دقائق · الدعم مشمول",
+      tvApp: {
+        title: "تطبيق TV وجوال (PWA)",
+        sub: "افتح نفس الصفحة على التلفزيون أو الهاتف: الإقران، عرض القائمة، ثم التثبيت على الشاشة الرئيسية عندما يعرضه المتصفح.",
+        cta: "احصل على التطبيق — افتح /tv",
+      },
     },
     stats: [
       { value: "2 دق", label: "لتوصيل التلفزيون" },
@@ -215,7 +225,7 @@ const T = {
           period: "",
           color: BLUE,
           tag: "",
-          features: ["شاشتان متصلتان", "قائمة رقمية غير محدودة", "QR مجاني", "عروض أساسية", "موقع تجاري", "دعم عادي"],
+          features: ["شاشة 1", "قائمة رقمية  محدودة", "QR مجاني", "عروض أساسية", "موقع تجاري", "دعم عادي"],
           cta: "اختر Starter",
         },
         {
@@ -224,7 +234,7 @@ const T = {
           period: "",
           color: GREEN,
           tag: "الأكثر طلباً",
-          features: ["5 شاشات متصلة", "قوائم تشغيل متقدمة", "حملات مجدولة", "تحليلات تفصيلية", "متعدد اللغات كامل", "دعم ذو أولوية"],
+          features: ["3-5 شاشات متصلة", "قوائم تشغيل متقدمة", "حملات مجدولة", "تحليلات تفصيلية", "متعدد اللغات كامل", "دعم ذو أولوية"],
           cta: "اختر Growth",
         },
         {
@@ -421,6 +431,22 @@ export function PublicHomePage({ branding }: { branding: PublicBranding }) {
               </div>
 
               <p className="mt-4 text-sm text-slate-400 font-medium">{t.hero.trust}</p>
+
+              <div className="mt-6 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-sm backdrop-blur-sm sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{t.hero.tvApp.title}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{t.hero.tvApp.sub}</p>
+                  </div>
+                  <Link
+                    href="/tv"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800"
+                  >
+                    <MonitorSmartphone className="size-4" />
+                    {t.hero.tvApp.cta}
+                  </Link>
+                </div>
+              </div>
 
               {/* Stats */}
               <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
