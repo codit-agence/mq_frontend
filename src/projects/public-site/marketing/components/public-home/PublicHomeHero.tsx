@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CircleDot, PlayCircle, Sparkles } from "lucide-react";
 
@@ -83,7 +82,17 @@ export function PublicHomeHero({
         <div className="relative">
           <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_30px_90px_-40px_rgba(15,23,42,0.45)]">
             <div className="relative overflow-hidden rounded-[1.6rem] border border-slate-200 bg-slate-50">
-              <Image unoptimized key={activeHero?.code || "fallback"} src={getImageUrl(activeHero?.image_url)} alt={branding.app_name} width={1400} height={960} className="h-[300px] w-full scale-[1.02] object-cover transition duration-700 sm:h-[420px]" priority />
+              <img
+                key={activeHero?.code || "fallback"}
+                src={getImageUrl(activeHero?.image_url)}
+                alt={branding.app_name}
+                width={1400}
+                height={960}
+                className="h-[300px] w-full scale-[1.02] object-cover transition duration-700 sm:h-[420px]"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+              />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950/75 to-transparent p-5 text-white">
                 <p className="text-sm font-black uppercase tracking-[0.18em] text-white/70">{branding.app_name}</p>
                 <p className="mt-2 max-w-lg text-sm leading-7 text-white/90">{activeHero ? getLocalizedText(locale, activeHero.description) : branding.tagline}</p>

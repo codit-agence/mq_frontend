@@ -437,7 +437,16 @@ export function PublicHomePage({ branding }: { branding: PublicBranding }) {
             <div className="relative order-1 lg:order-2">
               <div className="relative overflow-hidden rounded-[2.5rem] border border-slate-200/80 bg-white shadow-2xl shadow-slate-200/60">
                 {heroImage ? (
-                  <Image unoptimized src={heroImage} alt={branding.app_name} width={1200} height={800} className="h-[280px] w-full object-cover sm:h-[380px] lg:h-[460px]" priority />
+                  <img
+                    src={heroImage}
+                    alt={branding.app_name}
+                    width={1200}
+                    height={800}
+                    className="h-[280px] w-full object-cover sm:h-[380px] lg:h-[460px]"
+                    loading="eager"
+                    fetchPriority="high"
+                    decoding="async"
+                  />
                 ) : (
                   /* Placeholder mockup when no image */
                   <div className="flex h-[280px] w-full items-center justify-center sm:h-[380px] lg:h-[460px]" style={{ background: `linear-gradient(135deg, ${BLUE}18 0%, ${GREEN}18 100%)` }}>
