@@ -15,6 +15,25 @@ export interface TVHeartbeatPayload {
 }
 
 export const tvApi = {
+  /**
+   * Mode « Afficher QR » : la TV demande une session QR au backend (sans auth).
+   * Le téléphone du gérant scanne le QR pour apparier la TV sans saisie manuelle.
+   */
+  qrSession: async (): Promise<{ session_token: string }> => {
+    const response = await api.post("/screens/tv/qr-session");
+    return response.data;
+  },
+
+  /**
+   * La TV poll cet endpoint pour savoir si le gérant a confirmé via QR.
+   */
+  qrStatus: async (
+    sessionToken: string,
+  ): Promise<{ status: "pending" | "paired"; access_token?: string; screen_id?: string; screen_name?: string }> => {
+    const response = await api.get(`/screens/tv/qr-status/${sessionToken}`);
+    return response.data;
+  },
+
   initialize: async (pairingCode: string, deviceInfo: TVDeviceInfo): Promise<TVInitResponse> => {
     const response = await api.post("/screens/tv/init", {
       pairing_code: pairingCode,

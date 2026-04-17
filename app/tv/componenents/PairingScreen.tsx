@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 import { getApiBaseUrl, getSiteUrl } from "@/src/core/config/public-env";
 import { tvApi } from "@/src/projects/client-dashboard/tv/tv.api";
@@ -8,6 +9,7 @@ import { useTVStore } from "@/src/projects/client-dashboard/tv/tv.store";
 import type { PublicBranding } from "@/src/projects/shared/branding/branding.types";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { getDeviceInfo } from "@/src/utils/helpers/getDeviceInfo";
+import { PairingQrDisplay } from "./PairingQrDisplay";
 
 function BrandingHeader({ branding }: { branding: PublicBranding | null }) {
   const site = getSiteUrl();
@@ -48,7 +50,10 @@ function BrandingHeader({ branding }: { branding: PublicBranding | null }) {
   );
 }
 
+type Mode = "enter" | "qr";
+
 const PairingScreen: React.FC = () => {
+  const [mode, setMode] = useState<Mode>("enter");
   const [pairingCode, setPairingCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -186,6 +191,11 @@ const PairingScreen: React.FC = () => {
   }, [isWaitingForSecurity, screenId, displaySecurityCode, setAuth, setControlConfig]);
 
   if (isWaitingForSecurity) {
+    const secQrValue =
+      screenId && displaySecurityCode
+        ? `mq-sec:${screenId}:${displaySecurityCode}`
+        : "";
+
     return (
       <div style={styles.page}>
         <BrandingHeader branding={branding} />
@@ -204,6 +214,20 @@ const PairingScreen: React.FC = () => {
           ))}
         </div>
 
+        {secQrValue && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: 0 }}>
+              Ou scannez ce QR depuis le tableau de bord pour confirmer instantanément
+            </p>
+            <p lang="ar" dir="rtl" style={{ fontSize: "0.8rem", color: "#4b5563", margin: 0 }}>
+              أو امسح هذا الرمز من لوحة التحكم للتأكيد مباشرة
+            </p>
+            <div style={{ background: "#fff", padding: 14, borderRadius: 18, display: "inline-block" }}>
+              <QRCodeSVG value={secQrValue} size={160} level="M" />
+            </div>
+          </div>
+        )}
+
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={styles.dot} />
           <p style={{ fontSize: "1.1rem", color: "#6b7280", margin: 0 }}>
@@ -219,11 +243,56 @@ const PairingScreen: React.FC = () => {
     );
   }
 
+  const isQrMode = mode === "qr";
+
   return (
     <div style={styles.page}>
       <BrandingHeader branding={branding} />
 
-      <div style={{ width: "100%", maxWidth: "480px" }}>
+      {/* Onglets : Saisir le code / Afficher QR */}
+      <div style={{ display: "flex", gap: 0, borderRadius: 16, overflow: "hidden", border: "1px solid #222", maxWidth: 480, width: "100%" }}>
+        <button
+          type="button"
+          onClick={() => setMode("enter")}
+          style={{
+            flex: 1,
+            padding: "14px 0",
+            fontSize: "1rem",
+            fontWeight: 700,
+            border: "none",
+            cursor: "pointer",
+            background: !isQrMode ? "#2196f3" : "#111",
+            color: !isQrMode ? "#fff" : "#6b7280",
+            transition: "background 0.2s",
+          }}
+        >
+          ⌨ Saisir le code
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("qr")}
+          style={{
+            flex: 1,
+            padding: "14px 0",
+            fontSize: "1rem",
+            fontWeight: 700,
+            border: "none",
+            borderLeft: "1px solid #222",
+            cursor: "pointer",
+            background: isQrMode ? "#2196f3" : "#111",
+            color: isQrMode ? "#fff" : "#6b7280",
+            transition: "background 0.2s",
+          }}
+        >
+          ▦ Afficher QR
+        </button>
+      </div>
+
+      {/* Mode QR : la TV montre son propre QR */}
+      {isQrMode && <PairingQrDisplay onBack={() => setMode("enter")} />}
+
+      {/* Mode saisie : formulaire code 6 chiffres */}
+      <div style={{ width: "100%", maxWidth: "480px", display: isQrMode ? "none" : undefined }}>
         <input
           ref={inputRef}
           type="text"
@@ -293,21 +362,15 @@ const PairingScreen: React.FC = () => {
         </button>
       </div>
 
-      <p style={{ fontSize: "0.9rem", color: "#444", marginTop: "-8px", textAlign: "center" }}>
-        Saisie sur la TV · le gérant peut aussi ouvrir « Afficher sur la TV » depuis le tableau de bord : grand code + QR à
-        scanner avec le téléphone (pas de caméra nécessaire sur la TV).
-        <span lang="ar" dir="rtl" style={{ display: "block", marginTop: 6 }}>
-          الإدخال على التلفاز · يمكن للمسؤول فتح « عرض على التلفاز » من لوحة التحكم لعرض رمز كبير + QR يمسح بالهاتف
-        </span>
-      </p>
-
-      <p style={{ fontSize: "0.75rem", color: "#525252", textAlign: "center", maxWidth: 520, lineHeight: 1.5 }}>
-        Sur téléphone : ouvrez cette page depuis le site ({getSiteUrl().replace(/^https?:\/\//, "")}) puis utilisez
-        « Installer » lorsque le navigateur le propose (PWA).
-        <span lang="ar" dir="rtl" style={{ display: "block", marginTop: 8, color: "#737373" }}>
-          على الهاتف: افتح هذه الصفحة من الموقع ثم استخدم « تثبيت » عندما يعرضه المتصفح (تطبيق ويب تقدّمي).
-        </span>
-      </p>
+      {!isQrMode && (
+        <p style={{ fontSize: "0.85rem", color: "#444", marginTop: "-8px", textAlign: "center", maxWidth: 480, lineHeight: 1.5 }}>
+          Lisez le code affiché dans le tableau de bord · ou basculez sur « Afficher QR » pour que le gérant scanne
+          directement depuis son téléphone sans saisie.
+          <span lang="ar" dir="rtl" style={{ display: "block", marginTop: 6, color: "#374151" }}>
+            اقرأ الرمز الظاهر في لوحة التحكم · أو انتقل إلى « عرض QR » ليمسحه المسؤول مباشرة.
+          </span>
+        </p>
+      )}
     </div>
   );
 };

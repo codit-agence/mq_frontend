@@ -1,16 +1,34 @@
 "use client";
 
-import React, { Suspense, useEffect, useMemo, useRef } from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Tv, Loader2, Signal, AlertTriangle, Clock3 } from "lucide-react";
+import { Tv, Loader2, Signal, AlertTriangle, Clock3, ScanLine } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { AnimatePresence } from "framer-motion";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
+import { TvPairingQrScanner, extractPairingCodeFromScan } from "@/app/tv/componenents/TvPairingQrScanner";
 import { useTVStream } from "../hooks/useTVStream";
 import { AddScreenForm } from "../components/AddScreenForm";
 import { PairingModal } from "../components/PairingModal";
 import ScreenCard from "../components/ScreenCard";
+import { tvStreamService } from "../services/tvstream.service";
+
+/** Extrait le session_token depuis le QR de la TV en mode « Afficher QR ». */
+function extractTvSessionToken(raw: string): string | null {
+  const t = raw.trim();
+  // Format URL : {origin}/tv-new?s={token}
+  try {
+    const u = new URL(t);
+    const s = u.searchParams.get("s");
+    if (s && s.length > 8) return s;
+  } catch {
+    /* not a URL */
+  }
+  // Format brut UUID
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t)) return t;
+  return null;
+}
 
 export interface TvStreamPageViewProps {
   /** Si défini (route tenant), stats complètes + actions admin sur les cartes. */
@@ -48,6 +66,9 @@ function TvStreamPageViewInner({ tenantId }: TvStreamPageViewProps) {
     handleForceRefresh,
   } = useTVStream(scoped);
 
+  const [tvQrScanOpen, setTvQrScanOpen] = useState(false);
+  const [tvQrPairing, setTvQrPairing] = useState(false);
+
   const text = useMemo(
     () =>
       locale === "ar"
@@ -60,6 +81,13 @@ function TvStreamPageViewInner({ tenantId }: TvStreamPageViewProps) {
             uptime: "مدة التشغيل 7 أيام",
             empty: "لا توجد شاشة مسجلة لهذا المستأجر.",
             pairUnknown: "لم يُعثر على شاشة لهذا الرمز.",
+            scanNewTv: "مسح تلفاز جديد",
+            scanNewTitle: "امسح الـ QR المعروض على التلفاز",
+            scanNewHint: "على التلفاز : انتقل إلى « عرض QR » ثم وجّه كاميرا هذا الهاتف نحو الشاشة.",
+            scanNewBack: "إغلاق",
+            scanNewCameraErr: "تعذر تشغيل الكاميرا",
+            scanNewOk: "تم ربط التلفاز الجديد!",
+            scanNewErr: "رمز QR غير صالح أو جلسة منتهية.",
           }
         : {
             close: "Fermer",
@@ -72,11 +100,39 @@ function TvStreamPageViewInner({ tenantId }: TvStreamPageViewProps) {
               ? "Aucun ecran enregistre pour ce tenant."
               : "Aucun ecran enregistre. Selectionnez un etablissement ou creez un ecran.",
             pairUnknown: "Aucun ecran ne correspond a ce code.",
+            scanNewTv: "Scanner nouveau TV",
+            scanNewTitle: "Visez le QR affiche sur la TV",
+            scanNewHint: "Sur la TV : basculez sur « Afficher QR » puis pointez la camera de ce telephone vers l'ecran.",
+            scanNewBack: "Fermer",
+            scanNewCameraErr: "Camera indisponible",
+            scanNewOk: "Nouveau TV associe avec succes !",
+            scanNewErr: "QR non reconnu ou session expiree.",
           },
     [locale, scoped],
   );
 
   const showAdminActions = Boolean(scoped);
+
+  const handleTvQrScanned = useCallback(
+    async (raw: string) => {
+      setTvQrScanOpen(false);
+      const sessionToken = extractTvSessionToken(raw);
+      if (!sessionToken) {
+        toast.error(text.scanNewErr);
+        return;
+      }
+      setTvQrPairing(true);
+      try {
+        await tvStreamService.pairTvQr(sessionToken, "TV", scoped);
+        toast.success(text.scanNewOk);
+      } catch {
+        toast.error(text.scanNewErr);
+      } finally {
+        setTvQrPairing(false);
+      }
+    },
+    [scoped, text.scanNewErr, text.scanNewOk],
+  );
 
   useEffect(() => {
     if (loading) return;
@@ -111,12 +167,22 @@ function TvStreamPageViewInner({ tenantId }: TvStreamPageViewProps) {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black italic flex items-center gap-3">
             <Tv className="text-blue-500" size={34} /> TV<span className="text-blue-500">STREAM</span>
           </h1>
-          <button
-            onClick={() => setIsAdding(!isAdding)}
-            className="w-full sm:w-auto bg-blue-600 px-6 py-3 rounded-2xl font-black text-sm"
-          >
-            {isAdding ? text.close : text.newScreen}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {/* Scanner QR d'un nouveau TV (mode « Afficher QR » sur la TV) */}
+            <button
+              onClick={() => setTvQrScanOpen(true)}
+              disabled={tvQrPairing}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-3 rounded-2xl font-black text-sm disabled:opacity-50"
+            >
+              <ScanLine size={18} /> {text.scanNewTv}
+            </button>
+            <button
+              onClick={() => setIsAdding(!isAdding)}
+              className="w-full sm:w-auto bg-blue-600 px-6 py-3 rounded-2xl font-black text-sm"
+            >
+              {isAdding ? text.close : text.newScreen}
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -182,6 +248,25 @@ function TvStreamPageViewInner({ tenantId }: TvStreamPageViewProps) {
           />
         )}
       </AnimatePresence>
+
+      {/* Modal scanner pour apparier un nouveau TV (QR session) */}
+      {tvQrScanOpen && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-[#0f172a] p-4 shadow-xl">
+            <TvPairingQrScanner
+              active={tvQrScanOpen}
+              onDecoded={(raw) => void handleTvQrScanned(raw)}
+              onBack={() => setTvQrScanOpen(false)}
+              labels={{
+                title: text.scanNewTitle,
+                hint: text.scanNewHint,
+                back: text.scanNewBack,
+                cameraError: text.scanNewCameraErr,
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

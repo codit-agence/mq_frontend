@@ -98,4 +98,21 @@ verifySecurityCode: async (screenId: string, code: string, tenantId?: string) =>
     );
     return response.data;
   },
+
+  /**
+   * Le téléphone appelle cet endpoint après avoir scanné le QR affiché sur la TV
+   * (mode « Afficher QR »). Crée un écran + finalise l'appairage en une fois.
+   */
+  pairTvQr: async (
+    sessionToken: string,
+    screenName: string,
+    tenantId?: string,
+  ): Promise<{ status: string; screen_id: string; screen_name: string }> => {
+    const response = await api.post(
+      `/screens/dashboard/qr-pair/${encodeURIComponent(sessionToken)}`,
+      null,
+      { params: { name: screenName }, headers: buildTenantHeaders(tenantId) },
+    );
+    return response.data;
+  },
 };

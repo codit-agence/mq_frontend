@@ -2,24 +2,30 @@
 
 import React, { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Tv, Settings, Trash2, RotateCcw, RefreshCw, AlertTriangle, MonitorPlay, ScanLine } from "lucide-react";
+import { Tv, Settings, Trash2, RotateCcw, RefreshCw, AlertTriangle, ScanLine } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { getSiteUrl } from "@/src/core/config/public-env";
 import { Screen } from "@/src/types/tvstream/tvstream";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 import { TvPairingQrScanner } from "@/app/tv/componenents/TvPairingQrScanner";
+import { tvStreamService } from "../services/tvstream.service";
 
-/** URL à ouvrir sur la TV : grand code + QR pour le téléphone (pas de caméra sur la TV). */
-function tvPairDisplayUrl(pairingCode: string, tenantId?: string | null) {
+/** QR que la TV peut ouvrir en saisissant le code (deep link). */
+function tvDeepLinkUrl(pairingCode: string) {
   const base = getSiteUrl().replace(/\/$/, "");
-  const q = new URLSearchParams({ code: pairingCode });
-  if (tenantId) q.set("tenant", tenantId);
-  return `${base}/tv/pair-display?${q.toString()}`;
+  return `${base}/tv?pair=${encodeURIComponent(pairingCode)}`;
+}
+
+/** Extrait le security code + screen_id depuis le QR affiché sur la TV (état attente sécurité). */
+function parseSecurityQr(raw: string): { screenId: string; secCode: string } | null {
+  const m = raw.trim().match(/^mq-sec:([^:]+):(\d{4})$/);
+  if (!m) return null;
+  return { screenId: m[1], secCode: m[2] };
 }
 
 interface Props {
-  /** Ancre pour scroll depuis `?pair=` (TV Stream). */
+  /** Ancre pour scroll depuis `?pair=` */
   id?: string;
   tenantId?: string | null;
   screen: Screen;
@@ -42,8 +48,12 @@ export function ScreenCard({
 }: Props) {
   const { branding } = useBranding();
   const { locale } = useAppLocale(branding);
-  const [phoneScanOpen, setPhoneScanOpen] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanBusy, setScanBusy] = useState(false);
+
   const isOnline = screen.is_online;
+  const pairingCode = screen.pairing_code ?? null;
+
   const text =
     locale === "ar"
       ? {
@@ -57,19 +67,17 @@ export function ScreenCard({
           moved: "تم رصد تحرك الجهاز",
           pairing: "ربط",
           pairingCode: "رمز الربط",
-          pairingQrHint: "على التلفاز: افتح « عرض على التلفاز » ثم امسح رمز الاستجابة السريعة بهاتفك (التلفاز بدون كاميرا).",
-          pairingQrHintShort: "رمز لفتح صفحة العرض على التلفاز",
-          showOnTv: "عرض على التلفاز",
-          scanPhone: "مسح بهذا الهاتف",
-          scanOk: "تم التعرف على الرمز",
-          scanMismatch: "الرمز لا يطابق هذه الشاشة",
-          scanLabelsTitle: "وجّه الكاميرا نحو الرمز على التلفاز",
-          scanLabelsHint: "يجب أن يظهر رمز الاستجابة السريعة الكبير على شاشة التلفاز (صفحة العرض بملء الشاشة).",
-          scanLabelsBack: "إغلاق",
-          scanLabelsCamera: "تعذر تشغيل الكاميرا",
+          scanBtn: "مسح QR التلفاز",
+          scanTitle: "وجّه كاميرا هذا الهاتف نحو التلفاز",
+          scanHint: "امسح رمز الأمان (4 أرقام) الظاهر على شاشة التلفاز للتأكيد التلقائي.",
+          scanBack: "إغلاق",
+          scanCameraErr: "تعذر تشغيل الكاميرا",
+          scanOk: "تم تأكيد الربط بنجاح!",
+          scanBadFormat: "رمز غير صالح — تأكد من أنك تمسح رمز QR للأمان على شاشة التلفاز.",
           resetAlert: "إعادة ضبط تنبيه التحرك",
           forceRefresh: "فرض التحديث",
           delete: "حذف الشاشة",
+          qrHint: "افتح هذا الرابط على متصفح التلفاز لإدخال الرمز تلقائيًا.",
         }
       : {
           noPing: "Aucun ping",
@@ -82,26 +90,41 @@ export function ScreenCard({
           moved: "Deplacement detecte",
           pairing: "Apparier",
           pairingCode: "Code d'appairage",
-          pairingQrHint:
-            "Sur la TV : ouvrez « Afficher sur la TV » (grand code), puis scannez le QR avec ce telephone — la TV n’a souvent pas de camera.",
-          pairingQrHintShort: "QR pour la page plein ecran sur la TV",
-          showOnTv: "Afficher sur la TV",
-          scanPhone: "Scanner avec ce telephone",
-          scanOk: "Code reconnu pour cet ecran",
-          scanMismatch: "Ce QR ne correspond pas a cet ecran",
-          scanLabelsTitle: "Visez le QR affiche sur la TV",
-          scanLabelsHint: "Le QR large doit etre visible sur l’ecran TV (page plein ecran).",
-          scanLabelsBack: "Fermer",
-          scanLabelsCamera: "Camera indisponible",
+          scanBtn: "Scanner QR TV",
+          scanTitle: "Visez la TV avec la camera de ce telephone",
+          scanHint: "Scannez le QR de securite (4 chiffres) affiche sur la TV pour confirmer automatiquement.",
+          scanBack: "Fermer",
+          scanCameraErr: "Camera indisponible",
+          scanOk: "Appairage confirme !",
+          scanBadFormat: "QR non reconnu — assurez-vous de scanner le QR securite affiche sur la TV.",
           resetAlert: "Reinitialiser l'alerte deplacement",
           forceRefresh: "Forcer le refresh",
           delete: "Supprimer l'ecran",
+          qrHint: "Ouvrez ce lien sur le navigateur de la TV pour saisir le code automatiquement.",
         };
+
   const lastPingLabel = screen.last_ping
     ? new Date(screen.last_ping).toLocaleString(locale === "ar" ? "ar-MA" : "fr-FR")
     : text.noPing;
   const uptime = screen.total_uptime_hours || 0;
-  const pairingCode = screen.pairing_code ?? null;
+
+  const handleScanned = async (raw: string) => {
+    setScanOpen(false);
+    const parsed = parseSecurityQr(raw);
+    if (!parsed) {
+      toast.error(text.scanBadFormat);
+      return;
+    }
+    setScanBusy(true);
+    try {
+      await tvStreamService.verifySecurityCode(parsed.screenId, parsed.secCode, tenantId ?? undefined);
+      toast.success(text.scanOk);
+    } catch {
+      toast.error(text.scanBadFormat);
+    } finally {
+      setScanBusy(false);
+    }
+  };
 
   return (
     <div
@@ -157,52 +180,47 @@ export function ScreenCard({
         )}
       </div>
 
+      {/* Zone appairage : code 6 chiffres + QR deep link + bouton scan */}
       {pairingCode && !screen.is_online && (
         <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-2xl mb-6 text-center space-y-3">
           <p className="text-xs text-blue-400 font-semibold">{text.pairingCode}</p>
-          <p className="text-2xl font-mono font-bold tracking-widest text-blue-300">{pairingCode}</p>
-          <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <button
-              type="button"
-              onClick={() => window.open(tvPairDisplayUrl(pairingCode, tenantId), "_blank", "noopener,noreferrer")}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-slate-100 hover:bg-slate-700"
-            >
-              <MonitorPlay size={16} /> {text.showOnTv}
-            </button>
-            <button
-              type="button"
-              onClick={() => setPhoneScanOpen(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-white hover:bg-blue-500"
-            >
-              <ScanLine size={16} /> {text.scanPhone}
-            </button>
-          </div>
-          <div className="flex flex-col items-center gap-2 pt-1">
-            <p className="text-[10px] text-slate-500 max-w-[260px] leading-snug">{text.pairingQrHint}</p>
-            <span className="sr-only">{text.pairingQrHintShort}</span>
+
+          {/* Code 6 chiffres */}
+          <p className="text-3xl font-mono font-bold tracking-[0.35em] text-blue-300">{pairingCode}</p>
+
+          {/* QR deep link : ouvre /tv?pair=CODE sur la TV */}
+          <div className="flex flex-col items-center gap-1">
+            <p className="text-[10px] text-slate-500 max-w-[240px] leading-snug">{text.qrHint}</p>
             <div className="rounded-xl bg-white p-2 inline-block">
-              <QRCodeSVG value={tvPairDisplayUrl(pairingCode, tenantId)} size={120} level="M" />
+              <QRCodeSVG value={tvDeepLinkUrl(pairingCode)} size={120} level="M" />
             </div>
           </div>
+
+          {/* Bouton scan : scanne le QR de sécurité affiché sur la TV */}
+          <button
+            type="button"
+            onClick={() => setScanOpen(true)}
+            disabled={scanBusy}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-500 px-4 py-3 text-sm font-black uppercase tracking-wide text-white disabled:opacity-50"
+          >
+            <ScanLine size={18} /> {text.scanBtn}
+          </button>
         </div>
       )}
 
-      {phoneScanOpen && pairingCode && (
+      {/* Modal scanner inline */}
+      {scanOpen && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 p-4">
           <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-[#0f172a] p-4 shadow-xl">
             <TvPairingQrScanner
-              active={phoneScanOpen}
-              onDecoded={(code) => {
-                setPhoneScanOpen(false);
-                if (code === pairingCode) toast.success(text.scanOk);
-                else toast.error(text.scanMismatch);
-              }}
-              onBack={() => setPhoneScanOpen(false)}
+              active={scanOpen}
+              onDecoded={(raw) => void handleScanned(raw)}
+              onBack={() => setScanOpen(false)}
               labels={{
-                title: text.scanLabelsTitle,
-                hint: text.scanLabelsHint,
-                back: text.scanLabelsBack,
-                cameraError: text.scanLabelsCamera,
+                title: text.scanTitle,
+                hint: text.scanHint,
+                back: text.scanBack,
+                cameraError: text.scanCameraErr,
               }}
             />
           </div>
