@@ -1,6 +1,9 @@
 "use client";
 
+import React, { Suspense, useEffect, useMemo, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tv, Loader2, Signal, AlertTriangle, Clock3 } from "lucide-react";
+import { toast } from "react-hot-toast";
 import { AnimatePresence } from "framer-motion";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
@@ -14,10 +17,14 @@ export interface TvStreamPageViewProps {
   tenantId?: string | null;
 }
 
-export function TvStreamPageView({ tenantId }: TvStreamPageViewProps) {
+function TvStreamPageViewInner({ tenantId }: TvStreamPageViewProps) {
   const { branding } = useBranding();
   const { locale, isRtl } = useAppLocale(branding);
   const scoped = tenantId ?? undefined;
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+  const pairHandledRef = useRef<string | null>(null);
 
   const {
     screens,
@@ -41,30 +48,61 @@ export function TvStreamPageView({ tenantId }: TvStreamPageViewProps) {
     handleForceRefresh,
   } = useTVStream(scoped);
 
-  const text =
-    locale === "ar"
-      ? {
-          close: "إغلاق",
-          newScreen: "شاشة جديدة",
-          online: "متصل",
-          totalScreens: "إجمالي الشاشات",
-          moved: "تنبيه التحرك",
-          uptime: "مدة التشغيل 7 أيام",
-          empty: "لا توجد شاشة مسجلة لهذا المستأجر.",
-        }
-      : {
-          close: "Fermer",
-          newScreen: "Nouvel ecran",
-          online: "En ligne",
-          totalScreens: "Total ecrans",
-          moved: "Alerte deplacement",
-          uptime: "Uptime 7j (h)",
-          empty: scoped
-            ? "Aucun ecran enregistre pour ce tenant."
-            : "Aucun ecran enregistre. Selectionnez un etablissement ou creez un ecran.",
-        };
+  const text = useMemo(
+    () =>
+      locale === "ar"
+        ? {
+            close: "إغلاق",
+            newScreen: "شاشة جديدة",
+            online: "متصل",
+            totalScreens: "إجمالي الشاشات",
+            moved: "تنبيه التحرك",
+            uptime: "مدة التشغيل 7 أيام",
+            empty: "لا توجد شاشة مسجلة لهذا المستأجر.",
+            pairUnknown: "لم يُعثر على شاشة لهذا الرمز.",
+          }
+        : {
+            close: "Fermer",
+            newScreen: "Nouvel ecran",
+            online: "En ligne",
+            totalScreens: "Total ecrans",
+            moved: "Alerte deplacement",
+            uptime: "Uptime 7j (h)",
+            empty: scoped
+              ? "Aucun ecran enregistre pour ce tenant."
+              : "Aucun ecran enregistre. Selectionnez un etablissement ou creez un ecran.",
+            pairUnknown: "Aucun ecran ne correspond a ce code.",
+          },
+    [locale, scoped],
+  );
 
   const showAdminActions = Boolean(scoped);
+
+  useEffect(() => {
+    if (loading) return;
+    const raw = searchParams.get("pair");
+    const code = (raw ?? "").replace(/\D/g, "").slice(0, 6);
+    if (!/^\d{6}$/.test(code)) return;
+    if (pairHandledRef.current === code) return;
+
+    if (screens.length === 0) {
+      pairHandledRef.current = code;
+      router.replace(pathname, { scroll: false });
+      return;
+    }
+
+    pairHandledRef.current = code;
+    const match = screens.find((s) => s.pairing_code === code);
+    if (match) {
+      requestAnimationFrame(() => {
+        document.getElementById(`tv-screen-${match.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    } else {
+      toast.error(text.pairUnknown);
+    }
+
+    router.replace(pathname, { scroll: false });
+  }, [loading, pathname, router, screens, searchParams, text.pairUnknown]);
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-[#020617] text-slate-200 p-4 sm:p-6 md:p-10">
@@ -112,6 +150,8 @@ export function TvStreamPageView({ tenantId }: TvStreamPageViewProps) {
             screens.map((s) => (
               <ScreenCard
                 key={s.id}
+                id={`tv-screen-${s.id}`}
+                tenantId={tenantId}
                 screen={s}
                 onStartPairing={(id: string) => {
                   setCurrentScreenId(id);
@@ -143,6 +183,20 @@ export function TvStreamPageView({ tenantId }: TvStreamPageViewProps) {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+export function TvStreamPageView({ tenantId }: TvStreamPageViewProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+          <Loader2 className="animate-spin text-blue-500" size={40} />
+        </div>
+      }
+    >
+      <TvStreamPageViewInner tenantId={tenantId} />
+    </Suspense>
   );
 }
 

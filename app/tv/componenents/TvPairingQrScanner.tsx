@@ -11,10 +11,23 @@ export const TV_PAIRING_SCANNER_ELEMENT_ID = "tv-pairing-qr-scanner-root";
 export function extractPairingCodeFromScan(raw: string): string | null {
   const t = raw.trim();
   if (!t) return null;
-  const onlyDigits = t.replace(/\D/g, "");
-  if (onlyDigits.length >= 6) {
-    const six = onlyDigits.slice(0, 6);
-    if (/^\d{6}$/.test(six)) return six;
+  // URL absolue : lire `pair` / `code` en query (évite les chiffres du tenant dans le chemin).
+  if (/^https?:\/\//i.test(t)) {
+    try {
+      const u = new URL(t);
+      const p = u.searchParams.get("pair") ?? u.searchParams.get("code");
+      if (p) {
+        const d = p.replace(/\D/g, "").slice(0, 6);
+        if (/^\d{6}$/.test(d)) return d;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  const m = t.match(/(?:\?|&|#)(?:pair|code)=([^&\s#]+)/i);
+  if (m) {
+    const d = decodeURIComponent(m[1]).replace(/\D/g, "").slice(0, 6);
+    if (/^\d{6}$/.test(d)) return d;
   }
   try {
     const u = new URL(t);
@@ -24,12 +37,12 @@ export function extractPairingCodeFromScan(raw: string): string | null {
       if (/^\d{6}$/.test(d)) return d;
     }
   } catch {
-    // pas une URL absolue
+    // pas une URL
   }
-  const m = t.match(/(?:\?|&|#)(?:pair|code)=([^&\s#]+)/i);
-  if (m) {
-    const d = decodeURIComponent(m[1]).replace(/\D/g, "").slice(0, 6);
-    if (/^\d{6}$/.test(d)) return d;
+  const onlyDigits = t.replace(/\D/g, "");
+  if (onlyDigits.length >= 6) {
+    const six = onlyDigits.slice(0, 6);
+    if (/^\d{6}$/.test(six)) return six;
   }
   return null;
 }
