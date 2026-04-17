@@ -7,7 +7,7 @@ import { toast } from "react-hot-toast";
 import { AnimatePresence } from "framer-motion";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
-import { TvPairingQrScanner, extractPairingCodeFromScan } from "@/app/tv/componenents/TvPairingQrScanner";
+import { TvPairingQrScanner } from "@/app/tv/componenents/TvPairingQrScanner";
 import { useTVStream } from "../hooks/useTVStream";
 import { AddScreenForm } from "../components/AddScreenForm";
 import { PairingModal } from "../components/PairingModal";

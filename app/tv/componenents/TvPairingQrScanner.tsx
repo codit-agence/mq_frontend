@@ -77,10 +77,10 @@ export function TvPairingQrScanner({ active, onDecoded, onBack, labels }: Props)
 
   const handleDecoded = useCallback(
     (text: string) => {
-      const code = extractPairingCodeFromScan(text);
-      if (!code) return;
+      const raw = text.trim();
+      if (!raw) return;
       void stopScanner().finally(() => {
-        onDecoded(code);
+        onDecoded(raw);
       });
     },
     [onDecoded, stopScanner],
