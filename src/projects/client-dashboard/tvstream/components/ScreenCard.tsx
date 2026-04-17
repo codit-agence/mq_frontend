@@ -1,10 +1,17 @@
 "use client";
 
 import React from "react";
+import { QRCodeSVG } from "qrcode.react";
 import { Tv, Settings, Trash2, RotateCcw, RefreshCw, AlertTriangle } from "lucide-react";
+import { getSiteUrl } from "@/src/core/config/public-env";
 import { Screen } from "@/src/types/tvstream/tvstream";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
+
+function tvPairingOpenUrl(pairingCode: string) {
+  const base = getSiteUrl().replace(/\/$/, "");
+  return `${base}/tv?pair=${encodeURIComponent(pairingCode)}`;
+}
 
 interface Props {
   screen: Screen;
@@ -39,6 +46,8 @@ export function ScreenCard({
           moved: "تم رصد تحرك الجهاز",
           pairing: "ربط",
           pairingCode: "رمز الربط",
+          pairingQrHint: "على التلفاز: افتح /tv ثم امسح هذا الرمز (أو أدخل الأرقام).",
+          pairingQrHintShort: "رمز QR لفتح صفحة التلفاز بالرمز",
           resetAlert: "إعادة ضبط تنبيه التحرك",
           forceRefresh: "فرض التحديث",
           delete: "حذف الشاشة",
@@ -54,6 +63,8 @@ export function ScreenCard({
           moved: "Deplacement detecte",
           pairing: "Apparier",
           pairingCode: "Code d'appairage",
+          pairingQrHint: "Sur la TV : ouvrez /tv puis scannez ce QR (ou saisissez le code).",
+          pairingQrHintShort: "QR pour ouvrir la page TV avec le code",
           resetAlert: "Reinitialiser l'alerte deplacement",
           forceRefresh: "Forcer le refresh",
           delete: "Supprimer l'ecran",
@@ -117,9 +128,16 @@ export function ScreenCard({
       </div>
 
       {screen.pairing_code && !screen.is_online && (
-        <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-2xl mb-6 text-center">
-          <p className="text-xs text-blue-400 font-semibold mb-2">{text.pairingCode}</p>
+        <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-2xl mb-6 text-center space-y-3">
+          <p className="text-xs text-blue-400 font-semibold">{text.pairingCode}</p>
           <p className="text-2xl font-mono font-bold tracking-widest text-blue-300">{screen.pairing_code}</p>
+          <div className="flex flex-col items-center gap-2 pt-1">
+            <p className="text-[10px] text-slate-500 max-w-[220px] leading-snug">{text.pairingQrHint}</p>
+            <span className="sr-only">{text.pairingQrHintShort}</span>
+            <div className="rounded-xl bg-white p-2 inline-block">
+              <QRCodeSVG value={tvPairingOpenUrl(screen.pairing_code)} size={120} level="M" />
+            </div>
+          </div>
         </div>
       )}
 

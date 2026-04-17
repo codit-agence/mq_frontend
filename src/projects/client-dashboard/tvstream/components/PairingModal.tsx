@@ -16,6 +16,13 @@ interface Props {
 export function PairingModal({ code, setCode, onConfirm, onCancel, isSubmitting }: Props) {
   const { branding } = useBranding();
   const { locale } = useAppLocale(branding);
+
+  const applyDigits = (raw: string) => {
+    const digits = raw.replace(/\D/g, "").slice(0, 4);
+    setCode(digits);
+    return digits;
+  };
+
   const text =
     locale === "ar"
       ? {
@@ -44,8 +51,19 @@ export function PairingModal({ code, setCode, onConfirm, onCancel, isSubmitting 
         <p className="text-slate-400 mb-8">{text.subtitle}</p>
 
         <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={(e) => applyDigits(e.target.value)}
+          onInput={(e) => applyDigits(e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            e.preventDefault();
+            const d = e.currentTarget.value.replace(/\D/g, "").slice(0, 4);
+            setCode(d);
+            if (d.length === 4 && !isSubmitting) onConfirm();
+          }}
           maxLength={4}
           placeholder="0000"
           className="w-full bg-slate-950 border-2 border-emerald-500/30 rounded-3xl px-6 py-6 text-center text-6xl font-black tracking-[1.5rem] text-emerald-500 outline-none focus:border-emerald-500 transition-all mb-8"

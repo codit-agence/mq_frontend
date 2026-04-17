@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { getApiBaseUrl, getSiteUrl } from "@/src/core/config/public-env";
 import { tvApi } from "@/src/projects/client-dashboard/tv/tv.api";
@@ -57,6 +57,8 @@ const PairingScreen: React.FC = () => {
   const [isWaitingForSecurity, setIsWaitingForSecurity] = useState(false);
   const [branding, setBranding] = useState<PublicBranding | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const appliedPairFromUrl = useRef(false);
+  const initInFlightRef = useRef(false);
 
   const setAuth = useTVStore((s) => s.setAuth);
   const setControlConfig = useTVStore((s) => s.setControlConfig);
@@ -78,13 +80,14 @@ const PairingScreen: React.FC = () => {
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
 
-  const handleInit = async (code: string) => {
+  const handleInitFromDigits = useCallback(async (code: string) => {
     const clean = code.trim();
     if (clean.length !== 6) {
       setError("Entrez exactement 6 chiffres.");
       return;
     }
-    if (isLoading) return;
+    if (initInFlightRef.current) return;
+    initInFlightRef.current = true;
     setIsLoading(true);
     setError(null);
     try {
@@ -104,25 +107,58 @@ const PairingScreen: React.FC = () => {
       setPairingCode("");
       setTimeout(() => inputRef.current?.focus(), 50);
     } finally {
+      initInFlightRef.current = false;
       setIsLoading(false);
     }
-  };
+  }, [setControlConfig]);
 
-  const handleChange = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 6);
+  const readDigitsFromInput = (el: HTMLInputElement) => el.value.replace(/\D/g, "").slice(0, 6);
+
+  const applyDigitsFromInput = (el: HTMLInputElement) => {
+    const digits = readDigitsFromInput(el);
     setPairingCode(digits);
     setError(null);
     if (digits.length === 6) {
-      void handleInit(digits);
+      void handleInitFromDigits(digits);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      void handleInit(pairingCode);
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    applyDigitsFromInput(e.target);
   };
+
+  /** Certaines télécommandes / claviers TV envoient surtout `input`, pas toujours `change`. */
+  const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
+    applyDigitsFromInput(e.currentTarget);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    const digits = readDigitsFromInput(e.currentTarget);
+    setPairingCode(digits);
+    void handleInitFromDigits(digits);
+  };
+
+  /** Deep link depuis le dashboard (QR) : /tv?pair=123456 ou ?code=123456 */
+  useEffect(() => {
+    if (appliedPairFromUrl.current || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("pair") ?? params.get("code");
+    if (!raw) return;
+    const digits = raw.replace(/\D/g, "").slice(0, 6);
+    if (digits.length !== 6) return;
+    appliedPairFromUrl.current = true;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("pair");
+    url.searchParams.delete("code");
+    const qs = url.searchParams.toString();
+    window.history.replaceState({}, "", `${url.pathname}${qs ? `?${qs}` : ""}`);
+    setPairingCode(digits);
+    queueMicrotask(() => {
+      void handleInitFromDigits(digits);
+    });
+  }, [handleInitFromDigits]);
 
   useEffect(() => {
     if (!isWaitingForSecurity || !screenId) return;
@@ -195,7 +231,8 @@ const PairingScreen: React.FC = () => {
           pattern="[0-9]*"
           autoComplete="off"
           value={pairingCode}
-          onChange={(e) => handleChange(e.target.value)}
+          onChange={handleChange}
+          onInput={handleInput}
           onKeyDown={handleKeyDown}
           placeholder="______"
           maxLength={6}
@@ -231,7 +268,11 @@ const PairingScreen: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => void handleInit(pairingCode)}
+          onClick={() => {
+            const el = inputRef.current;
+            const digits = el ? readDigitsFromInput(el) : pairingCode.replace(/\D/g, "").slice(0, 6);
+            void handleInitFromDigits(digits);
+          }}
           disabled={isLoading}
           style={{
             width: "100%",
@@ -253,7 +294,10 @@ const PairingScreen: React.FC = () => {
       </div>
 
       <p style={{ fontSize: "0.9rem", color: "#444", marginTop: "-8px", textAlign: "center" }}>
-        La validation se déclenche automatiquement au 6ᵉ chiffre · يُفعّل تلقائياً عند الرقم السادس
+        6 chiffres puis Entrée ou « VALIDER » · QR depuis le tableau de bord ouvre cette page avec le code ·
+        <span lang="ar" dir="rtl" style={{ display: "block", marginTop: 6 }}>
+          ستة أرقام ثم Enter أو « تأكيد » · مسح رمز QR من لوحة التحكم يملأ الرمز تلقائياً
+        </span>
       </p>
 
       <p style={{ fontSize: "0.75rem", color: "#525252", textAlign: "center", maxWidth: 520, lineHeight: 1.5 }}>
