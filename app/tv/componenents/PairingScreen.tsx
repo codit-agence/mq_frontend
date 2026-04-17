@@ -9,6 +9,17 @@ import type { PublicBranding } from "@/src/projects/shared/branding/branding.typ
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { getDeviceInfo } from "@/src/utils/helpers/getDeviceInfo";
 
+import { TvPairingQrScanner } from "./TvPairingQrScanner";
+
+type PairingEntryMode = "type" | "scan";
+
+const TV_PAIRING_SCAN_LABELS = {
+  title: "Scannez le QR affiché dans le tableau de bord (TV Stream)",
+  hint: "Le gérant connecté au tenant affiche le QR à côté du code à 6 chiffres. La TV lit le même code sans le saisir au clavier.",
+  back: "← Saisir le code au clavier",
+  cameraError: "Caméra indisponible sur cet appareil. Utilisez la saisie du code.",
+} as const;
+
 function BrandingHeader({ branding }: { branding: PublicBranding | null }) {
   const site = getSiteUrl();
   const logoSrc = branding?.logo ? getImageUrl(branding.logo) : null;
@@ -56,6 +67,7 @@ const PairingScreen: React.FC = () => {
   const [screenId, setScreenId] = useState<string | null>(null);
   const [isWaitingForSecurity, setIsWaitingForSecurity] = useState(false);
   const [branding, setBranding] = useState<PublicBranding | null>(null);
+  const [entryMode, setEntryMode] = useState<PairingEntryMode>("type");
   const inputRef = useRef<HTMLInputElement>(null);
   const appliedPairFromUrl = useRef(false);
   const initInFlightRef = useRef(false);
@@ -111,6 +123,17 @@ const PairingScreen: React.FC = () => {
       setIsLoading(false);
     }
   }, [setControlConfig]);
+
+  const onScanDecoded = useCallback(
+    (code: string) => {
+      setEntryMode("type");
+      setPairingCode(code);
+      queueMicrotask(() => {
+        void handleInitFromDigits(code);
+      });
+    },
+    [handleInitFromDigits],
+  );
 
   const readDigitsFromInput = (el: HTMLInputElement) => el.value.replace(/\D/g, "").slice(0, 6);
 
@@ -223,80 +246,137 @@ const PairingScreen: React.FC = () => {
     <div style={styles.page}>
       <BrandingHeader branding={branding} />
 
-      <div style={{ width: "100%", maxWidth: "480px" }}>
-        <input
-          ref={inputRef}
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          autoComplete="off"
-          value={pairingCode}
-          onChange={handleChange}
-          onInput={handleInput}
-          onKeyDown={handleKeyDown}
-          placeholder="______"
-          maxLength={6}
-          style={{
-            width: "100%",
-            fontSize: "4.5rem",
-            fontWeight: 900,
-            textAlign: "center",
-            letterSpacing: "18px",
-            padding: "20px 16px",
-            background: "#111",
-            border: `3px solid ${error ? "#f44336" : pairingCode.length === 6 ? "#2196f3" : "#333"}`,
-            borderRadius: "18px",
-            color: "#2196f3",
-            outline: "none",
-            boxSizing: "border-box",
-            transition: "border-color 0.2s",
-          }}
-        />
-
-        {error && (
-          <p
-            style={{
-              color: "#f44336",
-              fontSize: "1rem",
-              textAlign: "center",
-              marginTop: "12px",
-            }}
-          >
-            {error}
-          </p>
-        )}
-
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          width: "100%",
+          maxWidth: 480,
+          marginBottom: 8,
+        }}
+      >
         <button
           type="button"
-          onClick={() => {
-            const el = inputRef.current;
-            const digits = el ? readDigitsFromInput(el) : pairingCode.replace(/\D/g, "").slice(0, 6);
-            void handleInitFromDigits(digits);
-          }}
-          disabled={isLoading}
+          onClick={() => setEntryMode("type")}
           style={{
-            width: "100%",
-            marginTop: "24px",
-            fontSize: "1.5rem",
-            fontWeight: "bold",
-            padding: "18px",
-            borderRadius: "14px",
-            border: "none",
-            background: isLoading ? "#1a1a1a" : "#2196f3",
-            color: isLoading ? "#444" : "white",
-            cursor: isLoading ? "default" : "pointer",
-            letterSpacing: "3px",
-            transition: "background 0.2s",
+            flex: 1,
+            padding: "12px 8px",
+            borderRadius: 12,
+            border: entryMode === "type" ? "2px solid #2196f3" : "1px solid #333",
+            background: entryMode === "type" ? "#0c2340" : "#111",
+            color: entryMode === "type" ? "#fff" : "#888",
+            fontWeight: 800,
+            fontSize: "0.95rem",
+            cursor: "pointer",
           }}
         >
-          {isLoading ? "Connexion…" : "VALIDER"}
+          Code 6 chiffres
+        </button>
+        <button
+          type="button"
+          onClick={() => setEntryMode("scan")}
+          style={{
+            flex: 1,
+            padding: "12px 8px",
+            borderRadius: 12,
+            border: entryMode === "scan" ? "2px solid #22c55e" : "1px solid #333",
+            background: entryMode === "scan" ? "#0f2918" : "#111",
+            color: entryMode === "scan" ? "#fff" : "#888",
+            fontWeight: 800,
+            fontSize: "0.95rem",
+            cursor: "pointer",
+          }}
+        >
+          Scanner QR
         </button>
       </div>
+      <p lang="ar" dir="rtl" style={{ fontSize: "0.8rem", color: "#525252", margin: "0 0 8px", textAlign: "center", maxWidth: 480 }}>
+        خياران: إدخال الرمز أو مسح الرمز من لوحة التحكم (نفس رمز المستأجر).
+      </p>
+
+      {entryMode === "scan" ? (
+        <TvPairingQrScanner
+          active={entryMode === "scan"}
+          onDecoded={onScanDecoded}
+          onBack={() => setEntryMode("type")}
+          labels={TV_PAIRING_SCAN_LABELS}
+        />
+      ) : (
+        <div style={{ width: "100%", maxWidth: "480px" }}>
+          <input
+            ref={inputRef}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="off"
+            value={pairingCode}
+            onChange={handleChange}
+            onInput={handleInput}
+            onKeyDown={handleKeyDown}
+            placeholder="______"
+            maxLength={6}
+            style={{
+              width: "100%",
+              fontSize: "4.5rem",
+              fontWeight: 900,
+              textAlign: "center",
+              letterSpacing: "18px",
+              padding: "20px 16px",
+              background: "#111",
+              border: `3px solid ${error ? "#f44336" : pairingCode.length === 6 ? "#2196f3" : "#333"}`,
+              borderRadius: "18px",
+              color: "#2196f3",
+              outline: "none",
+              boxSizing: "border-box",
+              transition: "border-color 0.2s",
+            }}
+          />
+
+          {error && (
+            <p
+              style={{
+                color: "#f44336",
+                fontSize: "1rem",
+                textAlign: "center",
+                marginTop: "12px",
+              }}
+            >
+              {error}
+            </p>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              const el = inputRef.current;
+              const digits = el ? readDigitsFromInput(el) : pairingCode.replace(/\D/g, "").slice(0, 6);
+              void handleInitFromDigits(digits);
+            }}
+            disabled={isLoading}
+            style={{
+              width: "100%",
+              marginTop: "24px",
+              fontSize: "1.5rem",
+              fontWeight: "bold",
+              padding: "18px",
+              borderRadius: "14px",
+              border: "none",
+              background: isLoading ? "#1a1a1a" : "#2196f3",
+              color: isLoading ? "#444" : "white",
+              cursor: isLoading ? "default" : "pointer",
+              letterSpacing: "3px",
+              transition: "background 0.2s",
+            }}
+          >
+            {isLoading ? "Connexion…" : "VALIDER"}
+          </button>
+        </div>
+      )}
 
       <p style={{ fontSize: "0.9rem", color: "#444", marginTop: "-8px", textAlign: "center" }}>
-        6 chiffres puis Entrée ou « VALIDER » · QR depuis le tableau de bord ouvre cette page avec le code ·
+        Le code à 6 chiffres vient du tableau de bord tenant (TV Stream) : même écran que le QR · Entrée ou « VALIDER »
         <span lang="ar" dir="rtl" style={{ display: "block", marginTop: 6 }}>
-          ستة أرقام ثم Enter أو « تأكيد » · مسح رمز QR من لوحة التحكم يملأ الرمز تلقائياً
+          الرمز من لوحة التحكم (نفس الشاشة التي تعرض QR للمستأجر)
         </span>
       </p>
 
