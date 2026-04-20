@@ -8,7 +8,7 @@ import { useMemo } from "react";
 export default function DesignTab() {
   const { formData, setNestedField } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
   const td = useMemo(() => getTenantSettingsTabsText(locale).design, [locale]);
   const colors = ["#EAB308", "#EF4444", "#3B82F6", "#10B981", "#111827", "#0EA5E9"];
   const languages = ["fr", "en", "ar", "es"] as const;

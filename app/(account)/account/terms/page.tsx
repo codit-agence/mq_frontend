@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 export default function TermsPage() {
   const router = useRouter();
   const { branding } = useBranding();
-  const { locale, setLocale, isRtl } = useAppLocale(branding);
+  const { locale, setLocale, isRtl } = useAppLocale();
 
   const text = locale === "ar"
     ? {

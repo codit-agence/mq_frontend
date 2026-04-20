@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 export default function IdentityTab() {
   const { formData, setField, setNestedField } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
   const t = useMemo(() => getTenantSettingsTabsText(locale).identity, [locale]);
   const dateLocale = locale === "ar" ? "ar-MA" : "fr-FR";
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

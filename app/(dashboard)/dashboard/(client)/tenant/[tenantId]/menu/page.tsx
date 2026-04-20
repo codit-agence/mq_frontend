@@ -30,7 +30,7 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
   const { formData } = useSettingsStore();
   const { tenant } = useAuthStore();
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
   const isOwner = tenant?.role === 'owner';
   const catalogRestricted = !!formData?.display?.catalog_client_restricted;
   const readonlyMode = catalogRestricted && !isOwner;

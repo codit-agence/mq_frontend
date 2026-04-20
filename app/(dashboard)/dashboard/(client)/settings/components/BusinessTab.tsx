@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 export default function BusinessTab() {
   const { formData, setNestedField } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
   const t = useMemo(() => getTenantSettingsTabsText(locale).business, [locale]);
   const [openingHoursText, setOpeningHoursText] = useState("{}");
   const socialLinks: Record<string, string> = formData.business?.social_links || {};

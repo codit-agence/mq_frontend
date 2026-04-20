@@ -121,7 +121,7 @@ function getOfferProfile(locale: "fr" | "ar", code: string) {
 }
 
 export function PublicOffersPage({ branding }: { branding: PublicBranding }) {
-  const { locale, setLocale, isRtl } = useAppLocale(branding);
+  const { locale, setLocale, isRtl } = useAppLocale();
   const [menuOpen, setMenuOpen] = useState(false);
   const { offers, navigation } = getPublicHomeCollections({
     offers: branding.site_offers,

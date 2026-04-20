@@ -177,6 +177,27 @@ export function getApiBaseUrl() {
   return normalized;
 }
 
+/**
+ * Base URL Ninja pour les `fetch()` **côté serveur Next.js** (SSR, Route Handlers).
+ *
+ * Dans Docker, `NEXT_PUBLIC_API_URL` vaut souvent `http://localhost:8000/api` pour le
+ * navigateur hôte, mais **depuis le conteneur front**, `localhost` n’est pas Django.
+ * Définir alors `API_URL_INTERNAL=http://web:8000/api` (nom du service compose du backend).
+ */
+export function getServerApiBaseUrl(): string {
+  const raw =
+    process.env.API_URL_INTERNAL?.trim() ||
+    process.env.INTERNAL_API_URL?.trim() ||
+    "";
+  if (raw) {
+    const preliminary = trimTrailingSlash(
+      safeUrl(withHttpSchemeIfMissing(raw), DEFAULT_API_URL),
+    );
+    return normalizeToNinjaApiRoot(preliminary);
+  }
+  return getApiBaseUrl();
+}
+
 export function getBackendOrigin() {
   const fallback = deriveOrigin(DEFAULT_API_URL, "http://127.0.0.1:8000");
   const explicitBackend = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();

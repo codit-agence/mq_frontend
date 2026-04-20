@@ -15,7 +15,7 @@ interface Props {
 
 export function PairingModal({ code, setCode, onConfirm, onCancel, isSubmitting }: Props) {
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
 
   const applyDigits = (raw: string) => {
     const digits = raw.replace(/\D/g, "").slice(0, 4);

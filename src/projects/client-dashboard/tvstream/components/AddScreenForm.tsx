@@ -14,7 +14,7 @@ interface Props {
 
 export function AddScreenForm({ screenName, setScreenName, onSubmit, isSubmitting }: Props) {
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
   const text =
     locale === "ar"
       ? {

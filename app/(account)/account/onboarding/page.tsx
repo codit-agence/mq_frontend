@@ -17,7 +17,7 @@ import { getErrorMessage } from "@/src/utils/errors";
 export default function OnboardingPage() {
   const router = useRouter();
   const { branding } = useBranding();
-  const { locale, setLocale, isRtl } = useAppLocale(branding);
+  const { locale, setLocale, isRtl } = useAppLocale();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");

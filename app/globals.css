@@ -13,6 +13,9 @@
   --brand-radius: 16px;
   --font-brand-latin: "Poppins";
   --font-brand-arabic: "Cairo";
+  /* Pas de next/font Geist dans layout : piles système pour éviter /__nextjs_font 403 */
+  --font-geist-sans: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-geist-mono: ui-monospace, "Cascadia Code", "Consolas", monospace;
   --dashboard-bg: #f6f8fc;
   --dashboard-surface: #ffffff;
   --dashboard-border: #e2e8f0;

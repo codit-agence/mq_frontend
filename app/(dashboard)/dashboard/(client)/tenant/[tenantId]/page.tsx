@@ -31,7 +31,7 @@ export default function TenantManagerPage() {
   const { tenant } = useAuthStore();
   const { formData } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
   const { theme } = useTenantShellTheme();
   const isDark = theme === "dark";
 

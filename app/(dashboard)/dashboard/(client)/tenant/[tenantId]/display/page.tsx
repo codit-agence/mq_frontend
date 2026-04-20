@@ -79,7 +79,7 @@ export default function TenantDisplayManagerPage() {
   const params = useParams<{ tenantId: string }>();
   const tenantId = params?.tenantId;
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
 
   const { formData, fetchSettings } = useSettingsStore();
   const {

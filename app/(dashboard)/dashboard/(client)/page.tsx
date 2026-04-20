@@ -24,7 +24,7 @@ import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 export default function GlobalDashboard() {
   const { user, tenant } = useAuthStore();
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
   const primaryColor = tenant?.primary_color || branding.primary_color || "#0f172a";
 
   const text = locale === "ar"

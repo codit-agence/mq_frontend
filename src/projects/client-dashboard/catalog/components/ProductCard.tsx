@@ -18,7 +18,7 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, tenantId, onDelete, disableActions = false }: ProductCardProps) => {
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
   const text = locale === "ar"
     ? {
         noImage: "لا توجد صورة",

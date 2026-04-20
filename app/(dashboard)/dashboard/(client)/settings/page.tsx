@@ -12,7 +12,7 @@ export default function RestaurantSettingsPage() {
   const { activeTab, setActiveTab, saveAll, isLoading, fetchSettings, formData } = useSettingsStore();
   const [mounted, setMounted] = useState(false);
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
 
   useEffect(() => {
     setMounted(true);

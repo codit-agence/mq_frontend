@@ -14,7 +14,7 @@ import { PublicHomeServices } from "@/src/projects/public-site/marketing/compone
 import { getPublicHomeCollections, getPublicHomeText } from "@/src/projects/public-site/marketing/components/public-home/public-home.utils";
 
 export function PublicSolutionsPage({ branding }: { branding: PublicBranding }) {
-  const { locale, setLocale, isRtl } = useAppLocale(branding);
+  const { locale, setLocale, isRtl } = useAppLocale();
   const [menuOpen, setMenuOpen] = useState(false);
   const { services, navigation } = getPublicHomeCollections({
     services: branding.site_services,

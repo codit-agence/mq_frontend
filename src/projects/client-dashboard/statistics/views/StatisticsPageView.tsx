@@ -22,7 +22,7 @@ export interface StatisticsPageViewProps {
 export function StatisticsPageView({ tenantId }: StatisticsPageViewProps) {
   const scoped = typeof tenantId === "string" && tenantId.length > 0 ? tenantId : undefined;
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
   const { screens, loading } = useTVStream(scoped);
   const { products, categories, fetchCatalog } = useCatalogStore();
   const { schedules, fetchSchedules } = useSchedulerStore();

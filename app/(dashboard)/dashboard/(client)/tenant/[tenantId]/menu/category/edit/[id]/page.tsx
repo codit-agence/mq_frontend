@@ -16,7 +16,7 @@ export default function EditCategoryPage() {
   const { tenant } = useAuthStore();
   const { formData } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
   const { categories, fetchCatalog } = useCatalogStore();
   const [initialData, setInitialData] = useState<any>(null);
   const [loading, setLoading] = useState(true);

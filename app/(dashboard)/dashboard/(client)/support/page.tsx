@@ -14,7 +14,7 @@ export default function SupportPage() {
   const params = useParams<{ tenantId?: string }>();
   const { tenant, user } = useAuthStore();
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
 
   const tenantId = useMemo(() => {
     const fromRoute = params?.tenantId;

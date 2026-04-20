@@ -100,7 +100,7 @@ export function PublicOfferDetailPage({
   offer: BrandingSiteOffer;
   relatedOffers: BrandingSiteOffer[];
 }) {
-  const { locale, setLocale, isRtl } = useAppLocale(branding);
+  const { locale, setLocale, isRtl } = useAppLocale();
   const [menuOpen, setMenuOpen] = useState(false);
   const { navigation } = getPublicHomeCollections({ navigation: branding.site_navigation });
   const text = getPublicHomeText(locale);

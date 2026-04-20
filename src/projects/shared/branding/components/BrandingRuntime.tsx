@@ -8,7 +8,7 @@ import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 
 export function BrandingRuntime() {
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
 
   useEffect(() => {
     const root = document.documentElement;

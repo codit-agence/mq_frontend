@@ -20,7 +20,7 @@ export const CategoryForm = ({ onSuccess, initialData }: CategoryFormProps) => {
   const { createCategory, updateCategory, loading } = useCatalogStore();
   const { formData } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
   const activeLanguages = (formData?.display?.active_languages || ["fr"]) as Lang[];
   const defaultLanguage = (formData?.display?.default_language as Lang) || activeLanguages[0] || "fr";
   const [activeLang, setActiveLang] = useState<Lang>(defaultLanguage);

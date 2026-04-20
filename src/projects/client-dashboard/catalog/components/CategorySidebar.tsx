@@ -26,7 +26,7 @@ export const CategorySidebar = ({
   showActions = true,
 }: CategorySidebarProps) => {
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
   const text = locale === "ar"
     ? {
         title: "التصنيفات",

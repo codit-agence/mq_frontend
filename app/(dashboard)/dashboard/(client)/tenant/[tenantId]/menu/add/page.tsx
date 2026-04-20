@@ -19,7 +19,7 @@ export default function AddProductPage() {
   const { tenant } = useAuthStore();
   const { formData } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
   const [activeLang, setActiveLang] = useState<Lang>("fr");
   const activeLanguages = (formData?.display?.active_languages || ["fr"]) as Lang[];
   const defaultLanguage = (formData?.display?.default_language as Lang) || activeLanguages[0] || "fr";

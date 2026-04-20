@@ -22,7 +22,7 @@ export default function EditProductPage() {
   const { tenant } = useAuthStore();
   const { formData } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
 
   const [initialData, setInitialData] = useState<any>(null);
   const [loading, setLoading] = useState(true);

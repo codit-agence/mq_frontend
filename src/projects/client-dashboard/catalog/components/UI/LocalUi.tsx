@@ -76,7 +76,7 @@ export const EmptyState = () => (
 
 function LocalizedLoadingState() {
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
 
   return (
     <div className="h-64 flex flex-col items-center justify-center bg-white rounded-[32px] border border-slate-100 gap-4">
@@ -93,7 +93,7 @@ function LocalizedLoadingState() {
 
 function LocalizedEmptyState() {
   const { branding } = useBranding();
-  const { locale } = useAppLocale(branding);
+  const { locale } = useAppLocale();
   const text = locale === "ar"
     ? {
         title: "لا توجد نتائج",

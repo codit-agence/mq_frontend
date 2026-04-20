@@ -23,7 +23,7 @@ function LoginContent() {
   const isRegistered = searchParams.get('registered') === 'true';
   const router = useRouter();
   const { branding } = useBranding();
-  const { locale, setLocale, isRtl } = useAppLocale(branding);
+  const { locale, setLocale, isRtl } = useAppLocale();
   const loginSuccess = useAuthStore((state) => state.handleLoginSuccess);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 

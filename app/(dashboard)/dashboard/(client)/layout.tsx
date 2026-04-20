@@ -16,7 +16,7 @@ import { TenantAccountSummaryStrip } from "@/src/projects/client-dashboard/tenan
 export default function ClientDashboardLayout({ children }: { children: React.ReactNode }) {
   const { logout, user, tenant } = useAuthStore();
   const { branding } = useBranding();
-  const { locale, setLocale, isRtl } = useAppLocale(branding);
+  const { locale, setLocale, isRtl } = useAppLocale();
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 

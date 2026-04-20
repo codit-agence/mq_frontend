@@ -16,7 +16,7 @@ import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 export default function TenantSettingsPage() {
   const { saveAll, isLoading } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
   const params = useParams<{ tenantId: string }>();
   const tenantId = params?.tenantId;
   const [mounted, setMounted] = useState(false);

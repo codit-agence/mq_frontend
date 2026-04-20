@@ -37,7 +37,7 @@ export interface TvStreamPageViewProps {
 
 function TvStreamPageViewInner({ tenantId }: TvStreamPageViewProps) {
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
   const scoped = tenantId ?? undefined;
   const searchParams = useSearchParams();
   const pathname = usePathname();

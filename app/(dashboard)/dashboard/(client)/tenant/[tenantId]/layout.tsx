@@ -36,7 +36,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
   const params = useParams();
   const pathname = usePathname();
   const { branding } = useBranding();
-  const { locale, setLocale, isRtl } = useAppLocale(branding);
+  const { locale, setLocale, isRtl } = useAppLocale();
   const { theme, setTheme } = useTenantShellTheme();
   const [qrOpen, setQrOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);

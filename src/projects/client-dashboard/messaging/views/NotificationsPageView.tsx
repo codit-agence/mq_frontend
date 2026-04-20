@@ -13,7 +13,7 @@ export function NotificationsPageView({ tenantId }: NotificationsPageViewProps) 
   const scoped = typeof tenantId === "string" && tenantId.length > 0 ? tenantId : null;
   const backHref = scoped ? `/dashboard/tenant/${scoped}` : "/dashboard";
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
 
   const text =
     locale === "ar"

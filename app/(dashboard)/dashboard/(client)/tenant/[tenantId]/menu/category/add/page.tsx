@@ -14,7 +14,7 @@ export default function AddCategoryPage() {
   const { tenant } = useAuthStore();
   const { formData } = useSettingsStore();
   const { branding } = useBranding();
-  const { locale, isRtl } = useAppLocale(branding);
+  const { locale, isRtl } = useAppLocale();
   const isOwner = tenant?.role === "owner";
   const catalogRestricted = !!formData?.display?.catalog_client_restricted;
   const readonlyMode = catalogRestricted && !isOwner;

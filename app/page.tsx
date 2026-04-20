@@ -4,6 +4,7 @@ import { getSiteUrl } from "@/src/core/config/public-env";
 import { PublicHomePage } from "@/src/projects/public-site/marketing/components/PublicHomePage";
 import { buildHomeMetadata, getPublicBrandingServer } from "@/src/projects/shared/branding/branding.server";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
+import { fetchQmwebPage } from "@/src/projects/public-site/marketing/api/qmweb.api";
 
 export async function generateMetadata() {
   const branding = await getPublicBrandingServer();
@@ -11,7 +12,11 @@ export async function generateMetadata() {
 }
 
 export default async function Home() {
-  const branding = await getPublicBrandingServer();
+  const [branding, qmwebData] = await Promise.all([
+    getPublicBrandingServer(),
+    fetchQmwebPage(),
+  ]);
+
   const siteUrl = getSiteUrl();
   const logoUrl = branding.logo ? getImageUrl(branding.logo) : undefined;
 
@@ -46,7 +51,7 @@ export default async function Home() {
         strategy="beforeInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
-      <PublicHomePage branding={branding} />
+      <PublicHomePage branding={branding} qmwebData={qmwebData} />
     </>
   );
 }

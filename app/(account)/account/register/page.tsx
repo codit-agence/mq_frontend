@@ -17,7 +17,7 @@ import { BrandingFooter } from "@/src/projects/shared/branding/components/Brandi
 export default function RegisterPage() {
   const router = useRouter();
   const { branding } = useBranding();
-  const { locale, setLocale, isRtl } = useAppLocale(branding);
+  const { locale, setLocale, isRtl } = useAppLocale();
 
   // État unique pour tout le formulaire (évite 10 useState)
   const [formData, setFormData] = useState<RegisterIn>({

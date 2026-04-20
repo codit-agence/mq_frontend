@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 
-import { getApiBaseUrl, getSiteUrl } from "@/src/core/config/public-env";
+import { getServerApiBaseUrl, getSiteUrl } from "@/src/core/config/public-env";
 import { brandingService } from "@/src/projects/shared/branding/branding.service";
 import { PublicBranding } from "@/src/projects/shared/branding/branding.types";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 
-const apiBaseUrl = getApiBaseUrl();
 const siteUrl = getSiteUrl();
 
 export async function getPublicBrandingServer(): Promise<PublicBranding> {
   try {
-    const response = await fetch(`${apiBaseUrl}/branding/public`, {
+    const response = await fetch(`${getServerApiBaseUrl()}/branding/public`, {
       next: { revalidate: 300 },
     });
 
