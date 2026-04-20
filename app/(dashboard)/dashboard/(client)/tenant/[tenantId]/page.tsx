@@ -11,6 +11,9 @@ import {
   Sparkles,
   Music2,
   BarChart3,
+  LayoutList,
+  Activity,
+  PieChart,
 } from "lucide-react";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
@@ -62,6 +65,15 @@ export default function TenantManagerPage() {
           statisticsDesc: "أداء الشاشات.",
           campaigns: "الحملات",
           campaignsDesc: "قيد التحضير.",
+          displayHub: "التلفاز والعرض",
+          displayHubSub: "افتح القسم المطلوب مباشرة.",
+          hubScreens: "الشاشات",
+          hubContent: "محتوى التلفاز",
+          hubSchedule: "البرمجة",
+          hubStatus: "الحالة",
+          hubAnalytics: "التحليلات",
+          hubAll: "كل أقسام العرض",
+          dashSubscription: "الاشتراك والفوترة — لوحة التحكم العامة",
         }
       : {
           console: "Console tenant",
@@ -84,7 +96,25 @@ export default function TenantManagerPage() {
           statisticsDesc: "Performance ecrans.",
           campaigns: "Campagnes",
           campaignsDesc: "Bientot disponible.",
+          displayHub: "TV & affichage",
+          displayHubSub: "Acces direct aux ongles (ecrans, contenu, planif…).",
+          hubScreens: "Ecrans",
+          hubContent: "Contenu",
+          hubSchedule: "Programmation",
+          hubStatus: "Etat d'affichage",
+          hubAnalytics: "Analytiques",
+          hubAll: "Vue complete ecran",
+          dashSubscription: "Abonnement & facturation — tableau de bord general",
         };
+
+  const displayBase = `/dashboard/tenant/${tenant.id}/display`;
+  const displayShortcuts = [
+    { href: `${displayBase}?tab=screens`, label: text.hubScreens, icon: <Monitor size={18} /> },
+    { href: `${displayBase}?tab=content`, label: text.hubContent, icon: <Tv size={18} /> },
+    { href: `${displayBase}?tab=schedule`, label: text.hubSchedule, icon: <LayoutList size={18} /> },
+    { href: `${displayBase}?tab=status`, label: text.hubStatus, icon: <Activity size={18} /> },
+    { href: `${displayBase}?tab=analytics`, label: text.hubAnalytics, icon: <PieChart size={18} /> },
+  ];
 
   const services: TenantServiceCard[] = [
     {
@@ -152,31 +182,31 @@ export default function TenantManagerPage() {
         </div>
       </section>
 
-      <section className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+      <section className="grid grid-cols-3 gap-1.5 max-sm:grid-cols-3 sm:grid-cols-2 sm:gap-2 lg:grid-cols-3 lg:gap-3">
         {services.map((service) => (
           <Link
             key={service.title}
             href={service.href}
-            className={`group rounded-2xl border p-3.5 sm:p-4 transition-transform active:scale-[0.99] ${surface} ${
+            className={`group rounded-xl border p-2.5 transition-transform active:scale-[0.99] sm:rounded-2xl sm:p-3.5 md:p-4 ${surface} ${
               service.locked ? "opacity-55 pointer-events-none" : "hover:-translate-y-0.5"
             }`}
           >
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex items-start justify-between gap-1 sm:gap-2">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-10 sm:w-10 sm:rounded-xl [&_svg]:size-[18px] sm:[&_svg]:size-5"
                 style={{ backgroundColor: `${primaryColor}14`, color: primaryColor }}
               >
                 {service.icon}
               </div>
               {service.badge ? (
-                <span className="rounded-full text-[9px] font-black uppercase tracking-wide px-2 py-0.5 text-white" style={{ backgroundColor: primaryColor }}>
+                <span className="rounded-full px-1 py-0.5 text-[7px] font-black uppercase tracking-wide text-white sm:px-2 sm:text-[9px]" style={{ backgroundColor: primaryColor }}>
                   {service.badge}
                 </span>
               ) : null}
             </div>
-            <h2 className={`mt-3 text-sm sm:text-base font-black tracking-tight line-clamp-2 ${heading}`}>{service.title}</h2>
-            <p className={`mt-1 text-[11px] sm:text-xs leading-snug line-clamp-2 ${muted}`}>{service.desc}</p>
-            <div className="mt-3 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide" style={{ color: primaryColor }}>
+            <h2 className={`mt-2 line-clamp-2 text-[11px] font-black leading-tight tracking-tight sm:mt-3 sm:text-sm md:text-base ${heading}`}>{service.title}</h2>
+            <p className={`mt-0.5 line-clamp-2 text-[9px] leading-snug sm:mt-1 sm:text-[11px] md:text-xs ${muted}`}>{service.desc}</p>
+            <div className="mt-2 inline-flex items-center gap-0.5 text-[8px] font-black uppercase tracking-wide sm:mt-3 sm:gap-1 sm:text-[10px]" style={{ color: primaryColor }}>
               {text.open}
               <ArrowRight size={12} className="rtl:rotate-180 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5 transition-transform" />
             </div>
@@ -185,19 +215,58 @@ export default function TenantManagerPage() {
 
         <Link
           href={`/dashboard/tenant/${tenant.id}/settings`}
-          className="group rounded-2xl border p-3.5 sm:p-4 text-white col-span-2 lg:col-span-1 transition-transform active:scale-[0.99] hover:opacity-95"
+          className="group col-span-3 rounded-xl border p-3 text-white transition-transform active:scale-[0.99] hover:opacity-95 sm:col-span-2 sm:rounded-2xl sm:p-3.5 md:p-4 lg:col-span-1"
           style={{ backgroundColor: primaryColor, borderColor: primaryColor }}
         >
-          <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center mb-3">
-            <Settings size={20} />
+          <div className="mb-2 flex items-center gap-3 sm:mb-3 sm:block">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/15 sm:h-10 sm:w-10 sm:rounded-xl">
+              <Settings size={18} className="sm:h-5 sm:w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-xs font-black tracking-tight sm:text-sm md:text-base">{text.settings}</h2>
+              <p className="mt-0.5 line-clamp-2 text-[9px] text-white/85 sm:mt-1 sm:text-[11px] md:text-xs">{text.settingsDesc}</p>
+            </div>
           </div>
-          <h2 className="text-sm sm:text-base font-black tracking-tight">{text.settings}</h2>
-          <p className="mt-1 text-[11px] sm:text-xs text-white/85 line-clamp-2">{text.settingsDesc}</p>
-          <div className="mt-3 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-white/95">
+          <div className="inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-wide text-white/95 sm:text-[10px]">
             {text.configure}
             <ArrowRight size={12} className="rtl:rotate-180" />
           </div>
         </Link>
+      </section>
+
+      <section className={`rounded-2xl border p-4 sm:p-5 ${surface}`}>
+        <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${muted}`}>{text.displayHub}</p>
+            <p className={`mt-1 text-sm ${muted}`}>{text.displayHubSub}</p>
+          </div>
+          <Link
+            href={displayBase}
+            className="text-[10px] font-black uppercase tracking-wider shrink-0"
+            style={{ color: primaryColor }}
+          >
+            {text.hubAll} →
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          {displayShortcuts.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-2 rounded-xl border px-3 py-3 transition active:scale-[0.99] hover:-translate-y-0.5 ${surface}`}
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: `${primaryColor}14`, color: primaryColor }}>
+                {item.icon}
+              </span>
+              <span className={`text-[11px] font-black leading-tight ${heading}`}>{item.label}</span>
+            </Link>
+          ))}
+        </div>
+        <p className={`mt-4 text-center text-[10px] font-semibold ${muted}`}>
+          <Link href="/dashboard" className="underline-offset-2 hover:underline" style={{ color: primaryColor }}>
+            {text.dashSubscription}
+          </Link>
+        </p>
       </section>
     </div>
   );

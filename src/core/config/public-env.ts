@@ -198,6 +198,36 @@ export function getServerApiBaseUrl(): string {
   return getApiBaseUrl();
 }
 
+const LOOPBACK_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+function isLoopbackHost(hostname: string) {
+  return LOOPBACK_HOSTNAMES.has(hostname.toLowerCase());
+}
+
+/**
+ * Base URL réellement utilisée par axios (navigateur vs SSR).
+ *
+ * Si `NEXT_PUBLIC_API_URL` pointe vers **localhost / 127.0.0.1** mais que la page est
+ * ouverte sur une autre origine (ex. `http://192.168.1.10:3000`), le navigateur tente
+ * quand même `http://localhost:3000/api` → **Network Error** (localhost = la machine du client).
+ * Dans ce cas on force `{window.location.origin}/api` (même proxy Next que la page).
+ */
+export function resolveActiveApiBaseUrl(): string {
+  if (typeof window === "undefined") {
+    return getServerApiBaseUrl();
+  }
+  const configured = getApiBaseUrl();
+  try {
+    const u = new URL(configured);
+    if (isLoopbackHost(u.hostname) && window.location.origin !== u.origin) {
+      return `${window.location.origin}/api`;
+    }
+  } catch {
+    /* ignore */
+  }
+  return configured;
+}
+
 export function getBackendOrigin() {
   const fallback = deriveOrigin(DEFAULT_API_URL, "http://127.0.0.1:8000");
   const explicitBackend = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();

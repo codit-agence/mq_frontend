@@ -1,5 +1,8 @@
 import { getSiteUrl } from "@/src/core/config/public-env";
 
+/** Cible QR par defaut si aucune URL publique / slug n'est configure pour le tenant. */
+export const TENANT_QR_FALLBACK_URL = "https://qalyas.com";
+
 function absolutize(pathOrUrl: string): string {
   const t = pathOrUrl.trim();
   if (!t) return t;
@@ -28,4 +31,13 @@ export function resolveTenantQrUrl(input: {
     return `${getSiteUrl().replace(/\/$/, "")}/q/${slug}`;
   }
   return null;
+}
+
+/** Toujours une URL absolue (scanner / impression). */
+export function resolveTenantQrUrlWithFallback(input: {
+  public_landing_url?: string | null;
+  qr_redirect_url?: string | null;
+  qr_slug?: string | null;
+}) {
+  return resolveTenantQrUrl(input) || TENANT_QR_FALLBACK_URL;
 }

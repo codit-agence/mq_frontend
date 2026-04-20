@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-import { useParams } from "next/navigation";
-import { ArrowLeft, CheckCircle2, Clock3, Home, Monitor, RefreshCw, RotateCcw, Signal, Trash2, Tv, XCircle } from "lucide-react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { CheckCircle2, Clock3, Home, Monitor, RefreshCw, RotateCcw, Signal, Trash2, Tv, XCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
@@ -17,17 +17,23 @@ import ScheduleManager from "@/src/projects/client-dashboard/scheduler/component
 import DisplayContent from "@/src/projects/client-dashboard/display/components/DisplayContent";
 import DisplayStatus from "@/src/projects/client-dashboard/scheduler/components/DisplayStatus";
 import AnalyticsDashboard from "@/src/projects/client-dashboard/scheduler/components/AnalyticsDashboard";
-import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 type DisplayTab = "screens" | "content" | "schedule" | "status" | "analytics";
+
+const DISPLAY_TAB_VALUES: DisplayTab[] = ["screens", "content", "schedule", "status", "analytics"];
+
+function parseDisplayTab(raw: string | null): DisplayTab | null {
+  if (!raw) return null;
+  return DISPLAY_TAB_VALUES.includes(raw as DisplayTab) ? (raw as DisplayTab) : null;
+}
 
 const TEMPLATE_OPTIONS = [
   { id: "standard", label: "Standard" },
   { id: "full_promo", label: "Full Promo" },
   { id: "branded", label: "Branded" },
   { id: "tvplayer", label: "TV Player" },
-  { id: "display", label: "Display" },
+  { id: "display", label: "Grille" },
 ];
 
 const TRANSPORT_OPTIONS = [
@@ -75,10 +81,11 @@ const formatLastSeenRelative = (lastPing?: string | null, localeCode: "fr" | "ar
   return `il y a ${Math.floor(h / 24)} j`;
 };
 
-export default function TenantDisplayManagerPage() {
+function TenantDisplayManagerPageContent() {
   const params = useParams<{ tenantId: string }>();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const tenantId = params?.tenantId;
-  const { branding } = useBranding();
   const { locale, isRtl } = useAppLocale();
 
   const { formData, fetchSettings } = useSettingsStore();
@@ -102,7 +109,12 @@ export default function TenantDisplayManagerPage() {
     handleResetPairing,
   } = useTVStream(tenantId);
 
-  const [activeTab, setActiveTab] = useState<DisplayTab>("screens");
+  const [activeTab, setActiveTab] = useState<DisplayTab>(() => parseDisplayTab(searchParams.get("tab")) || "screens");
+
+  useEffect(() => {
+    const next = parseDisplayTab(searchParams.get("tab"));
+    if (next) setActiveTab(next);
+  }, [searchParams]);
   const [templateDrafts, setTemplateDrafts] = useState<Record<string, string>>({});
   const [transportDrafts, setTransportDrafts] = useState<Record<string, Screen["preferred_transport"]>>({});
   const [pollDrafts, setPollDrafts] = useState<Record<string, number>>({});
@@ -169,8 +181,7 @@ export default function TenantDisplayManagerPage() {
     ? {
         manager: "ادارة العرض",
         title: "قيادة التلفاز والحالة المباشرة وزمن البث",
-        backTenant: "رجوع للمستأجر",
-        backDashboard: "اللوحة العامة",
+        backModules: "كل الخدمات",
         refresh: "تحديث",
         transport: "النقل",
         polling: "فاصل التحديث",
@@ -186,7 +197,7 @@ export default function TenantDisplayManagerPage() {
         totalTime: "الوقت الاجمالي",
         average: "المتوسط لكل شاشة",
         fleet: "اسطول الشاشات",
-        content: "محتوى التلفاز",
+        content: "المحتوى",
         schedule: "البرمجة",
         status: "حالة العرض",
         analytics: "التحليلات",
@@ -210,15 +221,11 @@ export default function TenantDisplayManagerPage() {
         resetPairing: "إعادة تهيئة الإقران",
         securityCode: "رمز الأمان (4 أرقام)",
         securityCodeHint: "أدخل هذا الرمز في لوحة التحكم لتأكيد التلفاز",
-        playlistShortcut:
-          "الصوت وقوائم التشغيل: استخدم تبويب «الجدولة» في الأسفل فقط — لا يوجد تكرار هنا لتجنب الالتباس.",
-        openPlaylist: "قائمة التشغيل",
       }
     : {
-        manager: "Tenant Display Manager",
-        title: "Pilotage TV, statut live et temps de diffusion",
-        backTenant: "Retour tenant",
-        backDashboard: "Dashboard global",
+        manager: "Affichage",
+        title: "Ecrans, contenu diffuse et planification",
+        backModules: "Tous les services",
         refresh: "Rafraichir",
         transport: "Transport",
         polling: "Intervalle polling",
@@ -234,7 +241,7 @@ export default function TenantDisplayManagerPage() {
         totalTime: "Temps total",
         average: "Moyenne / ecran",
         fleet: "Parc TV",
-        content: "Contenu TV",
+        content: "Contenu",
         schedule: "Programmation",
         status: "État d'affichage",
         analytics: "Analytique",
@@ -258,9 +265,6 @@ export default function TenantDisplayManagerPage() {
         resetPairing: "Réinitialiser l'appairage",
         securityCode: "Code sécurité (4 chiffres)",
         securityCodeHint: "La TV affiche ce code — entrez-le pour confirmer",
-        playlistShortcut:
-          "Audio / playlists : utilisez l’onglet Planif du menu (pas de doublon ici — évite la confusion avec l’accueil tenant).",
-        openPlaylist: "Ouvrir playlist",
       };
 
   const updateScreenConfig = async (screen: Screen, patch: Partial<Screen>) => {
@@ -293,11 +297,11 @@ export default function TenantDisplayManagerPage() {
             <p className="text-xs uppercase tracking-[0.2em] font-black text-slate-500">{text.manager}</p>
             <h1 className="text-3xl font-black text-slate-900 mt-2">{text.title}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Link href={`/dashboard/tenant/${tenantId}`} className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700">
-                <Home size={14} /> {text.backTenant}
-              </Link>
-              <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700">
-                <ArrowLeft size={14} /> {text.backDashboard}
+              <Link
+                href={tenantId ? `/dashboard/tenant/${tenantId}` : "/dashboard"}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-700"
+              >
+                <Home size={14} /> {text.backModules}
               </Link>
             </div>
           </div>
@@ -330,28 +334,23 @@ export default function TenantDisplayManagerPage() {
         </div>
       </section>
 
-      <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-        <p className="text-[11px] sm:text-xs font-semibold text-slate-600 leading-snug">{text.playlistShortcut}</p>
-        <Link
-          href={`/dashboard/tenant/${tenantId}/playlist`}
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-wide text-white"
-          style={{ backgroundColor: primaryColor }}
-        >
-          {text.openPlaylist}
-        </Link>
-      </div>
-
       <section className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto">
         {[
-          { id: "screens", label: text.fleet },
-          { id: "content", label: text.content },
-          { id: "schedule", label: text.schedule },
-          { id: "status", label: text.status },
-          { id: "analytics", label: text.analytics },
+          { id: "screens" as const, label: text.fleet },
+          { id: "content" as const, label: text.content },
+          { id: "schedule" as const, label: text.schedule },
+          { id: "status" as const, label: text.status },
+          { id: "analytics" as const, label: text.analytics },
         ].map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id as DisplayTab)}
+            type="button"
+            onClick={() => {
+              setActiveTab(tab.id);
+              if (tenantId) {
+                router.replace(`/dashboard/tenant/${tenantId}/display?tab=${tab.id}`, { scroll: false });
+              }
+            }}
             className={`px-4 py-3 text-sm font-black ${activeTab === tab.id ? "text-slate-900 border-b-2" : "text-slate-500"}`}
             style={activeTab === tab.id ? { borderBottomColor: primaryColor } : undefined}
           >
@@ -654,5 +653,13 @@ export default function TenantDisplayManagerPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TenantDisplayManagerPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Chargement…</div>}>
+      <TenantDisplayManagerPageContent />
+    </Suspense>
   );
 }

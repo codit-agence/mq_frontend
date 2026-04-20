@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { toast } from "react-hot-toast";
 import { useCatalogStore } from "@/src/projects/client-dashboard/catalog/store/catalog.store";
 import { Product } from "@/src/types/catalogs/catalog_types";
 import { Image as ImageIcon, Loader2, StickyNote } from "lucide-react";
+import { getErrorMessage } from "@/src/utils/errors";
 
 interface ProductFormProps {
   onSuccess: () => void;
@@ -12,8 +14,9 @@ interface ProductFormProps {
 
 export const ProductForm = ({ onSuccess, initialData }: ProductFormProps) => {
   // ✅ On utilise uniquement le store principal
-  const { categories, createProduct, updateProduct, loading, error } = useCatalogStore();
-  
+  const { categories, createProduct, updateProduct, error } = useCatalogStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image || null);
   const [imageFile, setImageFile] = useState<File | undefined>();
@@ -37,6 +40,7 @@ export const ProductForm = ({ onSuccess, initialData }: ProductFormProps) => {
       category_id: formData.category_id || categories[0]?.id 
     };
 
+    setIsSubmitting(true);
     try {
       if (initialData?.id) {
         await updateProduct(initialData.id, cleanData as any, imageFile);
@@ -46,6 +50,9 @@ export const ProductForm = ({ onSuccess, initialData }: ProductFormProps) => {
       onSuccess();
     } catch (err) {
       console.error("Erreur lors de la soumission", err);
+      toast.error(getErrorMessage(err));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -144,10 +151,10 @@ export const ProductForm = ({ onSuccess, initialData }: ProductFormProps) => {
           {/* BOUTON EN BAS À DROITE */}
           <button 
             type="submit"
-            disabled={loading}
+            disabled={isSubmitting}
             className="w-full py-6 bg-indigo-600 text-white rounded-[32px] font-black shadow-2xl shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest"
           >
-            {loading ? <Loader2 className="animate-spin" /> : (initialData ? "Sauvegarder les modifications" : "Confirmer l'ajout au menu")}
+            {isSubmitting ? <Loader2 className="animate-spin" /> : (initialData ? "Sauvegarder les modifications" : "Confirmer l'ajout au menu")}
           </button>
         </div>
       </div>

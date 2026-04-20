@@ -11,9 +11,14 @@ const prepareProductFormData = (data: any, imageFile?: File) => {
   
   const payload = {
     ...data,
-    // On s'assure que si le prix existe, c'est un nombre
-    price: data.price ? Number(data.price) : undefined,
-    compare_at_price: data.compare_at_price ? Number(data.compare_at_price) : null,
+    price: data.price != null && data.price !== "" ? Number(data.price) : undefined,
+    compare_at_price:
+      data.compare_at_price != null && data.compare_at_price !== ""
+        ? Number(data.compare_at_price)
+        : null,
+    is_available: data.is_available !== false,
+    is_featured: !!data.is_featured,
+    is_active: data.is_active !== false,
   };
 
   formData.append("data", JSON.stringify(payload));
@@ -21,6 +26,15 @@ const prepareProductFormData = (data: any, imageFile?: File) => {
   
   return formData;
 };
+
+async function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ""));
+    reader.onerror = () => reject(reader.error ?? new Error("Lecture fichier"));
+    reader.readAsDataURL(file);
+  });
+}
 
 export const catalogService = {
   // --- PRODUCTS ---
@@ -38,17 +52,14 @@ export const catalogService = {
 
   createProduct: async (data: ProductPayload, imageFile?: File): Promise<Product> => {
     const formData = prepareProductFormData(data, imageFile);
-    const res = await api.post("/catalogs/products", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    // Ne pas fixer Content-Type : le navigateur ajoute le boundary multipart requis.
+    const res = await api.post("/catalogs/products", formData);
     return res.data;
   },
 
   updateProduct: async (id: string, data: ProductUpdate, imageFile?: File): Promise<Product> => {
     const formData = prepareProductFormData(data, imageFile);
-    const res = await api.put(`/catalogs/products/${id}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    const res = await api.put(`/catalogs/products/${id}`, formData);
     return res.data;
   },
 
@@ -63,13 +74,30 @@ export const catalogService = {
     return res.data;
   },
 
-  createCategory: async (payload: CategoryPayload): Promise<Category> => {
-    const res = await api.post("/catalogs/categories", payload);
+  getCategoryById: async (id: string): Promise<Category> => {
+    const res = await api.get(`/catalogs/categories/${id}`);
     return res.data;
   },
 
-  updateCategory: async (id: string, payload: CategoryPayload): Promise<Category> => {
-    const res = await api.put(`/catalogs/categories/${id}`, payload);
+  /**
+   * Toujours JSON : l’image est envoyee en image_base64 (data URL), pas de multipart
+   * (evite les 400 via proxy Next ou Content-Type).
+   */
+  createCategory: async (payload: CategoryPayload, imageFile?: File): Promise<Category> => {
+    const body: CategoryPayload = { ...payload };
+    if (imageFile) {
+      body.image_base64 = await fileToDataUrl(imageFile);
+    }
+    const res = await api.post("/catalogs/categories", body);
+    return res.data;
+  },
+
+  updateCategory: async (id: string, payload: CategoryPayload, imageFile?: File): Promise<Category> => {
+    const body: CategoryPayload = { ...payload };
+    if (imageFile) {
+      body.image_base64 = await fileToDataUrl(imageFile);
+    }
+    const res = await api.put(`/catalogs/categories/${id}`, body);
     return res.data;
   },
 

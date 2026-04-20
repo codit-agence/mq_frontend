@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, LayoutDashboard, LifeBuoy, LogOut, Menu, Settings } from "lucide-react";
+import { LayoutDashboard, LifeBuoy, LogOut, Menu } from "lucide-react";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { DashboardMessaging } from "@/src/projects/client-dashboard/messaging/components/DashboardMessaging";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
@@ -11,10 +11,8 @@ import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
 import { BrandingFooter } from "@/src/projects/shared/branding/components/BrandingFooter";
 import { LocaleToggle } from "@/src/projects/shared/branding/components/LocaleToggle";
-import { TenantAccountSummaryStrip } from "@/src/projects/client-dashboard/tenant/components/TenantAccountSummaryStrip";
-
 export default function ClientDashboardLayout({ children }: { children: React.ReactNode }) {
-  const { logout, user, tenant } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const { branding } = useBranding();
   const { locale, setLocale, isRtl } = useAppLocale();
   const pathname = usePathname();
@@ -95,9 +93,6 @@ export default function ClientDashboardLayout({ children }: { children: React.Re
       </header>
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
-        {tenant?.id && !pathname.includes("/dashboard/tenant/") ? (
-          <TenantAccountSummaryStrip tenantId={tenant.id} locale={locale === "ar" ? "ar" : "fr"} />
-        ) : null}
         {children}
       </main>
 

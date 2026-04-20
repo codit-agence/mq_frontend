@@ -25,10 +25,13 @@ export function TenantQrModal({
   open,
   onClose,
   qrUrl,
+  tenantLabel,
 }: {
   open: boolean;
   onClose: () => void;
   qrUrl: string | null;
+  /** Nom affiche (etablissement) — utile quand l’URL QR est le fallback qalyas.com */
+  tenantLabel?: string | null;
 }) {
   const { branding } = useBranding();
   const siteOrigin = getSiteUrl().replace(/\/$/, "");
@@ -62,8 +65,11 @@ export function TenantQrModal({
             </div>
             <div className="min-w-0">
               <h2 className="text-lg font-black text-slate-900 truncate">{branding.app_name} · QR</h2>
-              <p className="text-sm text-slate-500">
-                FR : même marque que le site — couleurs branding. · AR : نفس ألوان الهوية المعروضة على الموقع.
+              {tenantLabel ? (
+                <p className="text-xs font-bold text-slate-700 truncate mt-0.5">{tenantLabel}</p>
+              ) : null}
+              <p className="text-sm text-slate-500 mt-1">
+                Code vers le site public (par defaut qalyas.com si aucune URL n&apos;est configuree pour cet etablissement).
               </p>
             </div>
           </div>
@@ -96,9 +102,7 @@ export function TenantQrModal({
               }}
             />
           ) : (
-            <p className="text-sm text-slate-500 text-center px-2">
-              QR indisponible : renseignez une URL publique ou un slug QR dans les réglages du tenant.
-            </p>
+            <p className="text-sm text-slate-500 text-center px-2">QR indisponible.</p>
           )}
         </div>
 

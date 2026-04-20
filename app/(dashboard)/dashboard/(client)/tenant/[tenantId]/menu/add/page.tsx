@@ -1,16 +1,17 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useProductForm } from "@/src/projects/client-dashboard/catalog/store/useProductForm";
 import { 
   ArrowLeft, Loader2, Plus, Trash2, 
-  ImageIcon, Save 
+  ImageIcon, Save, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
+import { toast } from "react-hot-toast";
 
 type Lang = "fr" | "ar" | "en" | "es";
 
@@ -20,9 +21,10 @@ export default function AddProductPage() {
   const { formData } = useSettingsStore();
   const { branding } = useBranding();
   const { locale, isRtl } = useAppLocale();
-  const [activeLang, setActiveLang] = useState<Lang>("fr");
+  const [langStep, setLangStep] = useState(0);
   const activeLanguages = (formData?.display?.active_languages || ["fr"]) as Lang[];
   const defaultLanguage = (formData?.display?.default_language as Lang) || activeLanguages[0] || "fr";
+  const activeLang = activeLanguages[langStep] ?? defaultLanguage;
   const isOwner = tenant?.role === "owner";
   const catalogRestricted = !!formData?.display?.catalog_client_restricted;
   const readonlyMode = catalogRestricted && !isOwner;
@@ -45,6 +47,10 @@ export default function AddProductPage() {
         note: "ملاحظة داخلية",
         processing: "جار المعالجة...",
         submit: "تأكيد الحفظ",
+        stepOf: (n: number, t: number) => `اللغة ${n} / ${t}`,
+        prev: "السابق",
+        next: "التالي",
+        fillLang: "املأ الاسم والوصف لهذه اللغة قبل المتابعة.",
       }
     : {
         restricted: "Acces restreint",
@@ -64,19 +70,24 @@ export default function AddProductPage() {
         note: "Note interne",
         processing: "Traitement en cours...",
         submit: "Confirmer l'enregistrement",
+        stepOf: (n: number, t: number) => `Langue ${n} / ${t}`,
+        prev: "Precedent",
+        next: "Suivant",
+        fillLang: "Remplissez le nom et la description pour cette langue avant de continuer.",
       };
 
   useEffect(() => {
-    if (!activeLanguages.includes(activeLang)) {
-      setActiveLang(defaultLanguage);
+    if (langStep >= activeLanguages.length) {
+      setLangStep(Math.max(0, activeLanguages.length - 1));
     }
-  }, [activeLanguages, activeLang, defaultLanguage]);
+  }, [activeLanguages.length, langStep]);
 
   // Initialisation du Hook avec redirection dynamique
   const { 
     register, handleSubmit, preview, handleImageChange, 
     categories, isSubmitting, fields, append, remove, 
-    formState: { errors } // On récupère les erreurs de validation ici
+    formState: { errors },
+    getValues,
   } = useProductForm(null, () => {
     if (tenant?.id) {
       router.push(`/dashboard/tenant/${tenant.id}/menu`);
@@ -84,6 +95,19 @@ export default function AddProductPage() {
       router.push("/dashboard");
     }
   });
+
+  const goNextLang = () => {
+    const data = getValues() as unknown as Record<string, string | undefined>;
+    const name = activeLang === "fr" ? data.name : data[`name_${activeLang}`];
+    const desc = activeLang === "fr" ? data.description : data[`description_${activeLang}`];
+    if (!String(name || "").trim() || !String(desc || "").trim()) {
+      toast.error(text.fillLang);
+      return;
+    }
+    setLangStep((s) => Math.min(s + 1, activeLanguages.length - 1));
+  };
+
+  const goPrevLang = () => setLangStep((s) => Math.max(0, s - 1));
 
   if (readonlyMode) {
     return (
@@ -184,16 +208,37 @@ export default function AddProductPage() {
         <div className="lg:col-span-8 space-y-8">
           
           <div className="bg-white p-6 md:p-10 rounded-[50px] border border-slate-100 shadow-xl shadow-slate-200/40">
-            {/* TABS DE LANGUES */}
-            <div className="flex bg-slate-100 p-2 rounded-[25px] gap-1 mb-10 overflow-x-auto no-scrollbar">
-              {activeLanguages.map((l) => (
-                <button 
-                  key={l} type="button" onClick={() => setActiveLang(l)} 
-                  className={`flex-1 min-w-[100px] py-3 rounded-[20px] text-[10px] font-black uppercase tracking-wider transition-all ${activeLang === l ? "bg-white text-indigo-600 shadow-md scale-105" : "text-slate-400 hover:text-slate-600"}`}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <p className="text-[11px] font-black text-slate-600 uppercase tracking-wider">
+                {text.stepOf(langStep + 1, activeLanguages.length)} —{" "}
+                {activeLang === "fr" ? "Français" : activeLang === "ar" ? "العربية" : activeLang === "en" ? "English" : "Español"}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={goPrevLang}
+                  disabled={langStep === 0}
+                  className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase text-slate-600 disabled:opacity-40"
                 >
-                  {l === "fr" ? "Français 🇫🇷" : l === "ar" ? "العربية 🇲🇦" : l === "en" ? "English 🇬🇧" : "Español 🇪🇸"}
+                  <ChevronLeft size={16} />
+                  {text.prev}
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={goNextLang}
+                  disabled={langStep >= activeLanguages.length - 1}
+                  className="flex items-center gap-1 rounded-2xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-white disabled:opacity-40"
+                >
+                  {text.next}
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden mb-10">
+              <div
+                className="h-full bg-indigo-500 transition-all duration-300 rounded-full"
+                style={{ width: `${((langStep + 1) / activeLanguages.length) * 100}%` }}
+              />
             </div>
 
             {/* INPUTS DYNAMIQUES */}

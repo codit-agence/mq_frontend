@@ -19,11 +19,10 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
-import { resolveTenantQrUrl } from "@/src/projects/client-dashboard/tenant/tenant-qr";
+import { resolveTenantQrUrlWithFallback } from "@/src/projects/client-dashboard/tenant/tenant-qr";
 import { TenantQrModal } from "@/src/projects/client-dashboard/tenant/components/TenantQrModal";
 import { TenantQrScannerModal } from "@/src/projects/client-dashboard/tenant/components/TenantQrScannerModal";
 import { resolveTenantDisplayName } from "@/src/projects/client-dashboard/tenant/tenant-display";
-import { TenantAccountSummaryStrip } from "@/src/projects/client-dashboard/tenant/components/TenantAccountSummaryStrip";
 import { useTenantShellTheme } from "@/src/projects/client-dashboard/tenant/shell/useTenantShellTheme";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
@@ -96,7 +95,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
     typeof businessLogo === "string" && businessLogo.length > 0 ? getImageUrl(businessLogo) : null;
   const qrUrl = useMemo(
     () =>
-      resolveTenantQrUrl({
+      resolveTenantQrUrlWithFallback({
         public_landing_url: formData?.public_landing_url,
         qr_redirect_url: formData?.qr_redirect_url,
         qr_slug: formData?.qr_slug,
@@ -254,7 +253,6 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
       </header>
 
       <main className="max-w-7xl mx-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-        {tenantId ? <TenantAccountSummaryStrip tenantId={tenantId} locale={locale} /> : null}
         <div
           className={`mt-3 overflow-hidden rounded-2xl sm:rounded-[2rem] border shadow-lg ${isDark ? "border-slate-800 bg-slate-900 shadow-black/40" : "border-slate-200/80 bg-white shadow-slate-200/50"}`}
         >
@@ -281,7 +279,7 @@ export default function TenantLayout({ children }: { children: React.ReactNode }
         </div>
       </nav>
 
-      <TenantQrModal open={qrOpen} onClose={() => setQrOpen(false)} qrUrl={qrUrl} />
+      <TenantQrModal open={qrOpen} onClose={() => setQrOpen(false)} qrUrl={qrUrl} tenantLabel={tenantDisplayName} />
       <TenantQrScannerModal open={scannerOpen} onClose={() => setScannerOpen(false)} />
     </div>
   );

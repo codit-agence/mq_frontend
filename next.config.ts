@@ -36,6 +36,16 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  /**
+   * Evite CORS en dev : le navigateur appelle `http://localhost:3000/api/...`, Next transmet vers Django.
+   * .env.local : API_PROXY_TO_BACKEND=http://127.0.0.1:8000 et NEXT_PUBLIC_API_URL=http://localhost:3000/api
+   */
+  async rewrites() {
+    const backend = process.env.API_PROXY_TO_BACKEND?.trim();
+    if (!backend) return [];
+    const base = backend.replace(/\/$/, "");
+    return [{ source: "/api/:path*", destination: `${base}/api/:path*` }];
+  },
 };
 
 export default nextConfig;

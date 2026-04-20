@@ -37,7 +37,7 @@ function isLocaleSkippedPath(pathname: string): boolean {
   return false;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   if (isLocaleSkippedPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }

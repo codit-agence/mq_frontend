@@ -1,6 +1,6 @@
 import axios, { AxiosHeaders } from "axios";
 import Cookies from "js-cookie";
-import { getApiBaseUrl } from "@/src/core/config/public-env";
+import { getApiBaseUrl, resolveActiveApiBaseUrl } from "@/src/core/config/public-env";
 import { clearAuthStorage } from "@/src/projects/client-dashboard/account/auth-storage";
 
 const SESSION_HEADER_EXCLUDED_PATHS = new Set([
@@ -48,6 +48,10 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+  const apiBase = resolveActiveApiBaseUrl();
+  config.baseURL = apiBase;
+  api.defaults.baseURL = apiBase;
+
   if (typeof window !== "undefined") {
     const includeSessionHeaders = shouldAttachSessionHeaders(config.url);
 
@@ -82,6 +86,16 @@ api.interceptors.request.use((config) => {
 
     config.headers = headers;
   }
+
+  // En dernier : FormData + Content-Type: application/json (default instance) = corps binaire
+  // lu comme UTF-8 côté Django → "codec can't decode byte 0x89" (signature PNG).
+  if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+    const headers = AxiosHeaders.from(config.headers);
+    headers.delete("Content-Type");
+    headers.delete("content-type");
+    config.headers = headers;
+  }
+
   return config;
 }, (error) => Promise.reject(error));
 
@@ -102,7 +116,7 @@ api.interceptors.response.use(
         const refreshToken = Cookies.get("refresh_token") || localStorage.getItem("refresh_token");
         if (!refreshToken) throw new Error("No refresh token");
 
-        const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
+        const { data } = await axios.post(`${resolveActiveApiBaseUrl()}/auth/refresh`, {
           refresh: refreshToken.replace(/"/g, ''),
         });
 

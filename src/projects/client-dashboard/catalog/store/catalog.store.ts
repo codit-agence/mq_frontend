@@ -13,8 +13,8 @@ interface CatalogState {
   updateProduct: (id: string, p: ProductUpdate, img?: File) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
 
-  createCategory: (c: CategoryPayload) => Promise<void>;
-  updateCategory: (id: string, c: CategoryPayload) => Promise<void>;
+  createCategory: (c: CategoryPayload, img?: File) => Promise<void>;
+  updateCategory: (id: string, c: CategoryPayload, img?: File) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   resetCatalog: () => void;
 }
@@ -74,13 +74,13 @@ export const useCatalogStore = create<CatalogState>((set, get) => ({
     }
   },
 
-  createCategory: async (c) => {
-    const category = await catalogService.createCategory(c);
+  createCategory: async (c, img) => {
+    const category = await catalogService.createCategory(c, img);
     set((state) => ({ categories: [...state.categories, category] }));
   },
 
-  updateCategory: async (id, c) => {
-    const updated = await catalogService.updateCategory(id, c);
+  updateCategory: async (id, c, img) => {
+    const updated = await catalogService.updateCategory(id, c, img);
     set((state) => ({
       categories: state.categories.map((cat) => cat.id === id ? updated : cat)
     }));

@@ -5,8 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
-import { useCatalogStore } from "@/src/projects/client-dashboard/catalog/store/catalog.store";
+import { catalogService } from "@/src/projects/client-dashboard/catalog/catalog.services";
 import { CategoryForm } from "@/src/projects/client-dashboard/catalog/components/CategoryForm";
+import type { Category } from "@/src/types/catalogs/catalog_types";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
@@ -17,8 +18,7 @@ export default function EditCategoryPage() {
   const { formData } = useSettingsStore();
   const { branding } = useBranding();
   const { locale, isRtl } = useAppLocale();
-  const { categories, fetchCatalog } = useCatalogStore();
-  const [initialData, setInitialData] = useState<any>(null);
+  const [initialData, setInitialData] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
 
   const isOwner = tenant?.role === "owner";
@@ -34,7 +34,7 @@ export default function EditCategoryPage() {
         notFound: "التصنيف غير موجود",
         back: "الرجوع إلى القائمة",
         title: "تعديل التصنيف",
-        subtitle: "عدّل النصوص متعددة اللغات وأيقونة التصنيف.",
+        subtitle: "عدّل النصوص متعددة اللغات والصورة والملاحظات القصيرة.",
         requiredTitle: "حقول متعددة اللغات مطلوبة",
         requiredDesc: `لحفظ التصنيف، يجب تعبئة \`الاسم\` في كل لغة مفعلة (${activeLanguages.join(", ")})، أو تغيير \`Active languages\` من الإعدادات > التصميم.`,
       }
@@ -46,29 +46,30 @@ export default function EditCategoryPage() {
         notFound: "Categorie introuvable",
         back: "Retour au menu",
         title: "Modifier la categorie",
-        subtitle: "Ajustez les textes multilingues et l'icone de la categorie.",
+        subtitle: "Ajustez les textes multilingues, la photo et les notes courtes.",
         requiredTitle: "Champs obligatoires multilingues",
         requiredDesc: `Pour enregistrer une categorie, vous devez remplir \`Nom\` dans chaque langue active (${activeLanguages.join(", ")}), ou modifier \`Active languages\` dans Parametres > Design.`,
       };
 
   useEffect(() => {
+    let cancelled = false;
     const loadCategory = async () => {
       if (!id) return;
-      if (categories.length === 0) {
-        await fetchCatalog();
+      setLoading(true);
+      try {
+        const data = await catalogService.getCategoryById(String(id));
+        if (!cancelled) setInitialData(data);
+      } catch {
+        if (!cancelled) toast.error(text.notFoundToast);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      const found = categories.find((category) => category.id === id);
-      if (found) {
-        setInitialData(found);
-      } else {
-        toast.error(text.notFoundToast);
-      }
-      setLoading(false);
     };
-
     loadCategory();
-  }, [categories, fetchCatalog, id, text.notFoundToast]);
+    return () => {
+      cancelled = true;
+    };
+  }, [id, text.notFoundToast]);
 
   if (readonlyMode) {
     return (

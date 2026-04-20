@@ -8,7 +8,7 @@ import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useA
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
 import { catalogService } from "@/src/projects/client-dashboard/catalog/catalog.services";
 import { getImageUrl } from "@/src/utils/helpers/getImageUrl";
-import { ArrowLeft, Loader2, Save, Trash2, ImageIcon } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Trash2, ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
@@ -18,7 +18,7 @@ type Lang = "fr" | "ar" | "en" | "es";
 export default function EditProductPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { products, categories } = useCatalogStore();
+  const { categories } = useCatalogStore();
   const { tenant } = useAuthStore();
   const { formData } = useSettingsStore();
   const { branding } = useBranding();
@@ -28,7 +28,7 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
   const activeLanguages = (formData?.display?.active_languages || ["fr"]) as Lang[];
   const defaultLanguage = (formData?.display?.default_language as Lang) || activeLanguages[0] || "fr";
-  const [activeLang, setActiveLang] = useState<Lang>(defaultLanguage);
+  const [langStep, setLangStep] = useState(0);
   const isOwner = tenant?.role === "owner";
   const catalogRestricted = !!formData?.display?.catalog_client_restricted;
   const readonlyMode = catalogRestricted && !isOwner;
@@ -51,6 +51,10 @@ export default function EditProductPage() {
         add: "+ إضافة",
         saving: "جار الحفظ...",
         save: "حفظ التعديلات",
+        stepOf: (n: number, t: number) => `اللغة ${n} / ${t}`,
+        prev: "السابق",
+        next: "التالي",
+        fillLang: "املأ الاسم والوصف لهذه اللغة قبل المتابعة.",
       }
     : {
         notFound: "Produit introuvable",
@@ -70,39 +74,49 @@ export default function EditProductPage() {
         add: "+ Ajouter",
         saving: "Enregistrement...",
         save: "Sauvegarder les modifications",
+        stepOf: (n: number, t: number) => `Langue ${n} / ${t}`,
+        prev: "Precedent",
+        next: "Suivant",
+        fillLang: "Remplissez le nom et la description pour cette langue avant de continuer.",
       };
 
-  useEffect(() => {
-    if (!activeLanguages.includes(activeLang)) {
-      setActiveLang(defaultLanguage);
-    }
-  }, [activeLanguages, activeLang, defaultLanguage]);
+  const activeLang = activeLanguages[langStep] ?? defaultLanguage;
 
-  // 1. Chargement robuste du produit
   useEffect(() => {
+    if (langStep >= activeLanguages.length) {
+      setLangStep(Math.max(0, activeLanguages.length - 1));
+    }
+  }, [activeLanguages.length, langStep]);
+
+  // Chargement du produit (detail API = champs i18n complets)
+  useEffect(() => {
+    let cancelled = false;
     const fetchProduct = async () => {
+      if (!id) return;
+      setLoading(true);
       try {
-        const found = products.find((p) => p.id === id);
-        if (found) {
-          setInitialData(found);
-        } else {
-          const data = await catalogService.getProductById(id as string);
-          setInitialData(data);
+        const data = await catalogService.getProductById(id as string);
+        if (!cancelled) setInitialData(data);
+      } catch {
+        if (!cancelled) {
+          toast.error(text.notFound);
+          router.push(`/dashboard/tenant/${tenant?.id}/menu`);
         }
-      } catch (err) {
-        toast.error(text.notFound);
-        router.push(`/dashboard/tenant/${tenant?.id}/menu`);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     fetchProduct();
-  }, [id, products, tenant?.id, router, text.notFound]);
+    return () => {
+      cancelled = true;
+    };
+  }, [id, tenant?.id, router, text.notFound]);
 
   // 2. Hook de formulaire
   const {
     register, handleSubmit, preview, handleImageChange,
-    isSubmitting, fields, append, remove, formState: { errors }
+    isSubmitting, fields, append, remove, formState: { errors },
+    getValues,
   } = useProductForm(initialData, () => {
     router.push(`/dashboard/tenant/${tenant?.id}/menu`);
   });
@@ -113,6 +127,23 @@ export default function EditProductPage() {
     if (initialData?.image) return getImageUrl(initialData.image);
     return null;
   }, [preview, initialData?.image]);
+
+  const validateCurrentLang = () => {
+    const data = getValues() as unknown as Record<string, string | undefined>;
+    const name = activeLang === "fr" ? data.name : data[`name_${activeLang}`];
+    const desc = activeLang === "fr" ? data.description : data[`description_${activeLang}`];
+    return { ok: !!(String(name || "").trim() && String(desc || "").trim()) };
+  };
+
+  const goNextLang = () => {
+    if (!validateCurrentLang().ok) {
+      toast.error(text.fillLang);
+      return;
+    }
+    setLangStep((s) => Math.min(s + 1, activeLanguages.length - 1));
+  };
+
+  const goPrevLang = () => setLangStep((s) => Math.max(0, s - 1));
 
   if (readonlyMode) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
@@ -194,14 +225,37 @@ export default function EditProductPage() {
         {/* COLONNE DROITE : CONTENU MULTILINGUE & VARIANTES */}
         <div className="lg:col-span-8 space-y-8">
           <div className="bg-white p-8 md:p-10 rounded-[50px] border border-slate-100 shadow-xl">
-            {/* TABS LANGUES */}
-            <div className="flex bg-slate-100 p-1.5 rounded-[22px] mb-8 w-fit">
-              {activeLanguages.map((l) => (
-                <button key={l} type="button" onClick={() => setActiveLang(l)} 
-                  className={`px-6 py-2.5 rounded-[18px] text-[10px] font-black uppercase transition-all ${activeLang === l ? "bg-white text-indigo-600 shadow-sm" : "text-slate-400"}`}>
-                  {l === "fr" ? "Français" : l === "ar" ? "العربية" : l === "en" ? "English" : "Español"}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <p className="text-[11px] font-black text-slate-600 uppercase tracking-wider">
+                {text.stepOf(langStep + 1, activeLanguages.length)} —{" "}
+                {activeLang === "fr" ? "Français" : activeLang === "ar" ? "العربية" : activeLang === "en" ? "English" : "Español"}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={goPrevLang}
+                  disabled={langStep === 0}
+                  className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase text-slate-600 disabled:opacity-40"
+                >
+                  <ChevronLeft size={16} />
+                  {text.prev}
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={goNextLang}
+                  disabled={langStep >= activeLanguages.length - 1}
+                  className="flex items-center gap-1 rounded-2xl bg-slate-900 px-4 py-2 text-[10px] font-black uppercase text-white disabled:opacity-40"
+                >
+                  {text.next}
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden mb-8">
+              <div
+                className="h-full bg-indigo-500 transition-all duration-300 rounded-full"
+                style={{ width: `${((langStep + 1) / activeLanguages.length) * 100}%` }}
+              />
             </div>
 
             <div className="space-y-6" dir={activeLang === "ar" ? "rtl" : "ltr"}>

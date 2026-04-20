@@ -6,6 +6,7 @@ import { getPublicBrandingServer } from "@/src/projects/shared/branding/branding
 import { AppLocaleProvider } from "@/src/projects/shared/branding/AppLocaleProvider";
 import { BrandingProvider } from "@/src/projects/shared/branding/components/BrandingProvider";
 import { BrandingRuntime } from "@/src/projects/shared/branding/components/BrandingRuntime";
+import { AppToaster } from "./AppToaster";
 
 const siteUrl = getSiteUrl();
 
@@ -50,6 +51,7 @@ export default async function RootLayout({
         <BrandingProvider branding={branding}>
           <AppLocaleProvider branding={branding}>
             <BrandingRuntime />
+            <AppToaster />
             {children}
           </AppLocaleProvider>
         </BrandingProvider>

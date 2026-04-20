@@ -2,8 +2,9 @@
 "use client";
 
 import React, { useState, useMemo, use } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Package, Layers, EyeOff, Loader2, Plus } from "lucide-react";
+import { Search, Package, Layers, EyeOff, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 
 // Composants & Stores
@@ -13,7 +14,6 @@ import { useCatalogStore } from "@/src/projects/client-dashboard/catalog/store/c
 import { useSettingsStore } from "@/src/projects/client-dashboard/settings/store/useSettingStore";
 import { useAuthStore } from "@/src/projects/client-dashboard/account/store/useAuthStore";
 import { EmptyState, LoadingState, StatMiniCard } from "@/src/projects/client-dashboard/catalog/components/UI/LocalUi";
-import { useBranding } from "@/src/projects/shared/branding/useBranding";
 import { useAppLocale } from "@/src/projects/shared/branding/useAppLocale";
 
 export default function MenuPage({ params }: { params: Promise<{ tenantId: string }> }) {
@@ -29,7 +29,6 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
   const { products, categories, loading, deleteProduct, deleteCategory } = useCatalogStore();
   const { formData } = useSettingsStore();
   const { tenant } = useAuthStore();
-  const { branding } = useBranding();
   const { locale, isRtl } = useAppLocale();
   const isOwner = tenant?.role === 'owner';
   const catalogRestricted = !!formData?.display?.catalog_client_restricted;
@@ -78,8 +77,6 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
     inactive: products.filter(p => !p.is_active).length
   }), [products, categories]);
 
-  const catalogEnabled = false;
-
   // --- HANDLERS ---
   const handleDeleteCategory = async (id: string) => {
     if (!confirm(text.deleteCategory)) return;
@@ -93,34 +90,33 @@ export default function MenuPage({ params }: { params: Promise<{ tenantId: strin
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-[#F8FAFC] pb-20">
-      <header className="bg-white border-b border-slate-100 py-6">
-        <div className="max-w-[1600px] mx-auto px-8 flex flex-wrap items-center gap-4">
+      <header className="relative z-20 bg-white border-b border-slate-100 py-4 sm:py-5">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-8 flex flex-wrap items-center gap-3 sm:gap-4">
           <StatMiniCard icon={Package} label={text.products} value={stats.total} color="bg-indigo-500" />
           <StatMiniCard icon={Layers} label={text.categories} value={stats.cats} color="bg-emerald-500" />
           <StatMiniCard icon={EyeOff} label={text.inactive} value={stats.inactive} color="bg-rose-500" />
 
-          <div className="flex-1 flex flex-wrap justify-end items-center gap-3">
+          <div className="flex flex-1 flex-wrap justify-end items-center gap-2">
             {!readonlyMode && (
               <>
-                <button
-                  type="button"
-                  onClick={() => router.push(`/dashboard/tenant/${tenantId}/menu/add`)}
-                  className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-black text-white transition hover:bg-indigo-700"
+                <Link
+                  href={`/dashboard/tenant/${tenantId}/menu/add`}
+                  prefetch
+                  className="inline-flex items-center gap-1.5 rounded-full bg-indigo-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.98]"
                 >
-                  <Plus size={30} />
+                  <Plus size={16} strokeWidth={2.5} aria-hidden />
                   {text.newProduct}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => router.push(`/dashboard/tenant/${tenantId}/menu/category/add`)}
-                  className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-black text-white transition hover:bg-slate-800"
+                </Link>
+                <Link
+                  href={`/dashboard/tenant/${tenantId}/menu/category/add`}
+                  prefetch
+                  className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-[0.98]"
                 >
-                  <Plus size={30} />
+                  <Plus size={16} strokeWidth={2.5} aria-hidden />
                   {text.newCategory}
-                </button>
+                </Link>
               </>
             )}
-            
           </div>
         </div>
       </header>

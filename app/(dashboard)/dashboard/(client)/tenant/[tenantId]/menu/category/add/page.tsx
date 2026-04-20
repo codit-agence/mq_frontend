@@ -18,7 +18,9 @@ export default function AddCategoryPage() {
   const isOwner = tenant?.role === "owner";
   const catalogRestricted = !!formData?.display?.catalog_client_restricted;
   const readonlyMode = catalogRestricted && !isOwner;
-  const activeLanguages = (formData?.display?.active_languages || ["fr"]) as string[];
+  const rawLangs = formData?.display?.active_languages;
+  const activeLanguages =
+    Array.isArray(rawLangs) && rawLangs.length > 0 ? rawLangs : (["fr"] as string[]);
   const text = locale === "ar"
     ? {
         restricted: "وصول مقيّد",
@@ -26,8 +28,8 @@ export default function AddCategoryPage() {
         back: "الرجوع إلى القائمة",
         title: "تصنيف جديد",
         subtitle: "أنشئ تصنيفاً جديداً لكتالوجك.",
-        requiredTitle: "حقول متعددة اللغات مطلوبة",
-        requiredDesc: `لحفظ التصنيف، يجب تعبئة \`الاسم\` في كل لغة مفعلة (${activeLanguages.join(", ")})، أو تغيير \`Active languages\` من الإعدادات > التصميم.`,
+        requiredTitle: "اسم التصنيف",
+        requiredDesc: `لغة واحدة تكفي (${activeLanguages.join(", ")}). الملاحظة والصورة اختياريان. زر «التالي» يعرض لغة أخرى إن لزم.`,
       }
     : {
         restricted: "Acces restreint",
@@ -35,8 +37,8 @@ export default function AddCategoryPage() {
         back: "Retour au menu",
         title: "Nouvelle categorie",
         subtitle: "Creez une nouvelle categorie pour votre catalogue.",
-        requiredTitle: "Champs obligatoires multilingues",
-        requiredDesc: `Pour enregistrer une categorie, vous devez remplir \`Nom\` dans chaque langue active (${activeLanguages.join(", ")}), ou modifier \`Active languages\` dans Parametres > Design.`,
+        requiredTitle: "Nom de la categorie",
+        requiredDesc: `Une seule langue suffit (${activeLanguages.join(", ")}). Note et photo optionnels. Le bouton « Suivant » sert a passer a une autre langue si vous voulez.`,
       };
 
   if (readonlyMode) {

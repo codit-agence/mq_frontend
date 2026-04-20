@@ -10,7 +10,7 @@ import {
   ChevronRight,
   Clock3,
   CreditCard,
-  PlayCircle,
+  Headphones,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
@@ -80,6 +80,11 @@ export default function GlobalDashboard() {
         synced: "متزامن",
         fast: "سريع",
         pending: "قيد الانتظار",
+        assistTitle: "المتابعة والدعم",
+        assistSub: "رسائل، تنبيهات، مساعدة.",
+        assistCta: "فتح الدعم",
+        manageSub: "الباقة والفوترة.",
+        stickyOpen: "فتح المساحة",
       }
     : {
         heading: `Cockpit de ${user?.first_name || "Utilisateur"}`,
@@ -133,6 +138,11 @@ export default function GlobalDashboard() {
         synced: "Synchronise",
         fast: "Rapide",
         pending: "Pending",
+        assistTitle: "Suivi & assistance",
+        assistSub: "Messages, alertes, aide rapide.",
+        assistCta: "Accéder",
+        manageSub: "Pack et facturation.",
+        stickyOpen: "Ouvrir l'espace",
       };
 
   const registrationDate = tenant?.registration_date
@@ -168,91 +178,133 @@ export default function GlobalDashboard() {
     : [];
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="space-y-6 md:space-y-8">
-      <section className="relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-sm">
+    <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 max-md:pb-24 md:space-y-8">
+      <section className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:rounded-[2rem]">
         <div className="absolute inset-0 opacity-[0.10]" style={{ background: `radial-gradient(circle at top ${isRtl ? "right" : "left"}, ${primaryColor}, transparent 42%), linear-gradient(135deg, ${primaryColor}20, transparent 60%)` }} />
-        <div className="relative p-5 sm:p-7 lg:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-4 py-2 text-[10px] font-black uppercase tracking-[0.24em] text-white">
+        <div className="relative p-4 sm:p-7 lg:p-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+            <div className="max-w-3xl min-w-0">
+              <div className="inline-flex items-center gap-2 rounded-full bg-slate-950 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-white md:px-4 md:py-2 md:text-[10px] md:tracking-[0.24em]">
                 <Sparkles size={14} /> {text.commandDeck}
               </div>
-              <h2 className="mt-4 text-3xl sm:text-4xl font-black tracking-tight text-slate-950">{text.heading}</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">{text.intro}</p>
-              <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">{text.commandDeckSub}</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl md:mt-4 md:text-4xl">{text.heading}</h2>
+              <p className="mt-2 hidden max-w-2xl text-sm leading-7 text-slate-600 md:block">{text.intro}</p>
+              <p className="mt-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400 md:mt-2">{text.commandDeckSub}</p>
 
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-1.5 md:mt-4 md:gap-2">
                 <StatusBadge condition={user?.is_verified} trueText={text.verified} falseText={text.verifyNeeded} />
                 <StatusBadge condition={user?.is_active} trueText={text.active} falseText={text.suspended} color="indigo" />
                 <StatusBadge condition={Boolean(tenant?.id)} trueText={text.liveNow} falseText={text.noTenant} compact />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:min-w-[420px]">
-              <HeroMetric title={text.wallet} value="137.00 QRT" subtitle="Prepaid" tone="dark" />
-              <HeroMetric title={text.fidelity} value="13 250 pts" subtitle="Rewards" tone="light" />
-              <HeroMetric title={text.accountScore} value={`${readinessScore}%`} subtitle={text.readiness} tone="accent" color={primaryColor} />
+            <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0 lg:min-w-[420px] [&::-webkit-scrollbar]:hidden">
+              <div className="min-w-[9.5rem] shrink-0 sm:min-w-0">
+                <HeroMetric title={text.wallet} value="137.00 QRT" subtitle="Prepaid" tone="dark" />
+              </div>
+              <div className="min-w-[9.5rem] shrink-0 sm:min-w-0">
+                <HeroMetric title={text.fidelity} value="13 250 pts" subtitle="Rewards" tone="light" />
+              </div>
+              <div className="min-w-[9.5rem] shrink-0 sm:min-w-0">
+                <HeroMetric title={text.accountScore} value={`${readinessScore}%`} subtitle={text.readiness} tone="accent" color={primaryColor} />
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[1.45fr_0.95fr] gap-6">
-        <section className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-6">
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-start justify-between gap-4">
-                <div>
+      {/* Mobile : abonnement + suivi assistance en premier — pas de SEO, espace privé */}
+      <div className="grid grid-cols-1 gap-4 max-md:grid-cols-2 md:hidden">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="rounded-xl p-2 text-white" style={{ backgroundColor: primaryColor }}>
+              <CreditCard size={16} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{text.subscription}</p>
+              <p className="truncate text-base font-black text-slate-950">{tenant?.subscription_pack || "—"}</p>
+              <p className="text-[10px] text-slate-500">{text.manageSub}</p>
+            </div>
+          </div>
+        </div>
+        <Link
+          href="/dashboard/support"
+          className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-2">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-700">
+              <Headphones size={16} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">{text.assistTitle}</p>
+              <p className="text-base font-black text-slate-950">{text.assistCta}</p>
+              <p className="line-clamp-2 text-[10px] text-slate-500">{text.assistSub}</p>
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.45fr_0.95fr]">
+        <section className="space-y-4 md:space-y-6">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.15fr_0.85fr] lg:gap-6">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:rounded-[2rem] md:p-6">
+              <div className="flex items-start justify-between gap-3 md:gap-4">
+                <div className="min-w-0">
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">{text.clientSpace}</p>
-                  <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{text.professionalSpace}</h3>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">{text.professionalSpaceSub}</p>
+                  <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950 md:mt-2 md:text-2xl">{text.professionalSpace}</h3>
+                  <p className="mt-1 hidden text-sm leading-7 text-slate-600 sm:block">{text.professionalSpaceSub}</p>
                 </div>
-                <div className="rounded-2xl p-3 text-white" style={{ backgroundColor: primaryColor }}>
-                  <Building2 size={22} />
+                <div className="shrink-0 rounded-2xl p-2.5 text-white md:p-3" style={{ backgroundColor: primaryColor }}>
+                  <Building2 size={20} className="md:h-[22px] md:w-[22px]" />
                 </div>
               </div>
 
               {tenant ? (
-                <div className="mt-6 rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <h4 className="text-xl font-black text-slate-950">{tenant.name}</h4>
-                      <p className="mt-1 text-sm text-slate-500">{text.clientSpaceSub}</p>
+                <div className="mt-4 rounded-[1.6rem] border border-slate-200 bg-slate-50 p-4 md:mt-6 md:p-5">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="min-w-0">
+                      <h4 className="truncate text-lg font-black text-slate-950 md:text-xl">{tenant.name}</h4>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 md:text-sm">{text.clientSpaceSub}</p>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm">
+                    <div className="shrink-0 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs md:px-4 md:py-3 md:text-sm">
                       <span className="font-semibold text-slate-500">{text.status}: </span>
                       <span className="font-black text-slate-950">{tenant.status || "---"}</span>
                     </div>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] md:mt-5 md:grid md:grid-cols-3 md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden">
                     {quickLinks.map((item) => (
-                      <Link key={item.href} href={item.href} className="rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm font-black text-slate-900 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm">
-                        <div className="flex items-center justify-between gap-3">
-                          <span>{item.label}</span>
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="flex min-w-[5.5rem] shrink-0 flex-col items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-3 text-center transition hover:border-slate-300 hover:shadow-sm md:min-w-0 md:flex-row md:justify-between md:px-4 md:py-4 md:text-left"
+                      >
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 md:hidden" style={{ backgroundColor: `${primaryColor}18`, color: primaryColor }}>
                           {item.icon}
-                        </div>
+                        </span>
+                        <span className="text-[10px] font-black leading-tight text-slate-900 md:text-sm">{item.label}</span>
+                        <span className="hidden md:inline">{item.icon}</span>
                       </Link>
                     ))}
                   </div>
                 </div>
               ) : (
-                <div className="mt-6 rounded-[1.6rem] border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center text-slate-500">
+                <div className="mt-4 rounded-[1.6rem] border-2 border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-slate-500 md:mt-6 md:px-6 md:py-10">
                   <p className="text-sm font-bold">{text.noTenant}</p>
                 </div>
               )}
             </section>
 
-            <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:rounded-[2rem] md:p-6">
               <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">{text.readiness}</p>
-              <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{readinessScore}%</h3>
-              <p className="mt-2 text-sm leading-7 text-slate-600">{text.readinessSub}</p>
+              <h3 className="mt-1 text-xl font-black tracking-tight text-slate-950 md:mt-2 md:text-2xl">{readinessScore}%</h3>
+              <p className="mt-1 hidden text-sm leading-7 text-slate-600 sm:block">{text.readinessSub}</p>
 
-              <div className="mt-5 h-3 rounded-full bg-slate-100 overflow-hidden">
+              <div className="mt-3 h-2.5 rounded-full bg-slate-100 overflow-hidden md:mt-5 md:h-3">
                 <div className="h-full rounded-full transition-all" style={{ width: `${readinessScore}%`, backgroundColor: primaryColor }} />
               </div>
 
-              <div className="mt-5 space-y-3">
+              <div className="mt-3 space-y-2 md:mt-5 md:space-y-3">
                 <ReadinessRow label={text.verified} ok={Boolean(user?.is_verified)} pendingLabel={text.pending} />
                 <ReadinessRow label={text.active} ok={Boolean(user?.is_active)} pendingLabel={text.pending} />
                 <ReadinessRow label={text.clientSpace} ok={Boolean(tenant?.id)} pendingLabel={text.pending} />
@@ -261,33 +313,33 @@ export default function GlobalDashboard() {
             </section>
           </div>
 
-          <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:rounded-[2rem] md:p-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">{text.businessPulse}</p>
-                <h3 className="mt-2 text-2xl font-black tracking-tight text-slate-950">{text.businessPulseSub}</h3>
+                <h3 className="mt-1 text-lg font-black tracking-tight text-slate-950 md:mt-2 md:text-2xl">{text.businessPulseSub}</h3>
               </div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
+              <div className="inline-flex w-fit items-center gap-2 rounded-full bg-slate-50 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-slate-600 md:py-2 md:text-[10px]">
                 <CheckCircle2 size={14} /> {text.liveNow}
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:grid-cols-4 [&::-webkit-scrollbar]:hidden">
               {pulseCards.map((card) => (
-                <div key={card.label} className="rounded-[1.4rem] border border-slate-200 bg-slate-50 p-4">
-                  <div className="flex items-center justify-between gap-3 text-slate-500">
-                    <span className="text-[10px] font-black uppercase tracking-[0.18em]">{card.label}</span>
-                    {card.icon}
+                <div key={card.label} className="min-w-[7.5rem] shrink-0 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:min-w-0 md:rounded-[1.4rem] md:p-4">
+                  <div className="flex items-center justify-between gap-2 text-slate-500">
+                    <span className="text-[9px] font-black uppercase tracking-[0.15em] md:tracking-[0.18em]">{card.label}</span>
+                    <span className="scale-90">{card.icon}</span>
                   </div>
-                  <p className="mt-4 text-3xl font-black tracking-tight text-slate-950">{card.value}</p>
-                  <p className="mt-1 text-xs font-semibold text-slate-500">{card.detail}</p>
+                  <p className="mt-2 text-xl font-black tracking-tight text-slate-950 md:mt-4 md:text-3xl">{card.value}</p>
+                  <p className="mt-0.5 text-[10px] font-semibold text-slate-500 md:mt-1 md:text-xs">{card.detail}</p>
                 </div>
               ))}
             </div>
           </section>
         </section>
 
-        <section className="space-y-6">
+        <section className="order-first space-y-4 max-md:hidden md:order-none md:space-y-6 xl:order-none">
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -319,6 +371,15 @@ export default function GlobalDashboard() {
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">{text.since}: {registrationDate}</p>
               </div>
             </div>
+
+            <Link
+              href="/dashboard/support"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border-2 px-4 py-3 text-xs font-black uppercase tracking-wide transition hover:bg-slate-50"
+              style={{ borderColor: `${primaryColor}55`, color: primaryColor }}
+            >
+              <Headphones size={16} />
+              {text.assistTitle}
+            </Link>
           </div>
 {/* 
           <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
@@ -351,10 +412,10 @@ export default function GlobalDashboard() {
             </button>
           </div> */}
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:rounded-[2rem] md:p-6">
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">{text.nextActions}</p>
-            <h3 className="mt-2 text-xl font-black text-slate-950">{text.nextActionsSub}</h3>
-            <div className="mt-5 space-y-3">
+            <h3 className="mt-1 text-lg font-black text-slate-950 md:mt-2 md:text-xl">{text.nextActionsSub}</h3>
+            <div className="mt-4 space-y-2 md:mt-5 md:space-y-3">
               {actionItems.length ? actionItems.map((item) => (
                 <ActionRow key={item} text={item} />
               )) : (
@@ -364,6 +425,22 @@ export default function GlobalDashboard() {
           </div>
         </section>
       </div>
+
+      {tenant ? (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-3 pt-2 backdrop-blur-md md:hidden"
+          style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))" }}
+        >
+          <Link
+            href={`/dashboard/tenant/${tenant.id}`}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-black text-white shadow-md active:opacity-90"
+            style={{ backgroundColor: primaryColor }}
+          >
+            {text.stickyOpen}
+            <ArrowUpRight size={18} />
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -372,7 +449,7 @@ function HeroMetric({ title, value, subtitle, tone, color }: { title: string; va
   const accentStyle = tone === "accent" ? { backgroundColor: `${color || "#0f172a"}12`, borderColor: `${color || "#0f172a"}2e`, color: color || "#0f172a" } : undefined;
   return (
     <div
-      className={`rounded-2xl p-4 border ${
+      className={`rounded-2xl border p-3 md:p-4 ${
         tone === "dark"
           ? "bg-slate-900 text-white border-slate-900"
           : tone === "light"
