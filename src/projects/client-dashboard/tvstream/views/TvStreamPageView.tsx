@@ -141,8 +141,11 @@ function TvStreamPageViewInner({ tenantId }: TvStreamPageViewProps) {
     if (!/^\d{6}$/.test(code)) return;
     if (pairHandledRef.current === code) return;
 
+    // Avant : on marquait le code comme traité et on effaçait ?pair= sans liste → jamais de scroll une fois les écrans chargés.
+    // Liste vide après chargement = aucun écran à faire défiler : message explicite.
     if (screens.length === 0) {
       pairHandledRef.current = code;
+      toast.error(text.pairUnknown);
       router.replace(pathname, { scroll: false });
       return;
     }

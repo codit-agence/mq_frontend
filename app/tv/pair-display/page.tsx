@@ -1,39 +1,65 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 
 import { getSiteUrl } from "@/src/core/config/public-env";
 
 /**
- * Page à ouvrir **sur la TV** (plein écran) : grand code + QR pour que le **téléphone** du gérant scanne
- * (la TV n’a souvent pas de caméra). Le QR ouvre le tableau de bord TV Stream avec le même code en query.
+ * Page plein écran pour la **TV** : QR + code 6 chiffres (même information).
+ *
+ * **Query (toutes optionnelles sauf un code valide)** :
+ * - `pair` ou `code` : code d’appairage 6 chiffres (le dashboard et `/tv` utilisent `pair`).
+ * - `tenant` : id tenant — si présent, le QR ouvre le TV Stream du tenant avec `?pair=`.
+ *
+ * Exemple : `/tv/pair-display?pair=123456&tenant=<uuid>`
  */
-export default function TvPairDisplayPage() {
-  const [code, setCode] = useState("");
-  const [tenant, setTenant] = useState("");
-  const [qrSize, setQrSize] = useState(260);
+function parseSixDigitCode(searchParams: URLSearchParams): string {
+  const raw =
+    searchParams.get("pair") ??
+    searchParams.get("code") ??
+    searchParams.get("pairing") ??
+    "";
+  return raw.replace(/\D/g, "").slice(0, 6);
+}
 
+function TvPairDisplayContent() {
+  const searchParams = useSearchParams();
+  const code = useMemo(() => parseSixDigitCode(searchParams), [searchParams]);
+  const tenant = useMemo(() => (searchParams.get("tenant") ?? "").trim(), [searchParams]);
+
+  /** Même origine que la barre d’adresse : évite un QR vers localhost alors que la TV est en IP locale. */
+  const [origin, setOrigin] = useState("");
   useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    setCode((p.get("code") || "").replace(/\D/g, "").slice(0, 6));
-    setTenant((p.get("tenant") || "").trim());
+    setOrigin(typeof window !== "undefined" ? window.location.origin : "");
   }, []);
 
+  const [qrSize, setQrSize] = useState(260);
   useEffect(() => {
     const w = typeof window !== "undefined" ? window.innerWidth : 400;
     setQrSize(Math.min(280, Math.max(200, w - 80)));
   }, []);
 
-  const base = useMemo(() => getSiteUrl().replace(/\/$/, ""), []);
+  const base = useMemo(() => {
+    const o = origin.replace(/\/$/, "");
+    return (o || getSiteUrl().replace(/\/$/, "")).replace(/\/$/, "");
+  }, [origin]);
 
   const dashboardUrl = useMemo(() => {
     if (!/^\d{6}$/.test(code)) return "";
-    if (tenant) return `${base}/dashboard/tenant/${encodeURIComponent(tenant)}/tvstream?pair=${code}`;
-    return `${base}/tv?pair=${code}`;
+    const q = encodeURIComponent(code);
+    if (tenant) {
+      return `${base}/dashboard/tenant/${encodeURIComponent(tenant)}/tvstream?pair=${q}`;
+    }
+    return `${base}/tv?pair=${q}`;
   }, [base, code, tenant]);
 
   const ok = /^\d{6}$/.test(code);
+
+  const examplePath = tenant
+    ? `/tv/pair-display?pair=123456&tenant=${encodeURIComponent(tenant)}`
+    : "/tv/pair-display?pair=123456";
 
   return (
     <div
@@ -52,12 +78,17 @@ export default function TvPairDisplayPage() {
     >
       {!ok ? (
         <>
-          <p style={{ fontSize: "1.2rem", fontWeight: 700 }}>Paramètre manquant</p>
-          <p style={{ color: "#94a3b8", maxWidth: 420, lineHeight: 1.5 }}>
-            Ouvrez cette page depuis le bouton « Afficher sur la TV » du tableau de bord (code à 6 chiffres requis).
+          <p style={{ fontSize: "1.2rem", fontWeight: 700 }}>Code manquant ou invalide</p>
+          <p style={{ color: "#94a3b8", maxWidth: 480, lineHeight: 1.5 }}>
+            Utilisez le paramètre <strong style={{ color: "#e2e8f0" }}>pair</strong> (recommandé, comme sur le
+            tableau de bord) ou <strong style={{ color: "#e2e8f0" }}>code</strong> : 6 chiffres.
+            {tenant ? " Le tenant est déjà dans l’URL." : " Optionnel : ajoutez &tenant=&lt;id&gt; pour ouvrir le TV Stream du tenant."}
+          </p>
+          <p style={{ fontSize: "0.85rem", color: "#64748b", fontFamily: "ui-monospace, monospace", wordBreak: "break-all" }}>
+            Exemple : {examplePath}
           </p>
           <p lang="ar" dir="rtl" style={{ color: "#64748b", maxWidth: 420 }}>
-            افتح هذه الصفحة من لوحة التحكم عبر « عرض على التلفاز » (رمز من 6 أرقام).
+            يجب أن يحتوي الرابط على pair= أو code= مع 6 أرقام.
           </p>
         </>
       ) : (
@@ -69,9 +100,11 @@ export default function TvPairDisplayPage() {
             أعلى: رمز QR — أسفل: نفس الرمز المكوّن من 6 أرقام
           </p>
 
-          <div style={{ background: "#fff", padding: 16, borderRadius: 20, display: "inline-block" }}>
-            <QRCodeSVG value={dashboardUrl} size={qrSize} level="M" />
-          </div>
+          {dashboardUrl ? (
+            <div style={{ background: "#fff", padding: 16, borderRadius: 20, display: "inline-block" }}>
+              <QRCodeSVG value={dashboardUrl} size={qrSize} level="M" />
+            </div>
+          ) : null}
 
           <p style={{ fontSize: "0.8rem", color: "#64748b", margin: 0, fontWeight: 600 }}>
             Code (saisie manuelle si besoin)
@@ -89,11 +122,35 @@ export default function TvPairDisplayPage() {
             {code}
           </p>
 
-          <p style={{ fontSize: "0.75rem", color: "#475569", maxWidth: 360, wordBreak: "break-all", margin: 0 }}>
+          <p style={{ fontSize: "0.75rem", color: "#475569", maxWidth: 420, wordBreak: "break-all", margin: 0 }}>
             {dashboardUrl}
           </p>
         </>
       )}
     </div>
+  );
+}
+
+export default function TvPairDisplayPage() {
+  return (
+    <Suspense
+      fallback={
+        <div
+          style={{
+            minHeight: "100vh",
+            background: "#020617",
+            color: "#94a3b8",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontFamily: "sans-serif",
+          }}
+        >
+          Chargement…
+        </div>
+      }
+    >
+      <TvPairDisplayContent />
+    </Suspense>
   );
 }

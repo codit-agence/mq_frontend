@@ -17,6 +17,14 @@ function tvDeepLinkUrl(pairingCode: string) {
   return `${base}/tv?pair=${encodeURIComponent(pairingCode)}`;
 }
 
+/** Page plein écran TV : même code + QR dashboard (paramètre `pair`, comme partout ailleurs). */
+function tvPairDisplayUrl(pairingCode: string, tenantId?: string | null) {
+  const base = getSiteUrl().replace(/\/$/, "");
+  const q = new URLSearchParams({ pair: pairingCode.replace(/\D/g, "").slice(0, 6) });
+  if (tenantId) q.set("tenant", tenantId);
+  return `${base}/tv/pair-display?${q.toString()}`;
+}
+
 /** Extrait le security code + screen_id depuis le QR affiché sur la TV (état attente sécurité). */
 function parseSecurityQr(raw: string): { screenId: string; secCode: string } | null {
   const m = raw.trim().match(/^mq-sec:([^:]+):(\d{4})$/);
@@ -78,6 +86,8 @@ export function ScreenCard({
           forceRefresh: "فرض التحديث",
           delete: "حذف الشاشة",
           qrHint: "افتح هذا الرابط على متصفح التلفاز لإدخال الرمز تلقائيًا.",
+          pairDisplay: "عرض للتلفاز (QR + الرمز)",
+          pairDisplayHint: "نفس الرابط مع ?pair= في شاشة واحدة.",
         }
       : {
           noPing: "Aucun ping",
@@ -101,6 +111,8 @@ export function ScreenCard({
           forceRefresh: "Forcer le refresh",
           delete: "Supprimer l'ecran",
           qrHint: "Ouvrez ce lien sur le navigateur de la TV pour saisir le code automatiquement.",
+          pairDisplay: "Affichage TV (QR + code)",
+          pairDisplayHint: "Une seule page avec ?pair= — évite les problèmes de souris.",
         };
 
   const lastPingLabel = screen.last_ping
@@ -194,6 +206,15 @@ export function ScreenCard({
             <div className="rounded-xl bg-white p-2 inline-block">
               <QRCodeSVG value={tvDeepLinkUrl(pairingCode)} size={120} level="M" />
             </div>
+            <a
+              href={tvPairDisplayUrl(pairingCode, tenantId)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[10px] font-bold text-sky-400 hover:text-sky-300 underline underline-offset-2 max-w-[260px] text-center leading-snug"
+            >
+              {text.pairDisplay}
+            </a>
+            <p className="text-[9px] text-slate-600 max-w-[260px] leading-snug">{text.pairDisplayHint}</p>
           </div>
 
           {/* Bouton scan : scanne le QR de sécurité affiché sur la TV */}
