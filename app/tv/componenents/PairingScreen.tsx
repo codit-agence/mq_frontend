@@ -27,10 +27,10 @@ function BrandingHeader({ branding }: { branding: PublicBranding | null }) {
       <div>
         <h1 style={{ fontSize: "2rem", fontWeight: 900, margin: "0 0 8px", letterSpacing: "-0.02em" }}>{name}</h1>
         <p style={{ fontSize: "1.05rem", color: "#9ca3af", margin: 0, lineHeight: 1.5 }}>
-          Connexion TV — saisissez le code affiché dans votre tableau de bord.
+          Connexion TV — scannez le QR ou saisissez le code à 6 chiffres du tableau de bord (même écran).
         </p>
         <p lang="ar" dir="rtl" style={{ fontSize: "1.05rem", color: "#6ee7b7", margin: "10px 0 0", lineHeight: 1.6 }}>
-          اتصال التلفزيون — أدخل الرمز الظاهر في لوحة التحكم.
+          اتصال التلفزيون — امسح الرمز أو أدخل الرمز المكوّن من 6 أرقام من لوحة التحكم (نفس الشاشة).
         </p>
       </div>
       <a
@@ -50,10 +50,7 @@ function BrandingHeader({ branding }: { branding: PublicBranding | null }) {
   );
 }
 
-type Mode = "enter" | "qr";
-
 const PairingScreen: React.FC = () => {
-  const [mode, setMode] = useState<Mode>("enter");
   const [pairingCode, setPairingCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -200,12 +197,29 @@ const PairingScreen: React.FC = () => {
       <div style={styles.page}>
         <BrandingHeader branding={branding} />
         <p style={{ fontSize: "1.25rem", color: "#d1d5db", margin: 0, textAlign: "center" }}>
-          Code de sécurité — à confirmer sur le Dashboard
+          Confirmez sur le Dashboard — QR en haut, code en bas (même écran)
         </p>
         <p lang="ar" dir="rtl" style={{ fontSize: "1.1rem", color: "#86efac", margin: 0, textAlign: "center" }}>
-          رمز الأمان — يُرجى تأكيده من لوحة التحكم
+          أكّد من لوحة التحكم — الرمز الشبكي أعلاه والرمز أدناه
         </p>
 
+        {secQrValue && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
+            <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: 0 }}>
+              Scannez ce QR depuis le tableau de bord (téléphone du gérant)
+            </p>
+            <p lang="ar" dir="rtl" style={{ fontSize: "0.8rem", color: "#4b5563", margin: 0 }}>
+              امسح من لوحة التحكم
+            </p>
+            <div style={{ background: "#fff", padding: 14, borderRadius: 18, display: "inline-block" }}>
+              <QRCodeSVG value={secQrValue} size={160} level="M" />
+            </div>
+          </div>
+        )}
+
+        <p style={{ fontSize: "0.9rem", color: "#9ca3af", margin: "8px 0 0", textAlign: "center" }}>
+          Code de sécurité à saisir sur le Dashboard si besoin
+        </p>
         <div style={{ display: "flex", gap: "20px", margin: "12px 0", flexWrap: "wrap", justifyContent: "center" }}>
           {(displaySecurityCode || "----").split("").map((ch, i) => (
             <div key={i} style={styles.secBox}>
@@ -213,20 +227,6 @@ const PairingScreen: React.FC = () => {
             </div>
           ))}
         </div>
-
-        {secQrValue && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-            <p style={{ fontSize: "0.85rem", color: "#6b7280", margin: 0 }}>
-              Ou scannez ce QR depuis le tableau de bord pour confirmer instantanément
-            </p>
-            <p lang="ar" dir="rtl" style={{ fontSize: "0.8rem", color: "#4b5563", margin: 0 }}>
-              أو امسح هذا الرمز من لوحة التحكم للتأكيد مباشرة
-            </p>
-            <div style={{ background: "#fff", padding: 14, borderRadius: 18, display: "inline-block" }}>
-              <QRCodeSVG value={secQrValue} size={160} level="M" />
-            </div>
-          </div>
-        )}
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <span style={styles.dot} />
@@ -243,56 +243,30 @@ const PairingScreen: React.FC = () => {
     );
   }
 
-  const isQrMode = mode === "qr";
-
   return (
     <div style={styles.page}>
       <BrandingHeader branding={branding} />
 
-      {/* Onglets : Saisir le code / Afficher QR */}
-      <div style={{ display: "flex", gap: 0, borderRadius: 16, overflow: "hidden", border: "1px solid #222", maxWidth: 480, width: "100%" }}>
-        <button
-          type="button"
-          onClick={() => setMode("enter")}
-          style={{
-            flex: 1,
-            padding: "14px 0",
-            fontSize: "1rem",
-            fontWeight: 700,
-            border: "none",
-            cursor: "pointer",
-            background: !isQrMode ? "#2196f3" : "#111",
-            color: !isQrMode ? "#fff" : "#6b7280",
-            transition: "background 0.2s",
-          }}
-        >
-          ⌨ Saisir le code
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("qr")}
-          style={{
-            flex: 1,
-            padding: "14px 0",
-            fontSize: "1rem",
-            fontWeight: 700,
-            border: "none",
-            borderLeft: "1px solid #222",
-            cursor: "pointer",
-            background: isQrMode ? "#2196f3" : "#111",
-            color: isQrMode ? "#fff" : "#6b7280",
-            transition: "background 0.2s",
-          }}
-        >
-          ▦ Afficher QR
-        </button>
-      </div>
+      <PairingQrDisplay embedded />
 
-      {/* Mode QR : la TV montre son propre QR */}
-      {isQrMode && <PairingQrDisplay onBack={() => setMode("enter")} />}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 520,
+          height: 1,
+          background: "linear-gradient(90deg, transparent, #333, transparent)",
+          margin: "8px 0 4px",
+        }}
+        aria-hidden
+      />
 
-      {/* Mode saisie : formulaire code 6 chiffres */}
-      <div style={{ width: "100%", maxWidth: "480px", display: isQrMode ? "none" : undefined }}>
+      <div style={{ width: "100%", maxWidth: 480 }}>
+        <p style={{ fontSize: "1rem", color: "#d1d5db", margin: "0 0 10px", fontWeight: 700, textAlign: "center" }}>
+          Solution 2 — code à 6 chiffres (tableau de bord)
+        </p>
+        <p lang="ar" dir="rtl" style={{ fontSize: "0.95rem", color: "#6ee7b7", margin: "0 0 14px", textAlign: "center" }}>
+          الحل ٢ — أدخل الرمز المكوّن من 6 أرقام من لوحة التحكم
+        </p>
         <input
           ref={inputRef}
           type="text"
@@ -362,15 +336,12 @@ const PairingScreen: React.FC = () => {
         </button>
       </div>
 
-      {!isQrMode && (
-        <p style={{ fontSize: "0.85rem", color: "#444", marginTop: "-8px", textAlign: "center", maxWidth: 480, lineHeight: 1.5 }}>
-          Lisez le code affiché dans le tableau de bord · ou basculez sur « Afficher QR » pour que le gérant scanne
-          directement depuis son téléphone sans saisie.
-          <span lang="ar" dir="rtl" style={{ display: "block", marginTop: 6, color: "#374151" }}>
-            اقرأ الرمز الظاهر في لوحة التحكم · أو انتقل إلى « عرض QR » ليمسحه المسؤول مباشرة.
-          </span>
-        </p>
-      )}
+      <p style={{ fontSize: "0.85rem", color: "#444", marginTop: "-4px", textAlign: "center", maxWidth: 480, lineHeight: 1.5 }}>
+        Les deux méthodes sont visibles en même temps : pas besoin de souris pour changer d’écran.
+        <span lang="ar" dir="rtl" style={{ display: "block", marginTop: 6, color: "#374151" }}>
+          الطريقتان ظاهرتان معًا — دون الحاجة للفأرة للتبديل بين الشاشات.
+        </span>
+      </p>
     </div>
   );
 };
@@ -380,13 +351,15 @@ const styles = {
     display: "flex" as const,
     flexDirection: "column" as const,
     alignItems: "center" as const,
-    justifyContent: "center" as const,
+    justifyContent: "flex-start" as const,
     background: "#050505",
     color: "white",
     minHeight: "100vh",
     fontFamily: "sans-serif",
-    gap: "28px",
-    padding: "24px",
+    gap: "22px",
+    padding: "24px 24px 40px",
+    overflowY: "auto" as const,
+    boxSizing: "border-box" as const,
   },
   secBox: {
     width: "72px",

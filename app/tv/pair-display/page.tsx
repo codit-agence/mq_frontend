@@ -63,12 +63,19 @@ export default function TvPairDisplayPage() {
       ) : (
         <>
           <p style={{ fontSize: "1rem", color: "#94a3b8", margin: 0, fontWeight: 600 }}>
-            Scannez avec le téléphone du gérant (appareil photo)
+            En haut : QR (téléphone du gérant) — en bas : le même code à 6 chiffres
           </p>
           <p lang="ar" dir="rtl" style={{ fontSize: "0.95rem", color: "#64748b", margin: 0 }}>
-            امسح بهاتف المسؤول (الكاميرا)
+            أعلى: رمز QR — أسفل: نفس الرمز المكوّن من 6 أرقام
           </p>
 
+          <div style={{ background: "#fff", padding: 16, borderRadius: 20, display: "inline-block" }}>
+            <QRCodeSVG value={dashboardUrl} size={qrSize} level="M" />
+          </div>
+
+          <p style={{ fontSize: "0.8rem", color: "#64748b", margin: 0, fontWeight: 600 }}>
+            Code (saisie manuelle si besoin)
+          </p>
           <p
             style={{
               fontSize: "clamp(3rem, 14vw, 5.5rem)",
@@ -81,10 +88,6 @@ export default function TvPairDisplayPage() {
           >
             {code}
           </p>
-
-          <div style={{ background: "#fff", padding: 16, borderRadius: 20, display: "inline-block" }}>
-            <QRCodeSVG value={dashboardUrl} size={qrSize} level="M" />
-          </div>
 
           <p style={{ fontSize: "0.75rem", color: "#475569", maxWidth: 360, wordBreak: "break-all", margin: 0 }}>
             {dashboardUrl}

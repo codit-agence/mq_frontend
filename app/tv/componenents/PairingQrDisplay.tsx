@@ -19,10 +19,12 @@ import { getDeviceInfo } from "@/src/utils/helpers/getDeviceInfo";
  * 4. Quand status === "paired" → stocke access_token + screen_id
  */
 interface Props {
-  onBack: () => void;
+  /** Mode `/tv` combiné : pas de bouton retour, le formulaire code est affiché sous le QR. */
+  embedded?: boolean;
+  onBack?: () => void;
 }
 
-export function PairingQrDisplay({ onBack }: Props) {
+export function PairingQrDisplay({ embedded = false, onBack }: Props) {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,6 +98,7 @@ export function PairingQrDisplay({ onBack }: Props) {
   const base = typeof window !== "undefined" ? getSiteUrl().replace(/\/$/, "") : "";
   const qrUrl = sessionToken ? `${base}/tv-new?s=${encodeURIComponent(sessionToken)}` : "";
   const shortCode = sessionToken ? sessionToken.split("-")[0].toUpperCase() : "";
+  const qrSize = embedded ? 200 : 240;
 
   return (
     <div
@@ -103,18 +106,18 @@ export function PairingQrDisplay({ onBack }: Props) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 24,
+        gap: embedded ? 16 : 24,
         width: "100%",
         maxWidth: 520,
         textAlign: "center",
       }}
     >
       <div>
-        <p style={{ fontSize: "1.1rem", color: "#d1d5db", margin: "0 0 6px", fontWeight: 700 }}>
-          Scannez ce QR avec le téléphone du gérant
+        <p style={{ fontSize: embedded ? "1rem" : "1.1rem", color: "#d1d5db", margin: "0 0 6px", fontWeight: 700 }}>
+          {embedded ? "Solution 1 — scannez le QR (téléphone du gérant)" : "Scannez ce QR avec le téléphone du gérant"}
         </p>
-        <p lang="ar" dir="rtl" style={{ fontSize: "1rem", color: "#6ee7b7", margin: 0, lineHeight: 1.5 }}>
-          امسح هذا الرمز بهاتف المسؤول لتوصيل التلفاز
+        <p lang="ar" dir="rtl" style={{ fontSize: embedded ? "0.95rem" : "1rem", color: "#6ee7b7", margin: 0, lineHeight: 1.5 }}>
+          {embedded ? "الحل ١ — امسح الرمز بهاتف المسؤول" : "امسح هذا الرمز بهاتف المسؤول لتوصيل التلفاز"}
         </p>
       </div>
 
@@ -146,13 +149,15 @@ export function PairingQrDisplay({ onBack }: Props) {
 
       {!loading && !error && qrUrl && (
         <>
-          <div style={{ background: "#fff", padding: 20, borderRadius: 24, display: "inline-block", boxShadow: "0 0 40px rgba(56,189,248,.25)" }}>
-            <QRCodeSVG value={qrUrl} size={240} level="M" />
+          <div style={{ background: "#fff", padding: embedded ? 14 : 20, borderRadius: 24, display: "inline-block", boxShadow: "0 0 40px rgba(56,189,248,.25)" }}>
+            <QRCodeSVG value={qrUrl} size={qrSize} level="M" />
           </div>
 
-          <p style={{ fontSize: "1.5rem", fontWeight: 900, color: "#38bdf8", letterSpacing: "0.25em", fontFamily: "ui-monospace, monospace", margin: 0 }}>
-            {shortCode}
-          </p>
+          {!embedded && (
+            <p style={{ fontSize: "1.5rem", fontWeight: 900, color: "#38bdf8", letterSpacing: "0.25em", fontFamily: "ui-monospace, monospace", margin: 0 }}>
+              {shortCode}
+            </p>
+          )}
 
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span
@@ -175,25 +180,27 @@ export function PairingQrDisplay({ onBack }: Props) {
         </>
       )}
 
-      <button
-        type="button"
-        onClick={onBack}
-        style={{
-          marginTop: 8,
-          padding: "14px 0",
-          width: "100%",
-          maxWidth: 480,
-          borderRadius: 14,
-          border: "1px solid #333",
-          background: "#111",
-          color: "#9ca3af",
-          fontWeight: 700,
-          fontSize: "1rem",
-          cursor: "pointer",
-        }}
-      >
-        ← Saisir le code à la place
-      </button>
+      {!embedded && onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          style={{
+            marginTop: 8,
+            padding: "14px 0",
+            width: "100%",
+            maxWidth: 480,
+            borderRadius: 14,
+            border: "1px solid #333",
+            background: "#111",
+            color: "#9ca3af",
+            fontWeight: 700,
+            fontSize: "1rem",
+            cursor: "pointer",
+          }}
+        >
+          ← Saisir le code à la place
+        </button>
+      )}
 
       <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.15}}`}</style>
     </div>
